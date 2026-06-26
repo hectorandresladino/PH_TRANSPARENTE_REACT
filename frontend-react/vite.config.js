@@ -8,4 +8,16 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
+  build: {
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          icons: ['lucide-react']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
 });
