@@ -3,19 +3,13 @@
   "appName": "PH Transparente",
   "webDir": "dist",
   "version": "1.0.0",
-  "description": "Sistema de gestión de propiedad horizontal",
+  "description": "Sistema de gestion de propiedad horizontal",
   "author": "PH Transparente",
   "server": {
-    "androidScheme": "https",
-    "cleartext": true,
-    "allowNavigation": ["*"]
+    "hostname": "localhost",
+    "androidScheme": "http"
   },
   "android": {
-    "allowMixedContent": true,
-    "buildOptions": {
-      "keystorePath": "",
-      "keystoreAlias": "",
-      "keystorePassword": ""
-    }
+    "allowMixedContent": true
   }
 }
