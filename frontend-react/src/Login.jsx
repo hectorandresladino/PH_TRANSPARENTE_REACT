@@ -23,18 +23,18 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
       if (response.ok) {
         const data = await response.json();
         console.log('Login exitoso:', data);
-        // Guardar los mÃ³dulos permitidos en localStorage
+        // Guardar los modulos permitidos en localStorage
         if (data.modules) {
           localStorage.setItem('allowedModules', data.modules);
         }
         onLogin(data);
       } else {
         console.error('Error en login:', response.status);
-        setError('Credenciales invÃ¡lidas');
+        setError('Credenciales invalidas');
       }
     } catch (err) {
-      console.error('Error de conexiÃ³n:', err);
-      setError('Error de conexiÃ³n con el servidor');
+      console.error('Error de conexion:', err);
+      setError('Error de conexion con el servidor');
     }
   };
 
@@ -42,7 +42,7 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
     <div className="login-container">
       <div className="login-card">
         <h1>PH Transparente</h1>
-        <p>Iniciar sesiÃ³n</p>
+        <p>Iniciar sesion</p>
         <form onSubmit={handleSubmit}>
           <div className="login-form-group">
             <User size={20} />
@@ -52,16 +52,21 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
           <div className="login-form-group">
             <Lock size={20} />
             <input
               type="password"
-              placeholder="ContraseÃ±a"
+              placeholder="Contrasena"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </div>
           {error && <p className="error">{error}</p>}
@@ -69,10 +74,10 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
         </form>
         <div className="login-links">
           <button className="link-button" onClick={onShowForgotPassword}>
-            Â¿Olvidaste tu contraseÃ±a?
+            Olvidaste tu contrasena?
           </button>
           <button className="link-button" onClick={onShowRegister}>
-            Â¿No tienes cuenta? RegÃ­strate
+            No tienes cuenta? Registrate
           </button>
         </div>
         <p className="hint">Credenciales por rol:</p>
