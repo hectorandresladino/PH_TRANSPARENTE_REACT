@@ -596,6 +596,10 @@ function ModuleCard({ module }) {
   );
 }
 
+// Ocultar pantalla de carga
+const loadingEl = document.getElementById('loading');
+if (loadingEl) loadingEl.style.display = 'none';
+
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
     <App />
