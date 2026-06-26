@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ph-transparente-frontend
+  labels:
+    app: ph-transparente-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ph-transparente-frontend
+  template:
+    metadata:
+      labels:
+        app: ph-transparente-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ph-transparente-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: VITE_API_URL
+          value: "http://ph-transparente-backend:8081/api"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5

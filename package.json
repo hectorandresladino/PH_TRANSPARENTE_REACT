@@ -1,0 +1,16 @@
+{
+  "name": "ph-transparente-react-springboot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PH Transparente migrado a React + Spring Boot conservando los 24 módulos.",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend-react run dev",
+    "build:frontend": "npm --prefix frontend-react run build",
+    "dev:backend": "cd backend-springboot && mvn spring-boot:run",
+    "build:backend": "cd backend-springboot && mvn clean package",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "db:logs": "docker-compose logs -f postgres",
+    "db:reset": "docker-compose down -v && docker-compose up -d"
+  }
+}

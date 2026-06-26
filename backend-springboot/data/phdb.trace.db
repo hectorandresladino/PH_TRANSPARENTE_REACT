@@ -1,0 +1,4 @@
+2026-06-01 09:52:33.492782-05:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Error de Sintaxis en sentencia SQL "insert into roles (description,modules,name,password) values (?,?,?,?) [*]returning id"
+Syntax error in SQL statement "insert into roles (description,modules,name,password) values (?,?,?,?) [*]returning id"; SQL statement:
+insert into roles (description,modules,name,password) values (?,?,?,?) returning id [42000-224]
