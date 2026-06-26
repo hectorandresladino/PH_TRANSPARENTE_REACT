@@ -189,7 +189,7 @@ const ROLES_CONFIG = {
   }
 };
 
-export default function AdminDashboard({ onModuleSelect, currentView }) {
+export default function AdminDashboard({ onModuleSelect, currentView, userRole }) {
   const [expandedRoles, setExpandedRoles] = useState({});
 
   const toggleRole = (roleKey) => {
@@ -203,16 +203,42 @@ export default function AdminDashboard({ onModuleSelect, currentView }) {
     onModuleSelect(moduleName);
   };
 
+  // Mapeo de roles del backend a roles del frontend
+  const roleMapping = {
+    'ADMIN': 'ADMIN',
+    'ADMINISTRADOR': 'ADMIN',
+    'CONSEJERO': 'CONSEJERO',
+    'COPIROPIETARIO': 'COPIROPIETARIO',
+    'CONTADOR': 'CONTADOR',
+    'REVISOR_FISCAL': 'REVISOR_FISCAL',
+    'REVISOR': 'REVISOR_FISCAL',
+    'VIGILANCIA': 'VIGILANCIA',
+    'ASEO': 'ASEO'
+  };
+
+  const mappedRole = roleMapping[userRole] || 'COPIROPIETARIO';
+  const userRoleConfig = ROLES_CONFIG[mappedRole];
+
+  if (!userRoleConfig) {
+    return (
+      <div className="admin-dashboard">
+        <div className="admin-header">
+          <h1>Rol no reconocido: {userRole}</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
         <div className="header-content">
           <div className="header-icon">
-            <Sparkles size={32} />
+            {userRoleConfig.icon}
           </div>
           <div className="header-text">
-            <h1>Dashboard de Administración</h1>
-            <p>Gestión de Roles y Módulos por Perfil</p>
+            <h1>{userRoleConfig.name}</h1>
+            <p>{userRoleConfig.description}</p>
           </div>
         </div>
         <div className="header-badge">
@@ -222,49 +248,47 @@ export default function AdminDashboard({ onModuleSelect, currentView }) {
       </div>
 
       <div className="roles-grid">
-        {Object.entries(ROLES_CONFIG).map(([roleKey, roleConfig]) => (
-          <div key={roleKey} className="role-card" style={{ backgroundColor: roleConfig.bgColor }}>
-            <div 
-              className="role-header"
-              onClick={() => toggleRole(roleKey)}
-              style={{ background: roleConfig.color }}
-            >
-              <div className="role-info">
-                <div className="role-icon-wrapper">
-                  {roleConfig.icon}
-                </div>
-                <div className="role-details">
-                  <h3>{roleConfig.name}</h3>
-                  <p className="role-description">{roleConfig.description}</p>
-                  <span className="module-count">{roleConfig.modules.length} módulos disponibles</span>
-                </div>
+        <div className="role-card" style={{ backgroundColor: userRoleConfig.bgColor }}>
+          <div 
+            className="role-header"
+            onClick={() => toggleRole(mappedRole)}
+            style={{ background: userRoleConfig.color }}
+          >
+            <div className="role-info">
+              <div className="role-icon-wrapper">
+                {userRoleConfig.icon}
               </div>
-              <div className="expand-icon">
-                {expandedRoles[roleKey] ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              <div className="role-details">
+                <h3>{userRoleConfig.name}</h3>
+                <p className="role-description">{userRoleConfig.description}</p>
+                <span className="module-count">{userRoleConfig.modules.length} módulos disponibles</span>
               </div>
             </div>
-
-            {expandedRoles[roleKey] && (
-              <div className="role-modules">
-                <div className="modules-list">
-                  {roleConfig.modules.map(module => (
-                    <button
-                      key={module.name}
-                      className={`module-item ${currentView === module.name ? 'active' : ''}`}
-                      onClick={() => handleModuleClick(module.name)}
-                    >
-                      <div className="module-icon">{module.icon}</div>
-                      <div className="module-info">
-                        <span className="module-label">{module.label}</span>
-                        <span className="module-description">{module.description}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="expand-icon">
+              {expandedRoles[mappedRole] ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+            </div>
           </div>
-        ))}
+
+          {expandedRoles[mappedRole] && (
+            <div className="role-modules">
+              <div className="modules-list">
+                {userRoleConfig.modules.map(module => (
+                  <button
+                    key={module.name}
+                    className={`module-item ${currentView === module.name ? 'active' : ''}`}
+                    onClick={() => handleModuleClick(module.name)}
+                  >
+                    <div className="module-icon">{module.icon}</div>
+                    <div className="module-info">
+                      <span className="module-label">{module.label}</span>
+                      <span className="module-description">{module.description}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
