@@ -41,6 +41,7 @@ import TaskStatistics from './TaskStatistics.jsx';
 import SecurityReportsManagement from './SecurityReportsManagement.jsx';
 import CleaningTasksManagement from './CleaningTasksManagement.jsx';
 import StaffInfoManagement from './StaffInfoManagement.jsx';
+import StaffRatingsManagement from './StaffRatingsManagement.jsx';
 import './styles.css';
 
 class ErrorBoundary extends React.Component {
@@ -501,7 +502,7 @@ function App() {
         ) : currentView === 'payments' ? (
           <PaymentsManagement />
         ) : currentView === 'reservations' ? (
-          <ReservationsManagement />
+          <ReservationsManagement userRole={user?.role} />
         ) : currentView === 'visitors' ? (
           <VisitorsManagement />
         ) : currentView === 'contracts' ? (
@@ -560,6 +561,8 @@ function App() {
           <CleaningTasksManagement userRole={user?.role} onBack={() => setCurrentView('dashboard')} />
         ) : currentView === 'staff-info' ? (
           <StaffInfoManagement userRole={user?.role} onBack={() => setCurrentView('dashboard')} />
+        ) : currentView === 'staff-ratings' ? (
+          <StaffRatingsManagement userRole={user?.role} onBack={() => setCurrentView('dashboard')} />
         ) : (
           <AppStore />
         )}

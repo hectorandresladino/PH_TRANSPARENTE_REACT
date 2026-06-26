@@ -6,12 +6,12 @@
   "description": "Sistema de gestión de propiedad horizontal",
   "author": "PH Transparente",
   "server": {
-    "androidScheme": "http",
+    "androidScheme": "https",
     "cleartext": true,
-    "url": "http://192.168.1.4:5173",
     "allowNavigation": ["*"]
   },
   "android": {
+    "allowMixedContent": true,
     "buildOptions": {
       "keystorePath": "",
       "keystoreAlias": "",

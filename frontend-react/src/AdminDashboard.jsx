@@ -47,6 +47,7 @@ const ROLES_CONFIG = {
       { name: 'support-tasks', label: 'Soporte', icon: <Briefcase size={20} />, description: 'Tareas de soporte' },
       { name: 'task-statistics', label: 'Estadísticas', icon: <BarChart3 size={20} />, description: 'Estadísticas de tareas' },
       { name: 'staff-info', label: 'Personal', icon: <Users size={20} />, description: 'Info. del personal clave' },
+      { name: 'staff-ratings', label: 'Evaluar Roles', icon: <Star size={20} />, description: 'Calificar Consejo, Contador, Revisor' },
       { name: 'appstore', label: 'App Store', icon: <LayoutGrid size={20} />, description: 'Tienda de aplicaciones' }
     ]
   },
@@ -75,7 +76,8 @@ const ROLES_CONFIG = {
       { name: 'reports', label: 'Reportes', icon: <FileSpreadsheet size={20} />, description: 'Generación de reportes' },
       { name: 'personnel-ratings', label: 'Calificaciones', icon: <Star size={20} />, description: 'Evaluación de personal' },
       { name: 'support-tasks', label: 'Soporte', icon: <Briefcase size={20} />, description: 'Tareas de soporte' },
-      { name: 'task-statistics', label: 'Estadísticas', icon: <BarChart3 size={20} />, description: 'Estadísticas de tareas' }
+      { name: 'task-statistics', label: 'Estadísticas', icon: <BarChart3 size={20} />, description: 'Estadísticas de tareas' },
+      { name: 'staff-ratings', label: 'Evaluar Admin', icon: <Star size={20} />, description: 'Calificar al Administrador' }
     ]
   },
   COPIROPIETARIO: {
@@ -122,7 +124,8 @@ const ROLES_CONFIG = {
       { name: 'reports', label: 'Reportes', icon: <FileSpreadsheet size={20} />, description: 'Reportes financieros' },
       { name: 'documents', label: 'Documentos', icon: <FileText size={20} />, description: 'Documentos contables' },
       { name: 'transparency', label: 'Transparencia', icon: <Eye size={20} />, description: 'Dashboard transparencia' },
-      { name: 'staff-info', label: 'Personal', icon: <Users size={20} />, description: 'Info. del personal clave' }
+      { name: 'staff-info', label: 'Personal', icon: <Users size={20} />, description: 'Info. del personal clave' },
+      { name: 'staff-ratings', label: 'Evaluar Admin', icon: <Star size={20} />, description: 'Calificar al Administrador' }
     ]
   },
   REVISOR_FISCAL: {
@@ -147,7 +150,8 @@ const ROLES_CONFIG = {
       { name: 'transparency', label: 'Transparencia', icon: <Eye size={20} />, description: 'Dashboard transparencia' },
       { name: 'assemblies', label: 'Asambleas', icon: <Users size={20} />, description: 'Participación en asambleas' },
       { name: 'task-statistics', label: 'Estadísticas', icon: <BarChart3 size={20} />, description: 'Estadísticas de tareas' },
-      { name: 'staff-info', label: 'Personal', icon: <Users size={20} />, description: 'Info. del personal clave' }
+      { name: 'staff-info', label: 'Personal', icon: <Users size={20} />, description: 'Info. del personal clave' },
+      { name: 'staff-ratings', label: 'Evaluar Admin', icon: <Star size={20} />, description: 'Calificar al Administrador' }
     ]
   },
   VIGILANCIA: {
