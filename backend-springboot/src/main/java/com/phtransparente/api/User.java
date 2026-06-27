@@ -21,6 +21,7 @@ public class User {
   private String email;
   private String fullName;
   private String phone;
+  private String houseUnit;
   private Boolean active = true;
 
   public User() {}
@@ -52,6 +53,9 @@ public class User {
 
   public String getPhone() { return phone; }
   public void setPhone(String phone) { this.phone = phone; }
+
+  public String getHouseUnit() { return houseUnit; }
+  public void setHouseUnit(String houseUnit) { this.houseUnit = houseUnit; }
 
   public Boolean getActive() { return active; }
   public void setActive(Boolean active) { this.active = active; }

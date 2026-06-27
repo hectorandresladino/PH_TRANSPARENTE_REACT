@@ -47,6 +47,7 @@ public class UserController {
         existingUser.setEmail(user.getEmail());
         existingUser.setFullName(user.getFullName());
         existingUser.setPhone(user.getPhone());
+        existingUser.setHouseUnit(user.getHouseUnit());
         existingUser.setActive(user.getActive());
         User updatedUser = userRepository.save(existingUser);
         return ResponseEntity.ok(updatedUser);

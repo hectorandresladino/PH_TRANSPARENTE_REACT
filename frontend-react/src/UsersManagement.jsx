@@ -16,6 +16,7 @@ export default function UsersManagement() {
     email: '',
     fullName: '',
     phone: '',
+    houseUnit: '',
     active: true
   });
 
@@ -69,6 +70,7 @@ export default function UsersManagement() {
       email: user.email || '',
       fullName: user.fullName || '',
       phone: user.phone || '',
+      houseUnit: user.houseUnit || '',
       active: user.active !== false
     });
     setShowModal(true);
@@ -97,6 +99,7 @@ export default function UsersManagement() {
       email: '',
       fullName: '',
       phone: '',
+      houseUnit: '',
       active: true
     });
   };
@@ -139,6 +142,7 @@ export default function UsersManagement() {
               <th>Nombre Completo</th>
               <th>Email</th>
               <th>TelÃ©fono</th>
+              <th>Casa/Apto</th>
               <th>Rol</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -158,6 +162,7 @@ export default function UsersManagement() {
                 <td>{user.fullName || '-'}</td>
                 <td>{user.email || '-'}</td>
                 <td>{user.phone || '-'}</td>
+                <td>{user.houseUnit || '-'}</td>
                 <td>
                   <span className={`role-badge ${user.role.toLowerCase()}`}>
                     <Shield size={14} />
@@ -241,6 +246,15 @@ export default function UsersManagement() {
                     onChange={e => setFormData({...formData, phone: e.target.value})}
                     required
                     placeholder="+57 300 123 4567"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Casa / Apartamento</label>
+                  <input
+                    type="text"
+                    value={formData.houseUnit}
+                    onChange={e => setFormData({...formData, houseUnit: e.target.value})}
+                    placeholder="Ej: Torre 1, Apto 302"
                   />
                 </div>
                 <div className="form-group">
