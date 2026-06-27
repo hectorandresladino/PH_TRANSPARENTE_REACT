@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Plus, Edit, Trash2, Search, Clock, CheckCircle, XCircle, 
   Users as UsersIcon, DollarSign, Upload, Eye, AlertCircle,
-  CreditCard, FileText, Building, Phone
+  CreditCard, FileText, Building, Phone, Paperclip, X
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -17,8 +17,9 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
   const [filterFacility, setFilterFacility] = useState('TODAS');
   const [activeTab, setActiveTab] = useState('all');
   
-  const isAdmin = ['admin', 'Administrador', 'ADMIN'].includes(userRole);
-  const isCopropietario = ['copropietario', 'Copropietario', 'COPROPIETARIO'].includes(userRole);
+  const roleUpper = (userRole || '').toUpperCase();
+  const isAdmin = ['ADMIN', 'ADMINISTRADOR'].includes(roleUpper);
+  const isCopropietario = ['COPIROPIETARIO'].includes(roleUpper);
   
   const [formData, setFormData] = useState({
     facility: 'SALON SOCIAL',
@@ -35,8 +36,13 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
     paymentReference: '',
     paymentProofName: '',
     notes: '',
-    adminNotes: ''
+    adminNotes: '',
+    attachmentName: '',
+    attachmentType: '',
+    attachmentData: ''
   });
+  const fileInputRef = useRef(null);
+  const [viewingAttachment, setViewingAttachment] = useState(null);
 
   const [paymentData, setPaymentData] = useState({
     paymentMethod: 'TRANSFERENCIA',
@@ -245,7 +251,10 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
       paymentMethod: reservation.paymentMethod || '',
       paymentReference: reservation.paymentReference || '',
       notes: reservation.notes || '',
-      adminNotes: reservation.adminNotes || ''
+      adminNotes: reservation.adminNotes || '',
+      attachmentName: reservation.attachmentName || '',
+      attachmentType: reservation.attachmentType || '',
+      attachmentData: reservation.attachmentData || ''
     });
     setShowModal(true);
   };
@@ -261,6 +270,38 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
     if (file) {
       setPaymentData(prev => ({ ...prev, paymentProofName: file.name }));
     }
+  };
+
+  const handleAttachmentChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Solo se permiten archivos PDF, JPG o PNG');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('El archivo no puede superar los 5MB');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      setFormData(prev => ({
+        ...prev,
+        attachmentName: file.name,
+        attachmentType: file.type,
+        attachmentData: base64
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAttachment = () => {
+    setFormData(prev => ({ ...prev, attachmentName: '', attachmentType: '', attachmentData: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const resetForm = () => {
@@ -279,8 +320,12 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
       paymentReference: '',
       paymentProofName: '',
       notes: '',
-      adminNotes: ''
+      adminNotes: '',
+      attachmentName: '',
+      attachmentType: '',
+      attachmentData: ''
     });
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const getStatusColor = (status) => {
@@ -562,6 +607,18 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
                   </div>
                 )}
 
+                {reservation.attachmentName && (
+                  <div style={{ marginTop: '8px', padding: '8px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Paperclip size={16} color="#0284c7" />
+                    <span style={{ fontSize: '0.8rem', color: '#0284c7', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {reservation.attachmentName}
+                    </span>
+                    <button onClick={() => setViewingAttachment(reservation)} style={{ padding: '4px 8px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Eye size={14} /> Ver
+                    </button>
+                  </div>
+                )}
+
                 {/* Acciones */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
                   {/* Copropietario: Subir pago */}
@@ -614,7 +671,7 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
                         onClick={() => handleDelete(reservation.id)}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fee2e2', color: '#dc2626', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={16} /> Eliminar
                       </button>
                     </>
                   )}
@@ -704,6 +761,59 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
                   </>
                 )}
 
+                {isCopropietario && getFacilityPrice(formData.facility).price > 0 && (
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Estado del Pago</label>
+                    <select value={formData.paymentStatus} onChange={e => setFormData({...formData, paymentStatus: e.target.value})} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '10px' }}>
+                      <option value="PENDIENTE">Pendiente - Pagaré después</option>
+                      <option value="EN_REVISION">Ya pagué - En revisión</option>
+                    </select>
+                    {formData.paymentStatus === 'EN_REVISION' && (
+                      <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', fontSize: '0.85rem' }}>Método de Pago</label>
+                          <select value={formData.paymentMethod} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px' }}>
+                            <option value="">Seleccionar...</option>
+                            <option value="TRANSFERENCIA">Transferencia</option>
+                            <option value="PSE">PSE</option>
+                            <option value="NEQUI">Nequi</option>
+                            <option value="DAVIPLATA">Daviplata</option>
+                            <option value="EFECTIVO">Efectivo</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', fontSize: '0.85rem' }}>N° de Referencia</label>
+                          <input type="text" value={formData.paymentReference} onChange={e => setFormData({...formData, paymentReference: e.target.value})} placeholder="Ej: TRF-123456" style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '8px' }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Evidencia / Comprobante (PDF, JPG o PNG - max 5MB)</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      onChange={handleAttachmentChange}
+                      style={{ flex: 1 }}
+                    />
+                    {formData.attachmentName && (
+                      <button type="button" onClick={handleRemoveAttachment} style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {formData.attachmentName && (
+                    <small style={{ color: '#059669', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
+                      <Paperclip size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                      {formData.attachmentName}
+                    </small>
+                  )}
+                </div>
+
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>Motivo</label>
                   <textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '10px' }} />
@@ -769,6 +879,32 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
                 <button type="submit" style={{ flex: 1, padding: '14px', border: 'none', borderRadius: '10px', background: '#059669', color: 'white', cursor: 'pointer', fontWeight: '600' }}>Enviar</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {viewingAttachment && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }} onClick={() => setViewingAttachment(null)}>
+          <div style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0 }}>Evidencia: {viewingAttachment.attachmentName}</h2>
+              <button onClick={() => setViewingAttachment(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="#94a3b8" /></button>
+            </div>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              {viewingAttachment.attachmentType?.startsWith('image/') ? (
+                <img
+                  src={`data:${viewingAttachment.attachmentType};base64,${viewingAttachment.attachmentData}`}
+                  alt={viewingAttachment.attachmentName}
+                  style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '8px' }}
+                />
+              ) : (
+                <iframe
+                  src={`data:${viewingAttachment.attachmentType};base64,${viewingAttachment.attachmentData}`}
+                  style={{ width: '100%', height: '70vh', border: 'none', borderRadius: '8px' }}
+                  title={viewingAttachment.attachmentName}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
