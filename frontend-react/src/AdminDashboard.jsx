@@ -18,6 +18,7 @@ const ROLES_CONFIG = {
       { name: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={20} />, description: 'Vista general' },
       { name: 'users', label: 'Usuarios', icon: <Users size={20} />, description: 'Gestión de usuarios' },
       { name: 'pqr', label: 'PQR', icon: <FileText size={20} />, description: 'Peticiones y quejas' },
+      { name: 'pqr-statistics', label: 'Estadísticas PQR', icon: <BarChart3 size={20} />, description: 'Estadísticas de PQR y respuestas' },
       { name: 'payments', label: 'Pagos', icon: <DollarSign size={20} />, description: 'Gestión de pagos' },
       { name: 'reservations', label: 'Reservas', icon: <Calendar size={20} />, description: 'Reservas de espacios' },
       { name: 'visitors', label: 'Visitantes', icon: <Shield size={20} />, description: 'Control de visitantes' },
@@ -89,6 +90,7 @@ const ROLES_CONFIG = {
     modules: [
       { name: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={20} />, description: 'Vista general' },
       { name: 'pqr', label: 'PQR', icon: <FileText size={20} />, description: 'Peticiones y quejas' },
+      { name: 'pqr-statistics', label: 'Estadísticas PQR', icon: <BarChart3 size={20} />, description: 'Mis estadísticas de PQR' },
       { name: 'reservations', label: 'Reservas', icon: <Calendar size={20} />, description: 'Reservas de espacios' },
       { name: 'visitors', label: 'Visitantes', icon: <Shield size={20} />, description: 'Control de visitantes' },
       { name: 'documents', label: 'Documentos', icon: <FileText size={20} />, description: 'Gestión documental' },

@@ -9,6 +9,7 @@ import ForgotPassword from './ForgotPassword.jsx';
 import AppStore from './AppStore.jsx';
 import UsersManagement from './UsersManagement.jsx';
 import PqrManagement from './PqrManagement.jsx';
+import PqrStatistics from './PqrStatistics.jsx';
 import PaymentsManagement from './PaymentsManagement.jsx';
 import ReservationsManagement from './ReservationsManagement.jsx';
 import VisitorsManagement from './VisitorsManagement.jsx';
@@ -217,6 +218,15 @@ function App() {
           >
             <FileText size={18} />
             <span>PQR</span>
+          </button>
+          )}
+          {allowedModules.includes('pqr-statistics') && (
+          <button 
+            className={`nav-item ${currentView === 'pqr-statistics' ? 'active' : ''}`}
+            onClick={() => setCurrentView('pqr-statistics')}
+          >
+            <BarChart3 size={18} />
+            <span>Estadísticas PQR</span>
           </button>
           )}
           {allowedModules.includes('payments') && (
@@ -503,6 +513,8 @@ function App() {
           <UsersManagement />
         ) : currentView === 'pqr' ? (
           <PqrManagement user={user} />
+        ) : currentView === 'pqr-statistics' ? (
+          <PqrStatistics user={user} />
         ) : currentView === 'payments' ? (
           <PaymentsManagement />
         ) : currentView === 'reservations' ? (
