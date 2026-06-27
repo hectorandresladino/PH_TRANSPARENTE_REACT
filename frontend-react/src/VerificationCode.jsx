@@ -4,12 +4,13 @@ import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 
-export default function VerificationCode({ username, onVerified, onBack }) {
+export default function VerificationCode({ username, onVerified, onBack, sentCode }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [currentSentCode, setCurrentSentCode] = useState(sentCode || '');
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -52,8 +53,8 @@ export default function VerificationCode({ username, onVerified, onBack }) {
 
       if (response.ok) {
         const data = await response.json();
+        setCurrentSentCode(data.code || '');
         setError('');
-        alert('Nuevo código enviado. Revisa la consola del backend para ver el código.');
       } else {
         const errorText = await response.text();
         setError(errorText || 'Error al reenviar código');
@@ -92,10 +93,34 @@ export default function VerificationCode({ username, onVerified, onBack }) {
           }}>
             <Shield size={32} color="white" />
           </div>
-          <h1 style={{ color: '#123b62', fontSize: '1.5rem', margin: '0 0 8px' }}>Verificación</h1>
+          <h1 style={{ color: '#123b62', fontSize: '1.5rem', margin: '0 0 8px' }}>Verificacion</h1>
           <p style={{ color: '#65758a', margin: '0', fontSize: '0.9rem' }}>
-            Ingresa el código de 6 dígitos enviado a tu email
+            Ingresa el codigo de 6 digitos enviado a tu WhatsApp
           </p>
+          {currentSentCode && (
+            <div style={{ 
+              marginTop: '16px', 
+              padding: '12px', 
+              background: '#fef3c7', 
+              borderRadius: '12px', 
+              border: '1px solid #fcd34d',
+              textAlign: 'center'
+            }}>
+              <p style={{ margin: '0 0 4px', fontSize: '0.8rem', color: '#92400e' }}>
+                Codigo de verificacion (WhatsApp no configurado):
+              </p>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '1.8rem', 
+                fontWeight: 'bold', 
+                letterSpacing: '8px', 
+                fontFamily: 'monospace', 
+                color: '#123b62' 
+              }}>
+                {currentSentCode}
+              </p>
+            </div>
+          )}
         </div>
 
         {success ? (

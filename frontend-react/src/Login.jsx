@@ -11,6 +11,7 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
   const [error, setError] = useState('');
   const [showVerification, setShowVerification] = useState(false);
   const [pendingUser, setPendingUser] = useState(null);
+  const [sentCode, setSentCode] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +37,8 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
           });
 
           if (codeResponse.ok) {
+            const codeData = await codeResponse.json();
+            setSentCode(codeData.code || '');
             setPendingUser(data);
             setShowVerification(true);
           } else {
@@ -84,6 +87,7 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
         username={username} 
         onVerified={handleVerified} 
         onBack={handleBack} 
+        sentCode={sentCode}
       />
     );
   }
