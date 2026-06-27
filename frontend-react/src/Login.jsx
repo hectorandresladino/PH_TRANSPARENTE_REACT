@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { Lock, User } from 'lucide-react';
+import VerificationCode from './VerificationCode';
 import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -8,6 +9,8 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,11 +26,34 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
       if (response.ok) {
         const data = await response.json();
         console.log('Login exitoso:', data);
-        // Guardar los modulos permitidos en localStorage
-        if (data.modules) {
-          localStorage.setItem('allowedModules', data.modules);
+        
+        // Enviar código de verificación
+        try {
+          const codeResponse = await fetch(`${API_URL}/auth/send-verification-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+          });
+
+          if (codeResponse.ok) {
+            setPendingUser(data);
+            setShowVerification(true);
+          } else {
+            // Si falla el envío del código, permitir login sin verificación
+            console.warn('No se pudo enviar código de verificación, permitiendo login sin verificación');
+            if (data.modules) {
+              localStorage.setItem('allowedModules', data.modules);
+            }
+            onLogin(data);
+          }
+        } catch (codeErr) {
+          console.error('Error al enviar código:', codeErr);
+          // Permitir login sin verificación si falla el envío
+          if (data.modules) {
+            localStorage.setItem('allowedModules', data.modules);
+          }
+          onLogin(data);
         }
-        onLogin(data);
       } else {
         console.error('Error en login:', response.status);
         setError('Credenciales invalidas');
@@ -37,6 +63,30 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
       setError('Error de conexion con el servidor');
     }
   };
+
+  const handleVerified = () => {
+    if (pendingUser) {
+      if (pendingUser.modules) {
+        localStorage.setItem('allowedModules', pendingUser.modules);
+      }
+      onLogin(pendingUser);
+    }
+  };
+
+  const handleBack = () => {
+    setShowVerification(false);
+    setPendingUser(null);
+  };
+
+  if (showVerification) {
+    return (
+      <VerificationCode 
+        username={username} 
+        onVerified={handleVerified} 
+        onBack={handleBack} 
+      />
+    );
+  }
 
   return (
     <div className="login-container">

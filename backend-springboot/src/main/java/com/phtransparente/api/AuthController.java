@@ -14,10 +14,12 @@ public class AuthController {
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final VerificationService verificationService;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
+    this.verificationService = verificationService;
   }
 
   @PostMapping("/login")
@@ -89,10 +91,40 @@ public class AuthController {
     return ResponseEntity.ok("Contraseña actualizada exitosamente");
   }
 
+  @PostMapping("/send-verification-code")
+  public ResponseEntity<?> sendVerificationCode(@RequestBody SendVerificationCodeRequest request) {
+    logger.info("Solicitud de código de verificación para usuario: {}", request.username());
+    
+    try {
+      String code = verificationService.createAndSendVerificationCode(request.username());
+      return ResponseEntity.ok(new SendVerificationCodeResponse("Código enviado exitosamente", code));
+    } catch (IllegalArgumentException e) {
+      logger.error("Error al enviar código: {}", e.getMessage());
+      return ResponseEntity.status(400).body(e.getMessage());
+    }
+  }
+
+  @PostMapping("/verify-code")
+  public ResponseEntity<?> verifyCode(@RequestBody VerifyCodeRequest request) {
+    logger.info("Verificación de código para usuario: {}", request.username());
+    
+    boolean isValid = verificationService.verifyCode(request.username(), request.code());
+    
+    if (isValid) {
+      return ResponseEntity.ok(new VerifyCodeResponse("Código verificado exitosamente", true));
+    } else {
+      return ResponseEntity.status(400).body("Código inválido o expirado");
+    }
+  }
+
   public record LoginRequest(String username, String password) {}
   public record LoginResponse(Long id, String username, String role, String modules) {}
   public record RegisterRequest(String username, String email, String password, String confirmPassword) {}
   public record ForgotPasswordRequest(String username) {}
   public record ForgotPasswordResponse(String message, String currentPassword) {}
   public record ResetPasswordRequest(String username, String newPassword) {}
+  public record SendVerificationCodeRequest(String username) {}
+  public record SendVerificationCodeResponse(String message, String code) {}
+  public record VerifyCodeRequest(String username, String code) {}
+  public record VerifyCodeResponse(String message, boolean success) {}
 }
