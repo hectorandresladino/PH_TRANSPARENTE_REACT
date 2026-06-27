@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
   private final UserRepository userRepository;
-  private final SmsService smsService;
+  private final EmailService emailService;
 
-  public UserController(UserRepository userRepository, SmsService smsService) {
+  public UserController(UserRepository userRepository, EmailService emailService) {
     this.userRepository = userRepository;
-    this.smsService = smsService;
+    this.emailService = emailService;
   }
 
   @GetMapping
@@ -79,8 +79,8 @@ public class UserController {
 
   @PostMapping("/generate-password")
   public ResponseEntity<?> generatePassword(@RequestBody GeneratePasswordRequest request) {
-    if (request.phone() == null || request.phone().isEmpty()) {
-      return ResponseEntity.badRequest().body("El nÃºmero de celular es obligatorio");
+    if (request.email() == null || request.email().isEmpty()) {
+      return ResponseEntity.badRequest().body("El correo electronico es obligatorio");
     }
 
     String chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -91,13 +91,11 @@ public class UserController {
     }
 
     String generatedPassword = password.toString();
-    smsService.sendVerificationCode(request.phone(), 
-        "Tu contraseÃ±a de acceso a PH Transparente es: " + generatedPassword + 
-        ". Usa esta contraseÃ±a junto con tu usuario para ingresar.");
+    emailService.sendPassword(request.email(), generatedPassword);
 
     return ResponseEntity.ok(new GeneratePasswordResponse(generatedPassword));
   }
 
-  public record GeneratePasswordRequest(String phone) {}
+  public record GeneratePasswordRequest(String email) {}
   public record GeneratePasswordResponse(String password) {}
 }

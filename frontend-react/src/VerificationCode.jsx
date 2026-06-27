@@ -95,7 +95,7 @@ export default function VerificationCode({ username, onVerified, onBack, sentCod
           </div>
           <h1 style={{ color: '#123b62', fontSize: '1.5rem', margin: '0 0 8px' }}>Verificacion</h1>
           <p style={{ color: '#65758a', margin: '0', fontSize: '0.9rem' }}>
-            Ingresa el codigo de 6 digitos enviado a tu WhatsApp
+            Ingresa el codigo de 6 digitos enviado a tu correo electronico
           </p>
           {currentSentCode && (
             <div style={{ 
@@ -107,7 +107,7 @@ export default function VerificationCode({ username, onVerified, onBack, sentCod
               textAlign: 'center'
             }}>
               <p style={{ margin: '0 0 4px', fontSize: '0.8rem', color: '#92400e' }}>
-                Codigo de verificacion (WhatsApp no configurado):
+                Codigo de verificacion (correo no configurado):
               </p>
               <p style={{ 
                 margin: '0', 

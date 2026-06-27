@@ -15,11 +15,13 @@ public class AuthController {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
   private final VerificationService verificationService;
+  private final EmailService emailService;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.verificationService = verificationService;
+    this.emailService = emailService;
   }
 
   @PostMapping("/login")
@@ -111,6 +113,11 @@ public class AuthController {
     boolean isValid = verificationService.verifyCode(request.username(), request.code());
     
     if (isValid) {
+      // Enviar alerta de inicio de sesión por correo
+      User user = userRepository.findByUsername(request.username());
+      if (user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
+        emailService.sendLoginAlert(user.getEmail(), user.getUsername());
+      }
       return ResponseEntity.ok(new VerifyCodeResponse("Código verificado exitosamente", true));
     } else {
       return ResponseEntity.status(400).body("Código inválido o expirado");

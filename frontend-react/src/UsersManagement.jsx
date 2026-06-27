@@ -79,8 +79,8 @@ export default function UsersManagement() {
   };
 
   const handleGeneratePassword = async () => {
-    if (!formData.phone || formData.phone.trim() === '') {
-      setPasswordMessage('Primero ingrese el nÃºmero de celular');
+    if (!formData.email || formData.email.trim() === '') {
+      setPasswordMessage('Primero ingrese el correo electronico del usuario');
       return;
     }
     setGeneratingPassword(true);
@@ -89,12 +89,12 @@ export default function UsersManagement() {
       const response = await fetch(`${API_URL}/users/generate-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: formData.phone })
+        body: JSON.stringify({ email: formData.email })
       });
       if (response.ok) {
         const data = await response.json();
         setFormData({ ...formData, password: data.password });
-        setPasswordMessage('ContraseÃ±a generada y enviada por WhatsApp al celular del usuario');
+        setPasswordMessage('ContraseÃ±a generada y enviada por correo al usuario');
       } else {
         setPasswordMessage('Error al generar la contraseÃ±a');
       }

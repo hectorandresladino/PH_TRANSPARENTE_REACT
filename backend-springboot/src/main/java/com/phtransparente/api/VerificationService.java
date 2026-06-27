@@ -11,12 +11,12 @@ public class VerificationService {
   private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
   private final VerificationCodeRepository verificationCodeRepository;
   private final UserRepository userRepository;
-  private final SmsService smsService;
+  private final EmailService emailService;
 
-  public VerificationService(VerificationCodeRepository verificationCodeRepository, UserRepository userRepository, SmsService smsService) {
+  public VerificationService(VerificationCodeRepository verificationCodeRepository, UserRepository userRepository, EmailService emailService) {
     this.verificationCodeRepository = verificationCodeRepository;
     this.userRepository = userRepository;
-    this.smsService = smsService;
+    this.emailService = emailService;
   }
 
   // Generar código de 6 dígitos
@@ -32,8 +32,8 @@ public class VerificationService {
       throw new IllegalArgumentException("Usuario no encontrado");
     }
 
-    if (user.getPhone() == null || user.getPhone().isEmpty()) {
-      throw new IllegalArgumentException("El usuario no tiene número de celular configurado");
+    if (user.getEmail() == null || user.getEmail().isEmpty()) {
+      throw new IllegalArgumentException("El usuario no tiene correo electronico configurado");
     }
 
     // Eliminar códigos anteriores no usados
@@ -41,14 +41,13 @@ public class VerificationService {
 
     // Generar nuevo código
     String code = generateCode();
-    LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15); // Expira en 15 minutos
+    LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
 
     VerificationCode verificationCode = new VerificationCode(username, code, expiresAt);
     verificationCodeRepository.save(verificationCode);
 
-    // Enviar código por WhatsApp
-    smsService.sendVerificationCode(user.getPhone(), 
-        "Tu codigo de verificacion de PH Transparente es: " + code + ". Expira en 15 minutos.");
+    // Enviar código por correo electrónico
+    emailService.sendVerificationCode(user.getEmail(), code);
 
     return code;
   }
