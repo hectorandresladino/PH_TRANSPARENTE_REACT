@@ -1,6 +1,7 @@
 package com.phtransparente.api;
 
 import java.util.List;
+import java.util.Random;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
@@ -9,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
   private final UserRepository userRepository;
+  private final SmsService smsService;
 
-  public UserController(UserRepository userRepository) {
+  public UserController(UserRepository userRepository, SmsService smsService) {
     this.userRepository = userRepository;
+    this.smsService = smsService;
   }
 
   @GetMapping
@@ -73,4 +76,28 @@ public class UserController {
   public List<User> getUsersByActive(@PathVariable Boolean active) {
     return userRepository.findByActive(active);
   }
+
+  @PostMapping("/generate-password")
+  public ResponseEntity<?> generatePassword(@RequestBody GeneratePasswordRequest request) {
+    if (request.phone() == null || request.phone().isEmpty()) {
+      return ResponseEntity.badRequest().body("El nÃºmero de celular es obligatorio");
+    }
+
+    String chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    StringBuilder password = new StringBuilder();
+    Random random = new Random();
+    for (int i = 0; i < 8; i++) {
+      password.append(chars.charAt(random.nextInt(chars.length())));
+    }
+
+    String generatedPassword = password.toString();
+    smsService.sendVerificationCode(request.phone(), 
+        "Tu contraseÃ±a de acceso a PH Transparente es: " + generatedPassword + 
+        ". Usa esta contraseÃ±a junto con tu usuario para ingresar.");
+
+    return ResponseEntity.ok(new GeneratePasswordResponse(generatedPassword));
+  }
+
+  public record GeneratePasswordRequest(String phone) {}
+  public record GeneratePasswordResponse(String password) {}
 }

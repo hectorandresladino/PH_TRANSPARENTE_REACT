@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Search, Shield, Mail, Phone, User as UserIcon, Check, X } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Search, Shield, Mail, Phone, User as UserIcon, Check, X, KeyRound } from 'lucide-react';
 import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -9,6 +9,8 @@ export default function UsersManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [generatingPassword, setGeneratingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -74,6 +76,33 @@ export default function UsersManagement() {
       active: user.active !== false
     });
     setShowModal(true);
+  };
+
+  const handleGeneratePassword = async () => {
+    if (!formData.phone || formData.phone.trim() === '') {
+      setPasswordMessage('Primero ingrese el nÃºmero de celular');
+      return;
+    }
+    setGeneratingPassword(true);
+    setPasswordMessage('');
+    try {
+      const response = await fetch(`${API_URL}/users/generate-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formData.phone })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFormData({ ...formData, password: data.password });
+        setPasswordMessage('ContraseÃ±a generada y enviada por WhatsApp al celular del usuario');
+      } else {
+        setPasswordMessage('Error al generar la contraseÃ±a');
+      }
+    } catch (error) {
+      console.error('Error generating password:', error);
+      setPasswordMessage('Error de conexiÃ³n al generar contraseÃ±a');
+    }
+    setGeneratingPassword(false);
   };
 
   const handleDelete = async (id) => {
@@ -214,13 +243,30 @@ export default function UsersManagement() {
                 </div>
                 <div className="form-group">
                   <label>ContraseÃ±a</label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={e => setFormData({...formData, password: e.target.value})}
-                    required={!editingUser}
-                    placeholder={editingUser ? 'Dejar vacÃ­o para mantener la actual' : 'Ingrese una contraseÃ±a'}
-                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={formData.password}
+                      onChange={e => setFormData({...formData, password: e.target.value})}
+                      required={!editingUser}
+                      placeholder={editingUser ? 'Dejar vacÃ­o para mantener la actual' : 'Ingrese o genere una contraseÃ±a'}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      disabled={generatingPassword}
+                      style={{ whiteSpace: 'nowrap', padding: '0 12px', background: '#123b62', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      <KeyRound size={16} style={{ display: 'inline', marginRight: '4px' }} />
+                      {generatingPassword ? 'Generando...' : 'Generar'}
+                    </button>
+                  </div>
+                  {passwordMessage && (
+                    <small style={{ color: passwordMessage.includes('Error') ? '#dc2626' : '#136f43', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
+                      {passwordMessage}
+                    </small>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Nombre Completo</label>
