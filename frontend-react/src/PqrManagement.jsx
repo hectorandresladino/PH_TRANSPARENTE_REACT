@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X } from 'lucide-react';
 import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -19,8 +19,13 @@ export default function PqrManagement({ user }) {
     phone: '',
     status: 'PENDIENTE',
     priority: 'MEDIA',
-    response: ''
+    response: '',
+    attachmentName: '',
+    attachmentType: '',
+    attachmentData: ''
   });
+  const [viewingAttachment, setViewingAttachment] = useState(null);
+  const fileInputRef = useRef(null);
 
   const isCopropietario = user?.role === 'COPIROPIETARIO';
 
@@ -38,6 +43,42 @@ export default function PqrManagement({ user }) {
     } catch (error) {
       console.error('Error fetching pqrs:', error);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Solo se permiten archivos PDF, JPG o PNG');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('El archivo no puede superar los 5MB');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      setFormData(prev => ({
+        ...prev,
+        attachmentName: file.name,
+        attachmentType: file.type,
+        attachmentData: base64
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({ ...prev, attachmentName: '', attachmentType: '', attachmentData: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleViewAttachment = (pqr) => {
+    setViewingAttachment(pqr);
   };
 
   const handleSubmit = async (e) => {
@@ -76,7 +117,10 @@ export default function PqrManagement({ user }) {
       phone: pqr.phone || '',
       status: pqr.status,
       priority: pqr.priority || 'MEDIA',
-      response: pqr.response || ''
+      response: pqr.response || '',
+      attachmentName: pqr.attachmentName || '',
+      attachmentType: pqr.attachmentType || '',
+      attachmentData: pqr.attachmentData || ''
     });
     setShowModal(true);
   };
@@ -106,8 +150,12 @@ export default function PqrManagement({ user }) {
       phone: isCopropietario ? (user?.phone || '') : '',
       status: 'PENDIENTE',
       priority: 'MEDIA',
-      response: ''
+      response: '',
+      attachmentName: '',
+      attachmentType: '',
+      attachmentData: ''
     });
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const getStatusIcon = (status) => {
@@ -197,6 +245,18 @@ export default function PqrManagement({ user }) {
               {getStatusIcon(pqr.status)}
               <span>{pqr.status}</span>
             </div>
+            {pqr.attachmentName && (
+              <div style={{ marginTop: '8px', padding: '8px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Paperclip size={16} color="#0284c7" />
+                <span style={{ fontSize: '0.8rem', color: '#0284c7', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {pqr.attachmentName}
+                </span>
+                <button onClick={() => handleViewAttachment(pqr)} style={{ padding: '4px 8px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Eye size={14} />
+                  Ver
+                </button>
+              </div>
+            )}
             <div className="pqr-actions">
               <button className="btn-edit" onClick={() => handleEdit(pqr)}>
                 <Edit size={16} />
@@ -316,6 +376,29 @@ export default function PqrManagement({ user }) {
                   />
                 </div>
                 )}
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label>Evidencia (PDF, JPG o PNG - max 5MB)</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      onChange={handleFileChange}
+                      style={{ flex: 1 }}
+                    />
+                    {formData.attachmentName && (
+                      <button type="button" onClick={handleRemoveFile} style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {formData.attachmentName && (
+                    <small style={{ color: '#136f43', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
+                      <Paperclip size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                      {formData.attachmentName}
+                    </small>
+                  )}
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
@@ -326,6 +409,34 @@ export default function PqrManagement({ user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {viewingAttachment && (
+        <div className="modal-overlay" onClick={() => setViewingAttachment(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh' }}>
+            <div className="modal-header">
+              <h2>Evidencia: {viewingAttachment.attachmentName}</h2>
+              <button className="btn-close" onClick={() => setViewingAttachment(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '16px', textAlign: 'center', maxHeight: '70vh', overflow: 'auto' }}>
+              {viewingAttachment.attachmentType?.startsWith('image/') ? (
+                <img 
+                  src={`data:${viewingAttachment.attachmentType};base64,${viewingAttachment.attachmentData}`} 
+                  alt={viewingAttachment.attachmentName}
+                  style={{ maxWidth: '100%', maxHeight: '60vh', borderRadius: '8px' }}
+                />
+              ) : (
+                <iframe 
+                  src={`data:${viewingAttachment.attachmentType};base64,${viewingAttachment.attachmentData}`}
+                  style={{ width: '100%', height: '60vh', border: 'none', borderRadius: '8px' }}
+                  title={viewingAttachment.attachmentName}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

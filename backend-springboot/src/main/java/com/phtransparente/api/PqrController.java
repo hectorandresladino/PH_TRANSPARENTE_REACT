@@ -51,6 +51,11 @@ public class PqrController {
         existingPqr.setStatus(pqr.getStatus());
         existingPqr.setPriority(pqr.getPriority());
         existingPqr.setResponse(pqr.getResponse());
+        if (pqr.getAttachmentName() != null) {
+          existingPqr.setAttachmentName(pqr.getAttachmentName());
+          existingPqr.setAttachmentType(pqr.getAttachmentType());
+          existingPqr.setAttachmentData(pqr.getAttachmentData());
+        }
         existingPqr.setUpdatedAt(LocalDateTime.now());
         
         if ("RESUELTA".equals(pqr.getStatus()) && existingPqr.getResolvedAt() == null) {

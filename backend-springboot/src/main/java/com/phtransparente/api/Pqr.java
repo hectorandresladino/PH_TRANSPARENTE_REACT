@@ -32,6 +32,15 @@ public class Pqr {
 
   private String response;
 
+  @Column(name = "attachment_name")
+  private String attachmentName;
+
+  @Column(name = "attachment_type", columnDefinition = "TEXT")
+  private String attachmentType;
+
+  @Column(name = "attachment_data", columnDefinition = "TEXT")
+  private String attachmentData;
+
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
@@ -72,6 +81,15 @@ public class Pqr {
 
   public String getResponse() { return response; }
   public void setResponse(String response) { this.response = response; }
+
+  public String getAttachmentName() { return attachmentName; }
+  public void setAttachmentName(String attachmentName) { this.attachmentName = attachmentName; }
+
+  public String getAttachmentType() { return attachmentType; }
+  public void setAttachmentType(String attachmentType) { this.attachmentType = attachmentType; }
+
+  public String getAttachmentData() { return attachmentData; }
+  public void setAttachmentData(String attachmentData) { this.attachmentData = attachmentData; }
 
   public LocalDateTime getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
