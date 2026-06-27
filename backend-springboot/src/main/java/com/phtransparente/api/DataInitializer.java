@@ -39,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
       
       // COPROPIETARIOS - Módulos básicos de residentes + transparencia + reportes + calificaciones + soporte
       roleRepository.save(new Role("COPROPIETARIO", "Copropietario con acceso a módulos básicos y transparencia", 
-        "dashboard,pqr,reservations,visitors,documents,payments,property-units,alerts,transparency,reports,personnel-ratings,support-tasks", 
+        "dashboard,pqr,reservations,visitors,documents,payments,bank-accounts,property-units,alerts,transparency,reports,personnel-ratings,support-tasks", 
         "copropietario123"));
       
       // EMPRESA DE VIGILANCIA - Módulos de seguridad
@@ -49,6 +49,15 @@ public class DataInitializer implements CommandLineRunner {
       
       System.out.println("Roles específicos creados");
     }
+
+    // Actualizar rol COPROPIETARIO si ya existe para incluir bank-accounts
+    roleRepository.findByName("COPROPIETARIO").ifPresent(role -> {
+      if (!role.getModules().contains("bank-accounts")) {
+        role.setModules(role.getModules() + ",bank-accounts");
+        roleRepository.save(role);
+        System.out.println("Rol COPROPIETARIO actualizado con módulo bank-accounts");
+      }
+    });
 
     // Crear o actualizar usuarios (asegura que siempre tengan los datos correctos)
     User admin = userRepository.findByUsername("admin");

@@ -96,6 +96,7 @@ const ROLES_CONFIG = {
       { name: 'visitors', label: 'Visitantes', icon: <Shield size={20} />, description: 'Control de visitantes' },
       { name: 'documents', label: 'Documentos', icon: <FileText size={20} />, description: 'Gestión documental' },
       { name: 'payments', label: 'Pagos', icon: <DollarSign size={20} />, description: 'Gestión de pagos' },
+      { name: 'bank-accounts', label: 'Cuentas Bancarias', icon: <DollarSign size={20} />, description: 'Cuentas bancarias del conjunto' },
       { name: 'council-minutes', label: 'Actas Consejo', icon: <FileText size={20} />, description: 'Ver actas del consejo' },
       { name: 'accounting-reports', label: 'Inf. Contables', icon: <DollarSign size={20} />, description: 'Ver informes contables' },
       { name: 'fiscal-reports', label: 'Inf. Revisoría', icon: <FileSpreadsheet size={20} />, description: 'Ver informes del revisor' },
