@@ -190,19 +190,6 @@ const ROLES_CONFIG = {
 };
 
 export default function AdminDashboard({ onModuleSelect, currentView, userRole }) {
-  const [expandedRoles, setExpandedRoles] = useState({});
-
-  const toggleRole = (roleKey) => {
-    setExpandedRoles(prev => ({
-      ...prev,
-      [roleKey]: !prev[roleKey]
-    }));
-  };
-
-  const handleModuleClick = (moduleName) => {
-    onModuleSelect(moduleName);
-  };
-
   // Mapeo de roles del backend a roles del frontend
   const roleMapping = {
     'ADMIN': 'ADMIN',
@@ -217,6 +204,19 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
   };
 
   const mappedRole = roleMapping[userRole] || 'COPIROPIETARIO';
+  const [expandedRoles, setExpandedRoles] = useState({ [mappedRole]: true });
+
+  const toggleRole = (roleKey) => {
+    setExpandedRoles(prev => ({
+      ...prev,
+      [roleKey]: !prev[roleKey]
+    }));
+  };
+
+  const handleModuleClick = (moduleName) => {
+    onModuleSelect(moduleName);
+  };
+
   const userRoleConfig = ROLES_CONFIG[mappedRole];
 
   if (!userRoleConfig) {
