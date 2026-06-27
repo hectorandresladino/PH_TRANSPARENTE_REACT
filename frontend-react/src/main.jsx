@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Building2, ShieldCheck, Vote, FileText, Bell, Car, Search, Users, BarChart3, LogOut, LayoutGrid, Grid, DollarSign, Calendar, Shield, FileText as FileTextIcon, AlertTriangle, Folder, Users as UsersIcon, Vote as VoteIcon, UserCheck, Building, PiggyBank, CreditCard, BookOpen, Bell as BellIcon, Star, TrendingUp, Menu } from 'lucide-react';
+import { Building2, ShieldCheck, Vote, FileText, Bell, Car, Search, Users, BarChart3, LogOut, LayoutGrid, Grid, DollarSign, Calendar, Shield, FileText as FileTextIcon, AlertTriangle, Folder, Users as UsersIcon, Vote as VoteIcon, UserCheck, Building, PiggyBank, CreditCard, BookOpen, Bell as BellIcon, Star, TrendingUp, Menu, Send } from 'lucide-react';
 import { getDashboard, getModules } from './api.js';
 import { roles } from './modules.js';
 import Login from './Login.jsx';
@@ -10,6 +10,7 @@ import AppStore from './AppStore.jsx';
 import UsersManagement from './UsersManagement.jsx';
 import PqrManagement from './PqrManagement.jsx';
 import PqrStatistics from './PqrStatistics.jsx';
+import PaymentReports from './PaymentReports.jsx';
 import PaymentsManagement from './PaymentsManagement.jsx';
 import ReservationsManagement from './ReservationsManagement.jsx';
 import VisitorsManagement from './VisitorsManagement.jsx';
@@ -227,6 +228,15 @@ function App() {
           >
             <BarChart3 size={18} />
             <span>Estadísticas PQR</span>
+          </button>
+          )}
+          {allowedModules.includes('payment-reports') && (
+          <button 
+            className={`nav-item ${currentView === 'payment-reports' ? 'active' : ''}`}
+            onClick={() => setCurrentView('payment-reports')}
+          >
+            <Send size={18} />
+            <span>Reportes al Contador</span>
           </button>
           )}
           {allowedModules.includes('payments') && (
@@ -515,6 +525,8 @@ function App() {
           <PqrManagement user={user} />
         ) : currentView === 'pqr-statistics' ? (
           <PqrStatistics user={user} />
+        ) : currentView === 'payment-reports' ? (
+          <PaymentReports userRole={user?.role} />
         ) : currentView === 'payments' ? (
           <PaymentsManagement />
         ) : currentView === 'reservations' ? (

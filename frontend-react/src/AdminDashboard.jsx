@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronUp, Settings, Lock, Eye, 
   DollarSign, FileText, Calendar, Bell, FileSpreadsheet,
   Sparkles, Crown, Home, Briefcase, Heart, Star,
-  Calculator, Search, ShieldCheck, Sparkle, BarChart3, ClipboardList
+  Calculator, Search, ShieldCheck, Sparkle, BarChart3, ClipboardList, Send
 } from 'lucide-react';
 
 const ROLES_CONFIG = {
@@ -19,6 +19,7 @@ const ROLES_CONFIG = {
       { name: 'users', label: 'Usuarios', icon: <Users size={20} />, description: 'Gestión de usuarios' },
       { name: 'pqr', label: 'PQR', icon: <FileText size={20} />, description: 'Peticiones y quejas' },
       { name: 'pqr-statistics', label: 'Estadísticas PQR', icon: <BarChart3 size={20} />, description: 'Estadísticas de PQR y respuestas' },
+      { name: 'payment-reports', label: 'Reportes al Contador', icon: <Send size={20} />, description: 'Enviar pagos al contador' },
       { name: 'payments', label: 'Pagos', icon: <DollarSign size={20} />, description: 'Gestión de pagos' },
       { name: 'reservations', label: 'Reservas', icon: <Calendar size={20} />, description: 'Reservas de espacios' },
       { name: 'visitors', label: 'Visitantes', icon: <Shield size={20} />, description: 'Control de visitantes' },
@@ -115,6 +116,7 @@ const ROLES_CONFIG = {
     modules: [
       { name: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={20} />, description: 'Vista general' },
       { name: 'accounting-reports', label: 'Mis Informes', icon: <FileSpreadsheet size={20} />, description: 'Cargar informes contables' },
+      { name: 'payment-reports', label: 'Pagos Recibidos', icon: <Send size={20} />, description: 'Reportes de pagos del admin' },
       { name: 'payments', label: 'Pagos', icon: <DollarSign size={20} />, description: 'Gestión de pagos' },
       { name: 'bank-accounts', label: 'Cuentas Bancarias', icon: <DollarSign size={20} />, description: 'Cuentas bancarias' },
       { name: 'reserve-funds', label: 'Fondo Reserva', icon: <DollarSign size={20} />, description: 'Fondo de reserva' },
