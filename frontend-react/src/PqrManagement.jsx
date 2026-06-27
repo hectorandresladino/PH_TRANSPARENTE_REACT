@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X, MessageSquare } from 'lucide-react';
 import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -245,6 +245,17 @@ export default function PqrManagement({ user }) {
               {getStatusIcon(pqr.status)}
               <span>{pqr.status}</span>
             </div>
+            {pqr.response && (
+              <div style={{ marginTop: '8px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MessageSquare size={12} />
+                  Respuesta de la administraciÃ³n:
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#166534' }}>
+                  {pqr.response}
+                </div>
+              </div>
+            )}
             {pqr.attachmentName && (
               <div style={{ marginTop: '8px', padding: '8px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Paperclip size={16} color="#0284c7" />
@@ -257,7 +268,16 @@ export default function PqrManagement({ user }) {
                 </button>
               </div>
             )}
-            <div className="pqr-actions">
+            <div className="pqr-actions" style={{ gap: '6px' }}>
+              {!isCopropietario && pqr.status !== 'RESUELTA' && (
+                <button 
+                  onClick={() => handleEdit(pqr)} 
+                  style={{ padding: '6px 12px', background: '#123b62', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
+                >
+                  <MessageSquare size={14} />
+                  Responder
+                </button>
+              )}
               <button className="btn-edit" onClick={() => handleEdit(pqr)}>
                 <Edit size={16} />
               </button>
@@ -372,8 +392,23 @@ export default function PqrManagement({ user }) {
                     value={formData.response}
                     onChange={e => setFormData({...formData, response: e.target.value})}
                     rows={3}
-                    placeholder="Respuesta de la administraciÃ³n..."
+                    placeholder="Escriba la respuesta para el copropietario..."
                   />
+                </div>
+                )}
+                {editingPqr && editingPqr.attachmentName && (
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label>Evidencia adjunta por el copropietario</label>
+                  <div style={{ padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Paperclip size={18} color="#0284c7" />
+                    <span style={{ fontSize: '0.85rem', color: '#0284c7', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {editingPqr.attachmentName}
+                    </span>
+                    <button type="button" onClick={() => handleViewAttachment(editingPqr)} style={{ padding: '6px 12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Eye size={14} />
+                      Ver evidencia
+                    </button>
+                  </div>
                 </div>
                 )}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -407,6 +442,23 @@ export default function PqrManagement({ user }) {
                 <button type="submit" className="btn-primary">
                   {editingPqr ? 'Actualizar' : 'Crear'}
                 </button>
+                {!isCopropietario && editingPqr && (
+                  <button 
+                    type="button" 
+                    className="btn-primary" 
+                    style={{ background: '#10b981' }}
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, status: 'RESUELTA' }));
+                      setTimeout(() => {
+                        const form = document.querySelector('form');
+                        if (form) form.requestSubmit();
+                      }, 100);
+                    }}
+                  >
+                    <CheckCircle size={16} style={{ display: 'inline', marginRight: '4px' }} />
+                    Resolver y Cerrar
+                  </button>
+                )}
               </div>
             </form>
           </div>
