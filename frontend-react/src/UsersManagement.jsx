@@ -9,7 +9,6 @@ export default function UsersManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [generatingPassword, setGeneratingPassword] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState('');
   const [formData, setFormData] = useState({
     username: '',
@@ -79,30 +78,13 @@ export default function UsersManagement() {
   };
 
   const handleGeneratePassword = async () => {
-    if (!formData.email || formData.email.trim() === '') {
-      setPasswordMessage('Primero ingrese el correo electronico del usuario');
-      return;
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setGeneratingPassword(true);
-    setPasswordMessage('');
-    try {
-      const response = await fetch(`${API_URL}/users/generate-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setFormData({ ...formData, password: data.password });
-        setPasswordMessage('ContraseÃ±a generada y enviada por correo al usuario');
-      } else {
-        setPasswordMessage('Error al generar la contraseÃ±a');
-      }
-    } catch (error) {
-      console.error('Error generating password:', error);
-      setPasswordMessage('Error de conexiÃ³n al generar contraseÃ±a');
-    }
-    setGeneratingPassword(false);
+    setFormData({ ...formData, password });
+    setPasswordMessage('ContraseÃ±a generada. El admin debe entregarla al usuario.');
   };
 
   const handleDelete = async (id) => {
@@ -255,11 +237,10 @@ export default function UsersManagement() {
                     <button
                       type="button"
                       onClick={handleGeneratePassword}
-                      disabled={generatingPassword}
                       style={{ whiteSpace: 'nowrap', padding: '0 12px', background: '#123b62', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
                     >
                       <KeyRound size={16} style={{ display: 'inline', marginRight: '4px' }} />
-                      {generatingPassword ? 'Generando...' : 'Generar'}
+                      Generar
                     </button>
                   </div>
                   {passwordMessage && (
