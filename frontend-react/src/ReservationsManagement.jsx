@@ -574,6 +574,16 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
                     </button>
                   )}
 
+                  {/* Copropietario: Eliminar su reserva */}
+                  {isCopropietario && (
+                    <button
+                      onClick={() => handleDelete(reservation.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fee2e2', color: '#dc2626', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      <Trash2 size={16} /> Eliminar
+                    </button>
+                  )}
+
                   {/* Admin: Aprobar/Rechazar */}
                   {isAdmin && reservation.paymentStatus === 'EN_REVISION' && (
                     <>
