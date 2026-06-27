@@ -502,7 +502,7 @@ function App() {
         ) : currentView === 'users' ? (
           <UsersManagement />
         ) : currentView === 'pqr' ? (
-          <PqrManagement />
+          <PqrManagement user={user} />
         ) : currentView === 'payments' ? (
           <PaymentsManagement />
         ) : currentView === 'reservations' ? (

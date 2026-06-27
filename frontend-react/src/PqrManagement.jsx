@@ -4,7 +4,7 @@ import './styles.css';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 
-export default function PqrManagement() {
+export default function PqrManagement({ user }) {
   const [pqrs, setPqrs] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingPqr, setEditingPqr] = useState(null);
@@ -21,6 +21,8 @@ export default function PqrManagement() {
     priority: 'MEDIA',
     response: ''
   });
+
+  const isCopropietario = user?.role === 'COPIROPIETARIO';
 
   useEffect(() => {
     fetchPqrs();
@@ -99,9 +101,9 @@ export default function PqrManagement() {
       type: 'PETICION',
       title: '',
       description: '',
-      requester: '',
-      email: '',
-      phone: '',
+      requester: isCopropietario ? (user?.fullName || user?.username || '') : '',
+      email: isCopropietario ? (user?.email || '') : '',
+      phone: isCopropietario ? (user?.phone || '') : '',
       status: 'PENDIENTE',
       priority: 'MEDIA',
       response: ''
@@ -266,6 +268,8 @@ export default function PqrManagement() {
                     value={formData.requester}
                     onChange={e => setFormData({...formData, requester: e.target.value})}
                     required
+                    readOnly={isCopropietario}
+                    style={isCopropietario ? { background: '#f0f0f0', color: '#666' } : {}}
                   />
                 </div>
                 <div className="form-group">
@@ -274,6 +278,8 @@ export default function PqrManagement() {
                     type="email"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
+                    readOnly={isCopropietario}
+                    style={isCopropietario ? { background: '#f0f0f0', color: '#666' } : {}}
                   />
                 </div>
                 <div className="form-group">
@@ -282,8 +288,11 @@ export default function PqrManagement() {
                     type="tel"
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value})}
+                    readOnly={isCopropietario}
+                    style={isCopropietario ? { background: '#f0f0f0', color: '#666' } : {}}
                   />
                 </div>
+                {!isCopropietario && (
                 <div className="form-group">
                   <label>Estado</label>
                   <select
@@ -295,6 +304,8 @@ export default function PqrManagement() {
                     <option value="RESUELTA">Resuelta</option>
                   </select>
                 </div>
+                )}
+                {!isCopropietario && (
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Respuesta</label>
                   <textarea
@@ -304,6 +315,7 @@ export default function PqrManagement() {
                     placeholder="Respuesta de la administraciÃ³n..."
                   />
                 </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
