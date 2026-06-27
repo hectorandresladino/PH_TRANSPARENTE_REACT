@@ -11,10 +11,12 @@ public class VerificationService {
   private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
   private final VerificationCodeRepository verificationCodeRepository;
   private final UserRepository userRepository;
+  private final SmsService smsService;
 
-  public VerificationService(VerificationCodeRepository verificationCodeRepository, UserRepository userRepository) {
+  public VerificationService(VerificationCodeRepository verificationCodeRepository, UserRepository userRepository, SmsService smsService) {
     this.verificationCodeRepository = verificationCodeRepository;
     this.userRepository = userRepository;
+    this.smsService = smsService;
   }
 
   // Generar código de 6 dígitos
@@ -30,8 +32,8 @@ public class VerificationService {
       throw new IllegalArgumentException("Usuario no encontrado");
     }
 
-    if (user.getEmail() == null || user.getEmail().isEmpty()) {
-      throw new IllegalArgumentException("El usuario no tiene email configurado");
+    if (user.getPhone() == null || user.getPhone().isEmpty()) {
+      throw new IllegalArgumentException("El usuario no tiene número de celular configurado");
     }
 
     // Eliminar códigos anteriores no usados
@@ -44,16 +46,8 @@ public class VerificationService {
     VerificationCode verificationCode = new VerificationCode(username, code, expiresAt);
     verificationCodeRepository.save(verificationCode);
 
-    // Enviar código (en desarrollo, mostrar en consola)
-    logger.info("========================================");
-    logger.info("CÓDIGO DE VERIFICACIÓN PARA {}: {}", username, code);
-    logger.info("========================================");
-    logger.info("Este código expira en 15 minutos");
-    logger.info("En producción, este código se enviaría por email a: {}", user.getEmail());
-    logger.info("========================================");
-
-    // Aquí se implementaría el envío de email en producción
-    // emailService.sendVerificationCode(user.getEmail(), code);
+    // Enviar código por SMS
+    smsService.sendVerificationCode(user.getPhone(), code);
 
     return code;
   }
