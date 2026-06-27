@@ -50,13 +50,9 @@ public class DataInitializer implements CommandLineRunner {
       System.out.println("Roles específicos creados");
     }
 
-    // Crear usuarios solo si no existen (evita borrar datos en cada reinicio con PostgreSQL)
-    if (userRepository.count() > 0) {
-      System.out.println("Usuarios ya existen, omitiendo creación");
-      return;
-    }
-
-    User admin = new User();
+    // Crear o actualizar usuarios (asegura que siempre tengan los datos correctos)
+    User admin = userRepository.findByUsername("admin");
+    if (admin == null) admin = new User();
     admin.setUsername("admin");
     admin.setPassword("admin123");
     admin.setRole("ADMIN");
@@ -66,7 +62,8 @@ public class DataInitializer implements CommandLineRunner {
     admin.setActive(true);
     userRepository.save(admin);
     
-    User contador = new User();
+    User contador = userRepository.findByUsername("contador");
+    if (contador == null) contador = new User();
     contador.setUsername("contador");
     contador.setPassword("contador123");
     contador.setRole("CONTADOR");
@@ -76,7 +73,8 @@ public class DataInitializer implements CommandLineRunner {
     contador.setActive(true);
     userRepository.save(contador);
     
-    User revisor = new User();
+    User revisor = userRepository.findByUsername("revisor");
+    if (revisor == null) revisor = new User();
     revisor.setUsername("revisor");
     revisor.setPassword("revisor123");
     revisor.setRole("REVISOR_FISCAL");
@@ -86,7 +84,8 @@ public class DataInitializer implements CommandLineRunner {
     revisor.setActive(true);
     userRepository.save(revisor);
     
-    User consejero = new User();
+    User consejero = userRepository.findByUsername("consejero");
+    if (consejero == null) consejero = new User();
     consejero.setUsername("consejero");
     consejero.setPassword("consejero123");
     consejero.setRole("CONSEJERO");
@@ -96,7 +95,8 @@ public class DataInitializer implements CommandLineRunner {
     consejero.setActive(true);
     userRepository.save(consejero);
     
-    User copropietario = new User();
+    User copropietario = userRepository.findByUsername("copropietario");
+    if (copropietario == null) copropietario = new User();
     copropietario.setUsername("copropietario");
     copropietario.setPassword("copropietario123");
     copropietario.setRole("COPROPIETARIO");
@@ -106,7 +106,8 @@ public class DataInitializer implements CommandLineRunner {
     copropietario.setActive(true);
     userRepository.save(copropietario);
     
-    User vigilancia = new User();
+    User vigilancia = userRepository.findByUsername("vigilancia");
+    if (vigilancia == null) vigilancia = new User();
     vigilancia.setUsername("vigilancia");
     vigilancia.setPassword("vigilancia123");
     vigilancia.setRole("VIGILANCIA");
@@ -116,6 +117,6 @@ public class DataInitializer implements CommandLineRunner {
     vigilancia.setActive(true);
     userRepository.save(vigilancia);
     
-    System.out.println("Usuarios recreados para cada rol");
+    System.out.println("Usuarios actualizados para cada rol");
   }
 }
