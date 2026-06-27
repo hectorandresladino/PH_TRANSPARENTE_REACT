@@ -40,7 +40,9 @@ public class UserController {
     return userRepository.findById(id)
       .map(existingUser -> {
         existingUser.setUsername(user.getUsername());
-        existingUser.setPassword(user.getPassword());
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+          existingUser.setPassword(user.getPassword());
+        }
         existingUser.setRole(user.getRole());
         existingUser.setEmail(user.getEmail());
         existingUser.setFullName(user.getFullName());

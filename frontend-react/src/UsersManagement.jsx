@@ -214,7 +214,7 @@ export default function UsersManagement() {
                     value={formData.password}
                     onChange={e => setFormData({...formData, password: e.target.value})}
                     required={!editingUser}
-                    placeholder={editingUser ? 'Dejar vacÃ­o para mantener' : ''}
+                    placeholder={editingUser ? 'Dejar vacÃ­o para mantener la actual' : 'Ingrese una contraseÃ±a'}
                   />
                 </div>
                 <div className="form-group">
