@@ -122,11 +122,15 @@ function App() {
 
   const handleLogin = (userData) => {
     console.log('handleLogin llamado con:', userData);
+    console.log('Rol del usuario:', userData.role);
+    console.log('Módulos permitidos:', userData.modules);
     setUser(userData);
     setAuthView('login');
     // Actualizar módulos permitidos
     if (userData.modules) {
-      setAllowedModules(userData.modules.split(','));
+      const modules = userData.modules.split(',');
+      setAllowedModules(modules);
+      console.log('allowedModules actualizado:', modules);
     }
   };
 

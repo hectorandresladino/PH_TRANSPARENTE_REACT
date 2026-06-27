@@ -204,6 +204,7 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
   };
 
   const mappedRole = roleMapping[userRole] || 'COPIROPIETARIO';
+  console.log('AdminDashboard - userRole recibido:', userRole, 'mappedRole:', mappedRole);
   const [expandedRoles, setExpandedRoles] = useState({ [mappedRole]: true });
 
   const toggleRole = (roleKey) => {
@@ -239,6 +240,9 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
           <div className="header-text">
             <h1>{userRoleConfig.name}</h1>
             <p>{userRoleConfig.description}</p>
+            <small style={{color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '8px'}}>
+              Rol detectado: {userRole || 'undefined'} → {mappedRole}
+            </small>
           </div>
         </div>
         <div className="header-badge">
