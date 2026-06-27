@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   DollarSign, Send, CheckCircle, Clock, FileText, Search, Eye,
   Paperclip, X, TrendingUp, Calendar, User, Building, Calculator,
-  ArrowRight, AlertCircle, Download
+  ArrowRight, AlertCircle, Download, BarChart3, CreditCard
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -162,6 +162,58 @@ export default function PaymentReports({ userRole = 'admin' }) {
     totalAmount: reports.filter(r => r.status === 'RECIBIDO_CONTADOR').reduce((sum, r) => sum + r.amount + (r.deposit || 0), 0)
   };
 
+  const sentReports = reports.filter(r => r.sentToContador);
+
+  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+  const byDayOfWeek = dayNames.map((name, idx) => {
+    const dayReports = sentReports.filter(r => {
+      if (!r.sentAt) return false;
+      return new Date(r.sentAt).getDay() === idx;
+    });
+    return {
+      name,
+      count: dayReports.length,
+      amount: dayReports.reduce((sum, r) => sum + r.amount + (r.deposit || 0), 0)
+    };
+  });
+
+  const byMonth = monthNames.map((name, idx) => {
+    const monthReports = sentReports.filter(r => {
+      if (!r.sentAt) return false;
+      return new Date(r.sentAt).getMonth() === idx;
+    });
+    return {
+      name: name.substring(0, 3),
+      count: monthReports.length,
+      amount: monthReports.reduce((sum, r) => sum + r.amount + (r.deposit || 0), 0)
+    };
+  }).filter(m => m.count > 0);
+
+  const byMethod = ['TRANSFERENCIA', 'PSE', 'NEQUI', 'DAVIPLATA', 'EFECTIVO'].map(method => {
+    const methodReports = sentReports.filter(r => r.paymentMethod === method);
+    return {
+      name: method,
+      count: methodReports.length,
+      amount: methodReports.reduce((sum, r) => sum + r.amount + (r.deposit || 0), 0)
+    };
+  }).filter(m => m.count > 0);
+
+  const byFacility = ['SALON SOCIAL', 'PISCINA', 'BBQ', 'CANCHA DE TENIS', 'SAUNA', 'CANCHA DE FUTBOL'].map(fac => {
+    const facReports = sentReports.filter(r => r.facility === fac);
+    return {
+      name: fac,
+      count: facReports.length,
+      amount: facReports.reduce((sum, r) => sum + r.amount + (r.deposit || 0), 0)
+    };
+  }).filter(f => f.count > 0);
+
+  const maxDayCount = Math.max(...byDayOfWeek.map(d => d.count), 1);
+  const maxMonthAmount = Math.max(...byMonth.map(m => m.amount), 1);
+  const maxMethodAmount = Math.max(...byMethod.map(m => m.amount), 1);
+  const maxFacilityCount = Math.max(...byFacility.map(f => f.count), 1);
+
   const TrailStep = ({ active, label, date, icon: Icon, color }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: active ? 1 : 0.4 }}>
       <div style={{
@@ -224,6 +276,203 @@ export default function PaymentReports({ userRole = 'admin' }) {
           <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>Total Contabilizado</span>
         </div>
       </div>
+
+      {/* Estadisticas para el Contador */}
+      {isContador && sentReports.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <BarChart3 size={24} color="#f59e0b" />
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#102033' }}>Estadísticas de Pagos Recibidos del Admin</h2>
+          </div>
+
+          {/* Resumen general */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Send size={18} color="#3b82f6" />
+                <span style={{ fontSize: '0.8rem', color: '#65758a', fontWeight: '600' }}>Recibidos del Admin</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: '#102033' }}>{sentReports.length}</p>
+            </div>
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <DollarSign size={18} color="#059669" />
+                <span style={{ fontSize: '0.8rem', color: '#65758a', fontWeight: '600' }}>Total Recibido</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '1.3rem', fontWeight: '700', color: '#059669' }}>{formatCurrency(sentReports.reduce((s, r) => s + r.amount + (r.deposit || 0), 0))}</p>
+            </div>
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <CheckCircle size={18} color="#8b5cf6" />
+                <span style={{ fontSize: '0.8rem', color: '#65758a', fontWeight: '600' }}>Procesados</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: '#8b5cf6' }}>{stats.recibidos}</p>
+            </div>
+            <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Clock size={18} color="#f59e0b" />
+                <span style={{ fontSize: '0.8rem', color: '#65758a', fontWeight: '600' }}>Pendientes</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b' }}>{stats.enviados}</p>
+            </div>
+          </div>
+
+          {/* Grafico por dia de la semana */}
+          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }}>
+            <h3 style={{ margin: '0 0 16px', color: '#102033', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Calendar size={18} color="#3b82f6" /> Pagos por Día de la Semana
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {byDayOfWeek.map(day => (
+                <div key={day.name} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ width: '90px', fontSize: '0.85rem', fontWeight: '600', color: '#475569', flexShrink: 0 }}>{day.name}</span>
+                  <div style={{ flex: 1, background: '#f1f5f9', borderRadius: '8px', height: '28px', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${(day.count / maxDayCount) * 100}%`,
+                      height: '100%',
+                      background: day.count > 0 ? 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)' : 'transparent',
+                      borderRadius: '8px',
+                      transition: 'width 0.3s'
+                    }}></div>
+                  </div>
+                  <span style={{ width: '30px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '700', color: '#3b82f6', flexShrink: 0 }}>{day.count}</span>
+                  <span style={{ width: '100px', textAlign: 'right', fontSize: '0.8rem', color: '#65758a', flexShrink: 0 }}>{day.count > 0 ? formatCurrency(day.amount) : '-'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grafico por mes */}
+          {byMonth.length > 0 && (
+            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', marginBottom: '16px' }}>
+              <h3 style={{ margin: '0 0 16px', color: '#102033', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} color="#059669" /> Pagos por Mes
+              </h3>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', height: '180px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {byMonth.map(month => (
+                  <div key={month.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '60px', gap: '6px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#059669' }}>{formatCurrency(month.amount).replace(/\.\d+/, '').replace('COP', '$')}</span>
+                    <div style={{
+                      width: '40px',
+                      height: `${(month.amount / maxMonthAmount) * 120}px`,
+                      background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                      borderRadius: '8px 8px 0 0',
+                      minHeight: '4px'
+                    }}></div>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>{month.name}</span>
+                    <span style={{ fontSize: '0.7rem', color: '#65758a' }}>{month.count} pago{month.count !== 1 ? 's' : ''}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grafico por metodo de pago e instalacion */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            {/* Por metodo de pago */}
+            {byMethod.length > 0 && (
+              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px' }}>
+                <h3 style={{ margin: '0 0 16px', color: '#102033', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CreditCard size={18} color="#8b5cf6" /> Por Método de Pago
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {byMethod.map(method => (
+                    <div key={method.name}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#475569' }}>{method.name}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#8b5cf6' }}>{method.count} - {formatCurrency(method.amount)}</span>
+                      </div>
+                      <div style={{ background: '#f1f5f9', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${(method.amount / maxMethodAmount) * 100}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)',
+                          borderRadius: '6px'
+                        }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Por instalacion */}
+            {byFacility.length > 0 && (
+              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px' }}>
+                <h3 style={{ margin: '0 0 16px', color: '#102033', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building size={18} color="#f59e0b" /> Por Instalación
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {byFacility.map(fac => (
+                    <div key={fac.name}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#475569' }}>{fac.name}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f59e0b' }}>{fac.count} - {formatCurrency(fac.amount)}</span>
+                      </div>
+                      <div style={{ background: '#f1f5f9', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${(fac.count / maxFacilityCount) * 100}%`,
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)',
+                          borderRadius: '6px'
+                        }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tabla detallada de pagos recibidos */}
+          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '20px', marginTop: '16px' }}>
+            <h3 style={{ margin: '0 0 16px', color: '#102033', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} color="#3b82f6" /> Detalle de Pagos Recibidos
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Fecha Envío</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Día</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Hora</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Instalación</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Copropietario</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', color: '#475569' }}>Método</th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px', color: '#475569' }}>Monto</th>
+                    <th style={{ textAlign: 'center', padding: '8px 12px', color: '#475569' }}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sentReports.sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).map(r => {
+                    const sentDate = new Date(r.sentAt);
+                    return (
+                      <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '8px 12px', color: '#475569' }}>{sentDate.toLocaleDateString('es-CO')}</td>
+                        <td style={{ padding: '8px 12px', color: '#475569' }}>{dayNames[sentDate.getDay()]}</td>
+                        <td style={{ padding: '8px 12px', color: '#475569' }}>{sentDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td>
+                        <td style={{ padding: '8px 12px', fontWeight: '600', color: '#102033' }}>{r.facility}</td>
+                        <td style={{ padding: '8px 12px', color: '#475569' }}>{r.userName}</td>
+                        <td style={{ padding: '8px 12px', color: '#475569' }}>{r.paymentMethod}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: '700', color: '#059669' }}>{formatCurrency(r.amount + (r.deposit || 0))}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                          <span style={{
+                            padding: '3px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600',
+                            background: r.status === 'RECIBIDO_CONTADOR' ? '#ede9fe' : '#dbeafe',
+                            color: r.status === 'RECIBIDO_CONTADOR' ? '#8b5cf6' : '#3b82f6'
+                          }}>
+                            {r.status === 'RECIBIDO_CONTADOR' ? 'Procesado' : 'Pendiente'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
