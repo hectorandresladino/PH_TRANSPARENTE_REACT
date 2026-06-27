@@ -234,11 +234,13 @@ export default function UsersManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>TelÃ©fono (Obligatorio para verificación)</label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value})}
+                    required
+                    placeholder="+57 300 123 4567"
                   />
                 </div>
                 <div className="form-group">
@@ -248,10 +250,12 @@ export default function UsersManagement() {
                     onChange={e => setFormData({...formData, role: e.target.value})}
                   >
                     <option value="ADMIN">Administrador</option>
-                    <option value="MODERATOR">Moderador</option>
-                    <option value="USER">Usuario</option>
-                    <option value="RESIDENT">Residente</option>
-                    <option value="VISITOR">Visitante</option>
+                    <option value="CONSEJERO">Consejero</option>
+                    <option value="COPIROPIETARIO">Copropietario</option>
+                    <option value="CONTADOR">Contador</option>
+                    <option value="REVISOR_FISCAL">Revisor Fiscal</option>
+                    <option value="VIGILANCIA">Vigilancia</option>
+                    <option value="ASEO">Aseo</option>
                   </select>
                 </div>
                 <div className="form-group checkbox-group">
