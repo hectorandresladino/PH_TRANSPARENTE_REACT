@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Plus, Edit, Trash2, Search, Clock, CheckCircle, XCircle, 
   Users as UsersIcon, DollarSign, Upload, Eye, AlertCircle,
-  CreditCard, FileText, Building, Phone, Paperclip, X
+  CreditCard, FileText, Building, Phone, Paperclip, X, ChevronLeft, ChevronRight, LayoutGrid
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
@@ -16,6 +16,8 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterFacility, setFilterFacility] = useState('TODAS');
   const [activeTab, setActiveTab] = useState('all');
+  const [viewMode, setViewMode] = useState('list');
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   
   const roleUpper = (userRole || '').toUpperCase();
   const isAdmin = ['ADMIN', 'ADMINISTRADOR'].includes(roleUpper);
@@ -407,12 +409,28 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
             </p>
           </div>
         </div>
-        <button 
-          onClick={() => { resetForm(); setEditingReservation(null); setShowModal(true); }}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#8b5cf6', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}
-        >
-          <Plus size={20} /> Nueva Reserva
-        </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', borderRadius: '10px', padding: '4px' }}>
+            <button
+              onClick={() => setViewMode('list')}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', background: viewMode === 'list' ? '#8b5cf6' : 'transparent', color: viewMode === 'list' ? 'white' : '#475569' }}
+            >
+              <LayoutGrid size={18} /> Lista
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', background: viewMode === 'calendar' ? '#8b5cf6' : 'transparent', color: viewMode === 'calendar' ? 'white' : '#475569' }}
+            >
+              <Calendar size={18} /> Cronograma
+            </button>
+          </div>
+          <button 
+            onClick={() => { resetForm(); setEditingReservation(null); setShowModal(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#8b5cf6', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600' }}
+          >
+            <Plus size={20} /> Nueva Reserva
+          </button>
+        </div>
       </div>
 
       {/* Estadísticas para Admin */}
@@ -473,6 +491,9 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
         </div>
       )}
 
+      {/* Vista de Lista */}
+      {viewMode === 'list' && (
+      <>
       {/* Filtros */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
@@ -681,8 +702,189 @@ export default function ReservationsManagement({ userRole = 'admin' }) {
           ))
         )}
       </div>
+      </>
+      )}
 
-      {/* Modal Nueva/Editar Reserva */}
+      {/* Vista de Cronograma */}
+      {viewMode === 'calendar' && (
+        <div>
+          {/* Controles del calendario */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <button
+              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: '8px', padding: '10px', cursor: 'pointer' }}
+            >
+              <ChevronLeft size={20} color="#475569" />
+            </button>
+            <h2 style={{ margin: 0, color: '#102033', fontSize: '1.3rem' }}>
+              {calendarMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+            </h2>
+            <button
+              onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+              style={{ background: '#f1f5f9', border: 'none', borderRadius: '8px', padding: '10px', cursor: 'pointer' }}
+            >
+              <ChevronRight size={20} color="#475569" />
+            </button>
+          </div>
+
+          {/* Leyenda */}
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#10b981' }}></div>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>Pagado</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#f59e0b' }}></div>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>Pendiente</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#3b82f6' }}></div>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>En Revisión</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#ef4444' }}></div>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>Rechazado</span>
+            </div>
+          </div>
+
+          {/* Días de la semana */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
+              <div key={day} style={{ textAlign: 'center', padding: '8px', fontWeight: '700', color: '#475569', fontSize: '0.85rem' }}>
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Días del calendario */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+            {(() => {
+              const year = calendarMonth.getFullYear();
+              const month = calendarMonth.getMonth();
+              const firstDay = new Date(year, month, 1);
+              let dayOfWeek = firstDay.getDay() - 1;
+              if (dayOfWeek < 0) dayOfWeek = 6;
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const cells = [];
+
+              for (let i = 0; i < dayOfWeek; i++) {
+                cells.push(<div key={`empty-${i}`} style={{ minHeight: '80px', background: '#f8fafc', borderRadius: '8px' }}></div>);
+              }
+
+              for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayReservations = reservations.filter(r => {
+                  if (!r.startTime) return false;
+                  const rDate = r.startTime.split('T')[0];
+                  return rDate === dateStr;
+                });
+                const isToday = date.getTime() === today.getTime();
+
+                cells.push(
+                  <div key={day} style={{
+                    minHeight: '80px',
+                    background: dayReservations.length > 0 ? 'white' : '#fafafa',
+                    border: isToday ? '2px solid #8b5cf6' : '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: isToday ? '#8b5cf6' : '#475569', marginBottom: '4px' }}>
+                      {day}
+                    </div>
+                    {dayReservations.map(r => {
+                      const payColor = r.paymentStatus === 'PAGADO' ? '#10b981' :
+                                       r.paymentStatus === 'PENDIENTE' ? '#f59e0b' :
+                                       r.paymentStatus === 'EN_REVISION' ? '#3b82f6' :
+                                       r.paymentStatus === 'RECHAZADO' ? '#ef4444' : '#6b7280';
+                      return (
+                        <div key={r.id} style={{
+                          background: payColor + '20',
+                          borderLeft: `3px solid ${payColor}`,
+                          borderRadius: '4px',
+                          padding: '4px 6px',
+                          marginBottom: '4px',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleEdit(r)}
+                        >
+                          <div style={{ fontWeight: '600', color: payColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {r.facility}
+                          </div>
+                          <div style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {r.userName}
+                          </div>
+                          <div style={{ color: payColor, fontWeight: '600' }}>
+                            {r.paymentStatus === 'PAGADO' ? '✓ Pagado' :
+                             r.paymentStatus === 'PENDIENTE' ? '⏳ Pendiente' :
+                             r.paymentStatus === 'EN_REVISION' ? '🔍 Revisión' :
+                             r.paymentStatus === 'RECHAZADO' ? '✗ Rechazado' : r.paymentStatus}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+              return cells;
+            })()}
+          </div>
+
+          {/* Reservas del mes */}
+          <div style={{ marginTop: '24px' }}>
+            <h3 style={{ color: '#102033', marginBottom: '12px' }}>
+              Reservas de {calendarMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+            </h3>
+            {reservations.filter(r => {
+              if (!r.startTime) return false;
+              const rDate = new Date(r.startTime);
+              return rDate.getMonth() === calendarMonth.getMonth() && rDate.getFullYear() === calendarMonth.getFullYear();
+            }).sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).map(r => (
+              <div key={r.id} style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                background: 'white', padding: '12px 16px', borderRadius: '10px',
+                border: '1px solid #e2e8f0', marginBottom: '8px', cursor: 'pointer'
+              }}
+              onClick={() => handleEdit(r)}
+              >
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: r.paymentStatus === 'PAGADO' ? '#d1fae5' :
+                              r.paymentStatus === 'PENDIENTE' ? '#fef3c7' :
+                              r.paymentStatus === 'EN_REVISION' ? '#dbeafe' : '#f1f5f9',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: '700', color: r.paymentStatus === 'PAGADO' ? '#059669' :
+                              r.paymentStatus === 'PENDIENTE' ? '#f59e0b' :
+                              r.paymentStatus === 'EN_REVISION' ? '#3b82f6' : '#6b7280'
+                }}>
+                  {new Date(r.startTime).getDate()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: '600', color: '#102033' }}>{r.facility}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#65758a' }}>
+                    {r.userName} - {new Date(r.startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                <div style={{
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600',
+                  background: r.paymentStatus === 'PAGADO' ? '#10b981' :
+                              r.paymentStatus === 'PENDIENTE' ? '#f59e0b' :
+                              r.paymentStatus === 'EN_REVISION' ? '#3b82f6' : '#ef4444',
+                  color: 'white'
+                }}>
+                  {r.paymentStatus === 'PAGADO' ? 'Pagado' :
+                   r.paymentStatus === 'PENDIENTE' ? 'Pendiente' :
+                   r.paymentStatus === 'EN_REVISION' ? 'En Revisión' : 'Rechazado'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }} onClick={() => setShowModal(false)}>
           <div style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
