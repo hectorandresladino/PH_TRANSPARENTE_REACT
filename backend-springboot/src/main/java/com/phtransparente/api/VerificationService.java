@@ -46,8 +46,9 @@ public class VerificationService {
     VerificationCode verificationCode = new VerificationCode(username, code, expiresAt);
     verificationCodeRepository.save(verificationCode);
 
-    // Enviar código por SMS
-    smsService.sendVerificationCode(user.getPhone(), code);
+    // Enviar código por WhatsApp
+    smsService.sendVerificationCode(user.getPhone(), 
+        "Tu codigo de verificacion de PH Transparente es: " + code + ". Expira en 15 minutos.");
 
     return code;
   }

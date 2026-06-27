@@ -20,19 +20,17 @@ public class SmsService {
   @Value("${callmebot.phone.number}")
   private String senderPhoneNumber;
 
-  public void sendVerificationCode(String phoneNumber, String code) {
-    // Formatear el número de teléfono (agregar +57 si no tiene código de país)
+  public void sendVerificationCode(String phoneNumber, String message) {
     String formattedPhone = phoneNumber;
     if (!phoneNumber.startsWith("+")) {
       formattedPhone = "+57" + phoneNumber;
     }
 
     try {
-      // Usar CallMeBot API (gratuito para WhatsApp)
       String apiUrl = String.format(
           "https://api.callmebot.com/whatsapp.php?phone=%s&text=%s&apikey=%s",
           formattedPhone,
-          URLEncoder.encode("Tu código de verificación de PH Transparente es: " + code + ". Expira en 15 minutos.", "UTF-8"),
+          URLEncoder.encode(message, "UTF-8"),
           apiKey != null ? apiKey : ""
       );
 
@@ -54,16 +52,16 @@ public class SmsService {
       if (responseCode == 200) {
         logger.info("WhatsApp enviado exitosamente a: {}", formattedPhone);
       } else {
-        logger.warn("Error al enviar WhatsApp. Código: {}, Respuesta: {}", responseCode, response.toString());
+        logger.warn("Error al enviar WhatsApp. Codigo: {}, Respuesta: {}", responseCode, response.toString());
         logger.info("========================================");
-        logger.info("CÓDIGO DE VERIFICACIÓN: {}", code);
+        logger.info("Mensaje: {}", message);
         logger.info("Para celular: {}", formattedPhone);
         logger.info("========================================");
       }
     } catch (Exception e) {
       logger.error("Error al enviar WhatsApp: {}", e.getMessage());
       logger.info("========================================");
-      logger.info("CÓDIGO DE VERIFICACIÓN: {}", code);
+      logger.info("Mensaje: {}", message);
       logger.info("Para celular: {}", formattedPhone);
       logger.info("========================================");
     }
