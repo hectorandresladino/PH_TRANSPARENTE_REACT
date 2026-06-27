@@ -1,59 +1,70 @@
 package com.phtransparente.api;
 
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 
 @Service
 public class SmsService {
   private static final Logger logger = LoggerFactory.getLogger(SmsService.class);
 
-  @Value("${twilio.account.sid}")
-  private String accountSid;
+  @Value("${callmebot.api.key}")
+  private String apiKey;
 
-  @Value("${twilio.auth.token}")
-  private String authToken;
-
-  @Value("${twilio.phone.number}")
-  private String twilioPhoneNumber;
+  @Value("${callmebot.phone.number}")
+  private String senderPhoneNumber;
 
   public void sendVerificationCode(String phoneNumber, String code) {
-    if (accountSid == null || accountSid.isEmpty() || 
-        authToken == null || authToken.isEmpty() || 
-        twilioPhoneNumber == null || twilioPhoneNumber.isEmpty()) {
-      logger.warn("Twilio no está configurado. Mostrando código en consola: {}", code);
-      logger.info("========================================");
-      logger.info("CÓDIGO DE VERIFICACIÓN: {}", code);
-      logger.info("Para celular: {}", phoneNumber);
-      logger.info("========================================");
-      return;
+    // Formatear el número de teléfono (agregar +57 si no tiene código de país)
+    String formattedPhone = phoneNumber;
+    if (!phoneNumber.startsWith("+")) {
+      formattedPhone = "+57" + phoneNumber;
     }
 
     try {
-      Twilio.init(accountSid, authToken);
+      // Usar CallMeBot API (gratuito para WhatsApp)
+      String apiUrl = String.format(
+          "https://api.callmebot.com/whatsapp.php?phone=%s&text=%s&apikey=%s",
+          formattedPhone,
+          URLEncoder.encode("Tu código de verificación de PH Transparente es: " + code + ". Expira en 15 minutos.", "UTF-8"),
+          apiKey != null ? apiKey : ""
+      );
 
-      // Formatear el número de teléfono (agregar +57 si no tiene código de país)
-      String formattedPhone = phoneNumber;
-      if (!phoneNumber.startsWith("+")) {
-        formattedPhone = "+57" + phoneNumber;
+      URL url = new URL(apiUrl);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(10000);
+      connection.setReadTimeout(10000);
+
+      int responseCode = connection.getResponseCode();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      StringBuilder response = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+        response.append(line);
       }
+      reader.close();
 
-      Message message = Message.creator(
-          new PhoneNumber(formattedPhone),
-          new PhoneNumber(twilioPhoneNumber),
-          "Tu código de verificación de PH Transparente es: " + code + ". Expira en 15 minutos."
-      ).create();
-
-      logger.info("SMS enviado exitosamente. SID: {}", message.getSid());
+      if (responseCode == 200) {
+        logger.info("WhatsApp enviado exitosamente a: {}", formattedPhone);
+      } else {
+        logger.warn("Error al enviar WhatsApp. Código: {}, Respuesta: {}", responseCode, response.toString());
+        logger.info("========================================");
+        logger.info("CÓDIGO DE VERIFICACIÓN: {}", code);
+        logger.info("Para celular: {}", formattedPhone);
+        logger.info("========================================");
+      }
     } catch (Exception e) {
-      logger.error("Error al enviar SMS: {}", e.getMessage());
+      logger.error("Error al enviar WhatsApp: {}", e.getMessage());
       logger.info("========================================");
       logger.info("CÓDIGO DE VERIFICACIÓN: {}", code);
-      logger.info("Para celular: {}", phoneNumber);
+      logger.info("Para celular: {}", formattedPhone);
       logger.info("========================================");
     }
   }
