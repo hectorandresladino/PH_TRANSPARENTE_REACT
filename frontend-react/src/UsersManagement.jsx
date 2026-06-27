@@ -234,6 +234,7 @@ export default function UsersManagement() {
                       placeholder={editingUser ? 'Dejar vacÃ­o para mantener la actual' : 'Ingrese o genere una contraseÃ±a'}
                       style={{ flex: 1 }}
                     />
+                    {!editingUser && (
                     <button
                       type="button"
                       onClick={handleGeneratePassword}
@@ -242,6 +243,7 @@ export default function UsersManagement() {
                       <KeyRound size={16} style={{ display: 'inline', marginRight: '4px' }} />
                       Generar
                     </button>
+                    )}
                   </div>
                   {passwordMessage && (
                     <small style={{ color: passwordMessage.includes('Error') ? '#dc2626' : '#136f43', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
