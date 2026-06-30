@@ -236,26 +236,7 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
 
   return (
     <div className="admin-dashboard">
-      <div className="admin-header">
-        <div className="header-content">
-          <div className="header-icon">
-            {userRoleConfig.icon}
-          </div>
-          <div className="header-text">
-            <h1>{userRoleConfig.name}</h1>
-            <p>{userRoleConfig.description}</p>
-            <small style={{color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: '8px'}}>
-              Rol detectado: {userRole || 'undefined'} → {mappedRole}
-            </small>
-          </div>
-        </div>
-        <div className="header-badge">
-          <Heart size={16} />
-          <span>PH Transparente</span>
-        </div>
-      </div>
-
-      <div className="roles-grid" style={{ marginTop: '28px' }}>
+      <div className="roles-grid">
         <div className="role-card" style={{ backgroundColor: userRoleConfig.bgColor }}>
           <div 
             className="role-header"
@@ -279,6 +260,10 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
 
           {expandedRoles[mappedRole] && (
             <div className="role-modules">
+              <div className="modules-section-title">
+                <Sparkles size={22} />
+                <span>Módulos disponibles para tu rol</span>
+              </div>
               <div className="modules-list">
                 {userRoleConfig.modules.map(module => {
                   const isActive = currentView === module.name;
