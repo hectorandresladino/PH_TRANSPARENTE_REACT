@@ -39,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
       
       // COPROPIETARIOS - Módulos básicos de residentes + transparencia + reportes + calificaciones + soporte
       roleRepository.save(new Role("COPROPIETARIO", "Copropietario con acceso a módulos básicos y transparencia", 
-        "dashboard,pqr,reservations,visitors,documents,payments,bank-accounts,property-units,alerts,transparency,reports,personnel-ratings,support-tasks", 
+        "dashboard,pqr,reservations,visitors,payments,bank-accounts,property-units,alerts,transparency,reports,personnel-ratings,support-tasks", 
         "copropietario123"));
       
       // EMPRESA DE VIGILANCIA - Módulos de seguridad
@@ -50,12 +50,20 @@ public class DataInitializer implements CommandLineRunner {
       System.out.println("Roles específicos creados");
     }
 
-    // Actualizar rol COPROPIETARIO si ya existe para incluir bank-accounts
+    // Actualizar rol COPROPIETARIO si ya existe para incluir bank-accounts y quitar documents
     roleRepository.findByName("COPROPIETARIO").ifPresent(role -> {
+      boolean updated = false;
       if (!role.getModules().contains("bank-accounts")) {
         role.setModules(role.getModules() + ",bank-accounts");
+        updated = true;
+      }
+      if (role.getModules().contains("documents")) {
+        role.setModules(role.getModules().replace(",documents", "").replace("documents,", ""));
+        updated = true;
+      }
+      if (updated) {
         roleRepository.save(role);
-        System.out.println("Rol COPROPIETARIO actualizado con módulo bank-accounts");
+        System.out.println("Rol COPROPIETARIO actualizado: bank-accounts agregado, documents removido");
       }
     });
 

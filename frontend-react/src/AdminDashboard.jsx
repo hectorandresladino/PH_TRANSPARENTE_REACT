@@ -94,7 +94,6 @@ const ROLES_CONFIG = {
       { name: 'pqr-statistics', label: 'Estadísticas PQR', icon: <BarChart3 size={20} />, description: 'Mis estadísticas de PQR' },
       { name: 'reservations', label: 'Reservas', icon: <Calendar size={20} />, description: 'Reservas de espacios' },
       { name: 'visitors', label: 'Visitantes', icon: <Shield size={20} />, description: 'Control de visitantes' },
-      { name: 'documents', label: 'Documentos', icon: <FileText size={20} />, description: 'Gestión documental' },
       { name: 'payments', label: 'Pagos', icon: <DollarSign size={20} />, description: 'Gestión de pagos' },
       { name: 'bank-accounts', label: 'Cuentas Bancarias', icon: <DollarSign size={20} />, description: 'Cuentas bancarias del conjunto' },
       { name: 'council-minutes', label: 'Actas Consejo', icon: <FileText size={20} />, description: 'Ver actas del consejo' },
