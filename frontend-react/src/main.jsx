@@ -464,7 +464,7 @@ function App() {
 
       <main className="dashboard-content">
         {currentView === 'dashboard' ? (
-          <>
+          <div className="dashboard-wrapper">
             <section className="dashboard-header">
               <h2>Bienvenido, {user?.username}</h2>
               <p>Panel de control de Propiedad Horizontal</p>
@@ -518,7 +518,7 @@ function App() {
             </section>
 
             <AdminDashboard onModuleSelect={setCurrentView} currentView={currentView} userRole={user?.role} />
-          </>
+          </div>
         ) : currentView === 'users' ? (
           <UsersManagement />
         ) : currentView === 'pqr' ? (
