@@ -62,10 +62,10 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 .nav-item:hover:not(.active) { background: rgba(255,255,255,0.1); }
 .logout-btn { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.1); border: 0; color: white; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-size: 1rem; width: 100%; text-align: left; margin-top: 16px; }
 .logout-btn:hover { background: rgba(255,255,255,0.2); }
-.dashboard-content { flex: 1; margin-left: 280px; padding: 0; background: linear-gradient(135deg, #f6f9fb 0%, #eef4f8 100%); display: flex; flex-direction: column; align-items: stretch; }
+.dashboard-content { flex: 1; margin-left: 280px; padding: 32px 40px; background: linear-gradient(135deg, #f6f9fb 0%, #eef4f8 100%); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; }
 
 /* Dashboard Header */
-.dashboard-header { margin-bottom: 40px; text-align: center; width: 100%; padding: 48px; background: linear-gradient(135deg, #123b62 0%, #1e5a8a 100%); border-radius: 28px; box-shadow: 0 16px 45px rgba(18,59,98,0.22); position: relative; overflow: hidden; }
+.dashboard-header { margin-bottom: 32px; text-align: center; width: 100%; padding: 44px; background: linear-gradient(135deg, #123b62 0%, #1e5a8a 100%); border-radius: 28px; box-shadow: 0 16px 45px rgba(18,59,98,0.22); position: relative; overflow: hidden; }
 .dashboard-header::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; opacity: 0.18; }
 .dashboard-header::after { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: pulse 8s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.8; } }
@@ -73,7 +73,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 .dashboard-header p { color: rgba(255,255,255,0.9); margin: 0; font-size: 1.3rem; font-weight: 500; position: relative; z-index: 1; }
 
 /* Quick Actions */
-.quick-actions { margin: 40px 0; width: 100%; max-width: 1200px; }
+.quick-actions { margin: 28px 0; width: 100%; }
 .quick-actions h3 { font-size: 1.8rem; color: #123b62; margin: 0 0 32px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
 .quick-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
 .quick-action-btn { display: flex; flex-direction: column; align-items: center; gap: 16px; background: white; border: none; border-radius: 20px; padding: 32px; cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 8px 24px rgba(16,32,51,.08); position: relative; overflow: hidden; }
@@ -119,8 +119,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 .logout-btn { display: flex; align-items: center; gap: 12px; background: rgba(220,38,38,0.2); border: 0; color: white; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-size: 1rem; width: 100%; text-align: left; }
 .logout-btn:hover { background: rgba(220,38,38,0.3); }
 
-.dashboard-content { flex: 1; margin-left: 280px; padding: 32px; background: #eef4f8; }
-.dashboard-stats { margin-bottom: 40px; width: 100%; max-width: 1200px; }
+.dashboard-stats { margin-bottom: 28px; width: 100%; }
 .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
 .stat-card { background: white; border: none; border-radius: 24px; padding: 28px; display: flex; align-items: center; gap: 20px; box-shadow: 0 8px 24px rgba(16,32,51,.08); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
 .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, #123b62 0%, #1e5a8a 100%); }
