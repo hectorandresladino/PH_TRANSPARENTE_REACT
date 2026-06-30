@@ -278,12 +278,8 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
           </div>
 
           {expandedRoles[mappedRole] && (
-            <div className="role-modules" style={{ padding: '24px' }}>
-              <div className="modules-list" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-                gap: '16px'
-              }}>
+            <div className="role-modules">
+              <div className="modules-list">
                 {userRoleConfig.modules.map(module => {
                   const isActive = currentView === module.name;
                   return (
@@ -291,55 +287,13 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
                       key={module.name}
                       className={`module-item ${isActive ? 'active' : ''}`}
                       onClick={() => handleModuleClick(module.name)}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        padding: '18px 16px',
-                        borderRadius: '16px',
-                        border: '1px solid #e2e8f0',
-                        background: isActive ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : 'white',
-                        color: isActive ? 'white' : '#1e293b',
-                        boxShadow: isActive ? '0 8px 20px rgba(37, 99, 235, 0.25)' : '0 2px 8px rgba(0,0,0,0.04)',
-                        transition: 'all 0.25s ease',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        minHeight: '110px'
-                      }}
                     >
-                      <div className="module-icon" style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: isActive ? 'rgba(255,255,255,0.2)' : userRoleConfig.bgColor,
-                        color: isActive ? 'white' : '#3b82f6',
-                        marginBottom: '12px',
-                        transition: 'all 0.25s ease'
-                      }}>
-                        {React.cloneElement(module.icon, { size: 22, strokeWidth: 2 })}
+                      <div className="module-icon" style={{ background: isActive ? 'rgba(255,255,255,0.2)' : userRoleConfig.bgColor }}>
+                        {React.cloneElement(module.icon, { size: 24, strokeWidth: 2 })}
                       </div>
-                      <div className="module-info" style={{ width: '100%' }}>
-                        <span className="module-label" style={{
-                          display: 'block',
-                          fontSize: '0.95rem',
-                          fontWeight: 700,
-                          marginBottom: '4px',
-                          lineHeight: 1.2
-                        }}>
-                          {module.label}
-                        </span>
-                        <span className="module-description" style={{
-                          display: 'block',
-                          fontSize: '0.75rem',
-                          color: isActive ? 'rgba(255,255,255,0.85)' : '#64748b',
-                          lineHeight: 1.3
-                        }}>
-                          {module.description}
-                        </span>
+                      <div className="module-info">
+                        <span className="module-label">{module.label}</span>
+                        <span className="module-description">{module.description}</span>
                       </div>
                     </button>
                   );
@@ -349,26 +303,6 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
           )}
         </div>
       </div>
-
-      <style>{`
-        .module-item:hover {
-          transform: translateY(-3px) !important;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-          border-color: #3b82f6 !important;
-        }
-        .module-item.active:hover {
-          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35) !important;
-        }
-        @media (max-width: 480px) {
-          .modules-list {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
-          }
-          .role-modules {
-            padding: 16px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
