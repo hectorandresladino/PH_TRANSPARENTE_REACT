@@ -3,7 +3,7 @@ import {
   LayoutGrid, Users, Shield, UserCheck, Building, 
   ChevronDown, ChevronUp, Settings, Lock, Eye, 
   DollarSign, FileText, Calendar, Bell, FileSpreadsheet,
-  Sparkles, Crown, Home, Briefcase, Heart, Star,
+  Sparkles, Crown, Home, Briefcase, Star,
   Calculator, Search, ShieldCheck, Sparkle, BarChart3, ClipboardList, Send
 } from 'lucide-react';
 
