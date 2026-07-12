@@ -13,8 +13,8 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 @media (max-width: 900px) { .hero, .two-cols, .module-grid { grid-template-columns: 1fr; } .section-title { align-items: stretch; flex-direction: column; } }
 
 /* Login Styles */
-.login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, rgba(18, 59, 98, 0.85) 0%, rgba(13, 42, 74, 0.9) 100%), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed; position: relative; }
-.login-container::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat; opacity: 0.25; }
+.login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, rgba(18, 59, 98, 0.85) 0%, rgba(13, 42, 74, 0.9) 100%), url('https://images.unsplash.com/photo-1761789863383-25219c2618ee?auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; background-attachment: fixed; position: relative; }
+.login-container::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat; opacity: 0.25; }
 .login-card { background: rgba(255, 255, 255, 0.98); border: 1px solid rgba(255,255,255,0.3); border-radius: 28px; padding: 44px; box-shadow: 0 24px 60px rgba(0,0,0,0.25); width: 100%; max-width: 420px; position: relative; z-index: 10; backdrop-filter: blur(10px); }
 .login-card h1 { text-align: center; color: #123b62; font-size: 2.1rem; margin: 0 0 8px; font-weight: 800; }
 .login-card > p { text-align: center; margin: 0 0 28px; color: #536477; font-size: 0.95rem; }
@@ -44,7 +44,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 
 /* Dashboard Layout */
 .dashboard-layout { display: flex; min-height: 100vh; }
-.sidebar { width: 280px; background: linear-gradient(180deg, #123b62 0%, #0d2a4a 100%), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center; background-blend-mode: overlay; color: white; display: flex; flex-direction: column; padding: 28px 24px; position: fixed; height: 100vh; box-shadow: 4px 0 30px rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.08); }
+.sidebar { width: 280px; background: linear-gradient(180deg, #123b62 0%, #0d2a4a 100%), url('https://images.unsplash.com/photo-1761789863383-25219c2618ee?auto=format&fit=crop&w=800&q=80'); background-size: cover; background-position: center; background-blend-mode: overlay; color: white; display: flex; flex-direction: column; padding: 28px 24px; position: fixed; height: 100vh; box-shadow: 4px 0 30px rgba(0,0,0,0.15); border-right: 1px solid rgba(255,255,255,0.08); }
 .sidebar-header { text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .sidebar-header h1 { font-size: 1.6rem; margin: 0 0 6px 0; color: white; font-weight: 800; letter-spacing: -0.5px; }
 .sidebar-header p { margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
@@ -67,7 +67,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 
 /* Dashboard Header */
 .dashboard-header { margin-bottom: 40px; text-align: center; width: 100%; padding: 52px 40px; background: linear-gradient(135deg, #123b62 0%, #1e5a8a 50%, #0d9488 100%); border-radius: 32px; box-shadow: 0 24px 60px rgba(18,59,98,0.25); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-.dashboard-header::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; opacity: 0.22; }
+.dashboard-header::before { content: ''; position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; opacity: 0.22; }
 .dashboard-header::after { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); animation: pulse 8s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.8; } }
 .dashboard-header h2 { font-size: 3.4rem; color: white; margin: 0 0 12px; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.25); position: relative; z-index: 1; }
@@ -625,7 +625,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 .admin-dashboard .role-card { border-radius: 32px; box-shadow: 0 14px 50px rgba(0, 0, 0, 0.1); overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(0, 0, 0, 0.05); width: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
 .admin-dashboard .role-card:hover { transform: translateY(-6px); box-shadow: 0 22px 60px rgba(0, 0, 0, 0.15); }
 .admin-dashboard .role-header { display: flex; justify-content: space-between; align-items: center; padding: 32px 44px; cursor: pointer; color: white; transition: all 0.3s; position: relative; overflow: hidden; }
-.admin-dashboard .role-header::before { content: ''; position: absolute; top: 0; right: 0; width: 50%; height: 100%; background: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; opacity: 0.15; mask-image: linear-gradient(90deg, transparent 0%, black 55%); -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 55%); }
+.admin-dashboard .role-header::before { content: ''; position: absolute; top: 0; right: 0; width: 50%; height: 100%; background: url('https://images.unsplash.com/photo-1761789863383-25219c2618ee?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; opacity: 0.15; mask-image: linear-gradient(90deg, transparent 0%, black 55%); -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 55%); }
 .admin-dashboard .role-header:hover { filter: brightness(1.05); }
 .admin-dashboard .role-info { display: flex; align-items: center; gap: 24px; position: relative; z-index: 2; }
 .admin-dashboard .role-icon-wrapper { width: 76px; height: 76px; border-radius: 22px; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(12px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); border: 1px solid rgba(255,255,255,0.25); }
@@ -634,7 +634,7 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 .admin-dashboard .role-description { margin: 0 0 8px 0; font-size: 1rem; opacity: 0.92; font-weight: 400; }
 .admin-dashboard .module-count { font-size: 0.85rem; opacity: 0.9; font-weight: 700; background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 20px; display: inline-block; border: 1px solid rgba(255,255,255,0.15); }
 .admin-dashboard .expand-icon { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.admin-dashboard .role-modules { border-top: 1px solid rgba(0, 0, 0, 0.06); background: rgba(255, 255, 255, 0.6); background-image: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; background-blend-mode: overlay; position: relative; padding: 36px 44px; }
+.admin-dashboard .role-modules { border-top: 1px solid rgba(0, 0, 0, 0.06); background: rgba(255, 255, 255, 0.6); background-image: url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center; background-blend-mode: overlay; position: relative; padding: 36px 44px; }
 .admin-dashboard .role-modules::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.9); pointer-events: none; }
 .admin-dashboard .modules-section-title { display: flex; align-items: center; gap: 12px; font-size: 1.2rem; font-weight: 700; color: #123b62; margin-bottom: 24px; position: relative; z-index: 2; }
 .admin-dashboard .modules-section-title svg { color: #0d9488; }
