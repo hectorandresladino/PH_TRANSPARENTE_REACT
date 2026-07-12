@@ -1,9 +1,10 @@
 package com.phtransparente.api;
 
+import java.security.SecureRandom;
 import java.util.List;
-import java.util.Random;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -11,10 +12,17 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
   private final UserRepository userRepository;
   private final EmailService emailService;
+  private final PasswordEncoder passwordEncoder;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-  public UserController(UserRepository userRepository, EmailService emailService) {
+  public UserController(UserRepository userRepository, EmailService emailService, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.emailService = emailService;
+    this.passwordEncoder = passwordEncoder;
+  }
+
+  private static boolean isBCryptHash(String value) {
+    return value != null && (value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$"));
   }
 
   @GetMapping
@@ -34,6 +42,9 @@ public class UserController {
     if (userRepository.existsByUsername(user.getUsername())) {
       return ResponseEntity.badRequest().body("El usuario ya existe");
     }
+    if (user.getPassword() != null && !user.getPassword().isEmpty() && !isBCryptHash(user.getPassword())) {
+      user.setPassword(passwordEncoder.encode(user.getPassword()));
+    }
     User savedUser = userRepository.save(user);
     return ResponseEntity.ok(savedUser);
   }
@@ -44,7 +55,10 @@ public class UserController {
       .map(existingUser -> {
         existingUser.setUsername(user.getUsername());
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-          existingUser.setPassword(user.getPassword());
+          String newPassword = isBCryptHash(user.getPassword())
+            ? user.getPassword()
+            : passwordEncoder.encode(user.getPassword());
+          existingUser.setPassword(newPassword);
         }
         existingUser.setRole(user.getRole());
         existingUser.setEmail(user.getEmail());
@@ -85,9 +99,8 @@ public class UserController {
 
     String chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
     StringBuilder password = new StringBuilder();
-    Random random = new Random();
-    for (int i = 0; i < 8; i++) {
-      password.append(chars.charAt(random.nextInt(chars.length())));
+    for (int i = 0; i < 12; i++) {
+      password.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
     }
 
     String generatedPassword = password.toString();

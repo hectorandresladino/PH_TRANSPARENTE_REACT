@@ -12,13 +12,26 @@ public class CorsConfig {
   @Bean
   @SuppressWarnings("null")
   public WebMvcConfigurer corsConfigurer(@Value("${app.cors.allowed-origins:*}") String origins) {
+    final String[] allowedOrigins = origins.split("\\s*,\\s*");
+    final boolean allowAll = allowedOrigins.length == 1 && "*".equals(allowedOrigins[0]);
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(@NonNull CorsRegistry registry) {
-        registry.addMapping("/api/**")
-          .allowedOrigins("*")
-          .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-          .allowedHeaders("*");
+        if (allowAll) {
+          // Desarrollo: cualquier origen, pero sin credenciales.
+          registry.addMapping("/api/**")
+            .allowedOriginPatterns("*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(false);
+        } else {
+          // Producción: solo orígenes explícitos configurados en app.cors.allowed-origins.
+          registry.addMapping("/api/**")
+            .allowedOrigins(allowedOrigins)
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+        }
       }
     };
   }

@@ -3,6 +3,7 @@ package com.phtransparente.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,28 +17,54 @@ public class AuthController {
   private final RoleRepository roleRepository;
   private final VerificationService verificationService;
   private final EmailService emailService;
+  private final PasswordEncoder passwordEncoder;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.verificationService = verificationService;
     this.emailService = emailService;
+    this.passwordEncoder = passwordEncoder;
+  }
+
+  private static boolean isBCryptHash(String value) {
+    return value != null && (value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$"));
   }
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     logger.info("Intento de login para usuario: {}", request.username());
     User user = userRepository.findByUsername(request.username());
-    
-    if (user != null && user.getPassword().equals(request.password())) {
+
+    if (user == null) {
+      logger.warn("Login fallido para usuario: {}", request.username());
+      return ResponseEntity.status(401).body("Credenciales inválidas");
+    }
+
+    boolean passwordMatches;
+    if (isBCryptHash(user.getPassword())) {
+      passwordMatches = passwordEncoder.matches(request.password(), user.getPassword());
+    } else {
+      // Contraseña heredada en texto plano: comparar y, si coincide, migrar a hash
+      passwordMatches = user.getPassword() != null && user.getPassword().equals(request.password());
+      if (passwordMatches) {
+        user.setPassword(passwordEncoder.encode(request.password()));
+        userRepository.save(user);
+        logger.info("Contraseña migrada a hash para usuario: {}", request.username());
+      }
+    }
+
+    if (passwordMatches) {
+      if (Boolean.FALSE.equals(user.getActive())) {
+        logger.warn("Login rechazado (usuario inactivo): {}", request.username());
+        return ResponseEntity.status(403).body("La cuenta está inactiva");
+      }
       logger.info("Login exitoso para usuario: {}", request.username());
-      // Obtener el rol y sus módulos permitidos
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
       String modules = role != null ? role.getModules() : "";
-      
       return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules));
     }
-    
+
     logger.warn("Login fallido para usuario: {}", request.username());
     return ResponseEntity.status(401).body("Credenciales inválidas");
   }
@@ -52,7 +79,7 @@ public class AuthController {
     
     User newUser = new User();
     newUser.setUsername(request.username());
-    newUser.setPassword(request.password());
+    newUser.setPassword(passwordEncoder.encode(request.password()));
     newUser.setRole("COPROPIETARIO");
     newUser.setEmail(request.email());
     newUser.setActive(true);
@@ -70,13 +97,13 @@ public class AuthController {
   public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
     User user = userRepository.findByUsername(request.username());
     
+    // Respuesta genérica para no revelar si el usuario existe (evita enumeración de usuarios)
+    // y nunca se expone la contraseña.
     if (user == null) {
-      return ResponseEntity.status(404).body("Usuario no encontrado");
+      logger.warn("forgot-password solicitado para usuario inexistente: {}", request.username());
     }
-    
-    // En un sistema real, aquí se enviaría un email con enlace de recuperación
-    // Por ahora, simulamos la recuperación mostrando la contraseña
-    return ResponseEntity.ok(new ForgotPasswordResponse("Se ha enviado un enlace de recuperación a tu correo", user.getPassword()));
+    return ResponseEntity.ok(new ForgotPasswordResponse(
+      "Si la cuenta existe, se enviarán instrucciones de recuperación al correo registrado."));
   }
 
   @PostMapping("/reset-password")
@@ -87,7 +114,7 @@ public class AuthController {
       return ResponseEntity.status(404).body("Usuario no encontrado");
     }
     
-    user.setPassword(request.newPassword());
+    user.setPassword(passwordEncoder.encode(request.newPassword()));
     userRepository.save(user);
     
     return ResponseEntity.ok("Contraseña actualizada exitosamente");
@@ -128,7 +155,7 @@ public class AuthController {
   public record LoginResponse(Long id, String username, String role, String modules) {}
   public record RegisterRequest(String username, String email, String password, String confirmPassword) {}
   public record ForgotPasswordRequest(String username) {}
-  public record ForgotPasswordResponse(String message, String currentPassword) {}
+  public record ForgotPasswordResponse(String message) {}
   public record ResetPasswordRequest(String username, String newPassword) {}
   public record SendVerificationCodeRequest(String username) {}
   public record SendVerificationCodeResponse(String message, String code) {}

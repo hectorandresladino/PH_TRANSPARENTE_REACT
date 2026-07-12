@@ -1,16 +1,39 @@
 package com.phtransparente.api;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final PasswordEncoder passwordEncoder;
 
-  public DataInitializer(UserRepository userRepository, RoleRepository roleRepository) {
+  public DataInitializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
+    this.passwordEncoder = passwordEncoder;
+  }
+
+  /**
+   * Crea o actualiza un usuario semilla. La contraseña (encriptada con BCrypt)
+   * solo se asigna cuando el usuario es nuevo, para no sobrescribir en cada arranque
+   * contraseñas que el usuario pudo haber cambiado.
+   */
+  private void upsertUser(String username, String rawPassword, String role, String email, String fullName, String phone) {
+    User existing = userRepository.findByUsername(username);
+    User user = (existing != null) ? existing : new User();
+    if (existing == null) {
+      user.setUsername(username);
+      user.setPassword(passwordEncoder.encode(rawPassword));
+    }
+    user.setRole(role);
+    user.setEmail(email);
+    user.setFullName(fullName);
+    user.setPhone(phone);
+    user.setActive(true);
+    userRepository.save(user);
   }
 
   @Override
@@ -67,73 +90,14 @@ public class DataInitializer implements CommandLineRunner {
       }
     });
 
-    // Crear o actualizar usuarios (asegura que siempre tengan los datos correctos)
-    User admin = userRepository.findByUsername("admin");
-    if (admin == null) admin = new User();
-    admin.setUsername("admin");
-    admin.setPassword("admin123");
-    admin.setRole("ADMIN");
-    admin.setEmail("admin@phtransparente.com");
-    admin.setFullName("Administrador del Sistema");
-    admin.setPhone("+57 300 123 4567");
-    admin.setActive(true);
-    userRepository.save(admin);
+    // Crear o actualizar usuarios semilla (la contraseña solo se asigna al crearlos)
+    upsertUser("admin", "admin123", "ADMIN", "admin@phtransparente.com", "Administrador del Sistema", "+57 300 123 4567");
+    upsertUser("contador", "contador123", "CONTADOR", "contador@phtransparente.com", "Contador Principal", "+57 300 234 5678");
+    upsertUser("revisor", "revisor123", "REVISOR_FISCAL", "revisor@phtransparente.com", "Revisor Fiscal", "+57 300 345 6789");
+    upsertUser("consejero", "consejero123", "CONSEJERO", "consejero@phtransparente.com", "Consejero Principal", "+57 300 456 7890");
+    upsertUser("copropietario", "copropietario123", "COPROPIETARIO", "copropietario@phtransparente.com", "Copropietario Residente", "+57 300 567 8901");
+    upsertUser("vigilancia", "vigilancia123", "VIGILANCIA", "vigilancia@phtransparente.com", "Empresa de Vigilancia", "+57 300 678 9012");
     
-    User contador = userRepository.findByUsername("contador");
-    if (contador == null) contador = new User();
-    contador.setUsername("contador");
-    contador.setPassword("contador123");
-    contador.setRole("CONTADOR");
-    contador.setEmail("contador@phtransparente.com");
-    contador.setFullName("Contador Principal");
-    contador.setPhone("+57 300 234 5678");
-    contador.setActive(true);
-    userRepository.save(contador);
-    
-    User revisor = userRepository.findByUsername("revisor");
-    if (revisor == null) revisor = new User();
-    revisor.setUsername("revisor");
-    revisor.setPassword("revisor123");
-    revisor.setRole("REVISOR_FISCAL");
-    revisor.setEmail("revisor@phtransparente.com");
-    revisor.setFullName("Revisor Fiscal");
-    revisor.setPhone("+57 300 345 6789");
-    revisor.setActive(true);
-    userRepository.save(revisor);
-    
-    User consejero = userRepository.findByUsername("consejero");
-    if (consejero == null) consejero = new User();
-    consejero.setUsername("consejero");
-    consejero.setPassword("consejero123");
-    consejero.setRole("CONSEJERO");
-    consejero.setEmail("consejero@phtransparente.com");
-    consejero.setFullName("Consejero Principal");
-    consejero.setPhone("+57 300 456 7890");
-    consejero.setActive(true);
-    userRepository.save(consejero);
-    
-    User copropietario = userRepository.findByUsername("copropietario");
-    if (copropietario == null) copropietario = new User();
-    copropietario.setUsername("copropietario");
-    copropietario.setPassword("copropietario123");
-    copropietario.setRole("COPROPIETARIO");
-    copropietario.setEmail("copropietario@phtransparente.com");
-    copropietario.setFullName("Copropietario Residente");
-    copropietario.setPhone("+57 300 567 8901");
-    copropietario.setActive(true);
-    userRepository.save(copropietario);
-    
-    User vigilancia = userRepository.findByUsername("vigilancia");
-    if (vigilancia == null) vigilancia = new User();
-    vigilancia.setUsername("vigilancia");
-    vigilancia.setPassword("vigilancia123");
-    vigilancia.setRole("VIGILANCIA");
-    vigilancia.setEmail("vigilancia@phtransparente.com");
-    vigilancia.setFullName("Empresa de Vigilancia");
-    vigilancia.setPhone("+57 300 678 9012");
-    vigilancia.setActive(true);
-    userRepository.save(vigilancia);
-    
-    System.out.println("Usuarios actualizados para cada rol");
+    System.out.println("Usuarios semilla verificados para cada rol");
   }
 }
