@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,14 +20,16 @@ public class AuthController {
   private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
   private final LoginRateLimiter loginRateLimiter;
+  private final JwtUtil jwtUtil;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.verificationService = verificationService;
     this.emailService = emailService;
     this.passwordEncoder = passwordEncoder;
     this.loginRateLimiter = loginRateLimiter;
+    this.jwtUtil = jwtUtil;
   }
 
   private static boolean isBCryptHash(String value) {
@@ -74,7 +77,8 @@ public class AuthController {
       logger.info("Login exitoso para usuario: {}", request.username());
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
       String modules = role != null ? role.getModules() : "";
-      return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules));
+      String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
+      return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, token));
     }
 
     loginRateLimiter.recordFailure(request.username());
@@ -102,8 +106,24 @@ public class AuthController {
     // Obtener módulos del rol
     Role role = roleRepository.findByName(savedUser.getRole()).orElse(null);
     String modules = role != null ? role.getModules() : "";
+    String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole());
     
-    return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules));
+    return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules, token));
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<?> currentUser(org.springframework.security.core.Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()) {
+      return ResponseEntity.status(401).body("No autenticado");
+    }
+    String username = authentication.getName();
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      return ResponseEntity.status(404).body("Usuario no encontrado");
+    }
+    Role role = roleRepository.findByName(user.getRole()).orElse(null);
+    String modules = role != null ? role.getModules() : "";
+    return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, null));
   }
 
   @PostMapping("/forgot-password")
@@ -165,7 +185,7 @@ public class AuthController {
   }
 
   public record LoginRequest(String username, String password) {}
-  public record LoginResponse(Long id, String username, String role, String modules) {}
+  public record LoginResponse(Long id, String username, String role, String modules, String token) {}
   public record RegisterRequest(String username, String email, String password, String confirmPassword) {}
   public record ForgotPasswordRequest(String username) {}
   public record ForgotPasswordResponse(String message) {}

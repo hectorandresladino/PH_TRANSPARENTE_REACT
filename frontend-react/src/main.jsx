@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Building2, ShieldCheck, Vote, FileText, Bell, Car, Search, Users, BarChart3, LogOut, LayoutGrid, Grid, DollarSign, Calendar, Shield, FileText as FileTextIcon, AlertTriangle, Folder, Users as UsersIcon, Vote as VoteIcon, UserCheck, Building, PiggyBank, CreditCard, BookOpen, Bell as BellIcon, Star, TrendingUp, Menu, Send } from 'lucide-react';
-import { getDashboard, getModules } from './api.js';
+import { getDashboard, getModules, removeToken, fetchMe } from './api.js';
 import { roles } from './modules.js';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
@@ -45,6 +45,25 @@ import CleaningTasksManagement from './CleaningTasksManagement.jsx';
 import StaffInfoManagement from './StaffInfoManagement.jsx';
 import StaffRatingsManagement from './StaffRatingsManagement.jsx';
 import './styles.css';
+import { getToken } from './api.js';
+
+// Parche global de fetch: inyecta el JWT en las peticiones a la API para que
+// todos los componentes existentes se beneficien sin editarlos uno a uno.
+const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+const originalFetch = window.fetch;
+window.fetch = async function patchedFetch(url, options = {}) {
+  const token = getToken();
+  if (token && typeof url === 'string' && url.startsWith(API_URL)) {
+    const headers = options.headers || {};
+    if (!headers['Authorization'] && !headers['authorization']) {
+      options = {
+        ...options,
+        headers: { ...headers, 'Authorization': `Bearer ${token}` }
+      };
+    }
+  }
+  return originalFetch(url, options);
+};
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -113,13 +132,29 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    getModules().then(setModules);
-    getDashboard().then(setDashboard);
-    // Cargar módulos permitidos del localStorage
+    // Intentar restaurar sesión si hay un token guardado
     const savedModules = localStorage.getItem('allowedModules');
     if (savedModules) {
       setAllowedModules(savedModules.split(','));
     }
+
+    fetchMe()
+      .then(userData => {
+        setUser(userData);
+        if (userData.modules) {
+          setAllowedModules(userData.modules.split(','));
+          localStorage.setItem('allowedModules', userData.modules);
+        }
+        getModules().then(setModules);
+        getDashboard().then(setDashboard);
+      })
+      .catch(() => {
+        // No hay sesión válida: continuar sin usuario y cargar datos publicos/fallback
+        removeToken();
+        localStorage.removeItem('allowedModules');
+        getModules().then(setModules);
+        getDashboard().then(setDashboard);
+      });
   }, []);
 
   const handleLogin = (userData) => {
@@ -132,6 +167,7 @@ function App() {
     if (userData.modules) {
       const modules = userData.modules.split(',');
       setAllowedModules(modules);
+      localStorage.setItem('allowedModules', userData.modules);
       console.log('allowedModules actualizado:', modules);
     }
   };
@@ -141,6 +177,7 @@ function App() {
     setUser(null);
     setAuthView('login');
     setAllowedModules([]);
+    removeToken();
     localStorage.removeItem('allowedModules');
   };
 

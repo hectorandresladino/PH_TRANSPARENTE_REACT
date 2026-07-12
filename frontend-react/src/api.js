@@ -1,8 +1,44 @@
 ﻿const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 
+const TOKEN_KEY = 'pht_token';
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function removeToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+function buildHeaders(extraHeaders = {}) {
+  const headers = { ...extraHeaders };
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/**
+ * Wrapper de fetch que inyecta automáticamente el token JWT cuando existe.
+ * Facilita la migración a autenticación stateless sin editar todos los componentes.
+ */
+export async function fetchWithAuth(url, options = {}) {
+  const headers = buildHeaders(options.headers || {});
+  return fetch(url, { ...options, headers });
+}
+
 export async function getModules() {
   try {
-    const response = await fetch(`${API_URL}/modules`);
+    const response = await fetchWithAuth(`${API_URL}/modules`);
     if (!response.ok) throw new Error('API no disponible');
     return await response.json();
   } catch (error) {
@@ -13,7 +49,7 @@ export async function getModules() {
 
 export async function getDashboard() {
   try {
-    const response = await fetch(`${API_URL}/dashboard`);
+    const response = await fetchWithAuth(`${API_URL}/dashboard`);
     if (!response.ok) throw new Error('API no disponible');
     return await response.json();
   } catch (error) {
@@ -28,9 +64,19 @@ export async function login(username, password) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    if (!response.ok) throw new Error('Credenciales invÃ¡lidas');
-    return await response.json();
+    if (!response.ok) throw new Error('Credenciales inválidas');
+    const data = await response.json();
+    if (data.token) {
+      setToken(data.token);
+    }
+    return data;
   } catch (error) {
     throw error;
   }
+}
+
+export async function fetchMe() {
+  const response = await fetchWithAuth(`${API_URL}/auth/me`);
+  if (!response.ok) throw new Error('No autenticado');
+  return await response.json();
 }
