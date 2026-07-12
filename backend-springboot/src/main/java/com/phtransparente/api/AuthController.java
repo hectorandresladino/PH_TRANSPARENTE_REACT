@@ -18,13 +18,15 @@ public class AuthController {
   private final VerificationService verificationService;
   private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
+  private final LoginRateLimiter loginRateLimiter;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.verificationService = verificationService;
     this.emailService = emailService;
     this.passwordEncoder = passwordEncoder;
+    this.loginRateLimiter = loginRateLimiter;
   }
 
   private static boolean isBCryptHash(String value) {
@@ -34,9 +36,18 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<?> login(@RequestBody LoginRequest request) {
     logger.info("Intento de login para usuario: {}", request.username());
+
+    if (loginRateLimiter.isBlocked(request.username())) {
+      long seconds = loginRateLimiter.secondsUntilUnlock(request.username());
+      logger.warn("Login bloqueado por demasiados intentos: {} ({}s restantes)", request.username(), seconds);
+      return ResponseEntity.status(429).body(
+        "Demasiados intentos fallidos. Intenta de nuevo en " + Math.ceil(seconds / 60.0) + " minuto(s).");
+    }
+
     User user = userRepository.findByUsername(request.username());
 
     if (user == null) {
+      loginRateLimiter.recordFailure(request.username());
       logger.warn("Login fallido para usuario: {}", request.username());
       return ResponseEntity.status(401).body("Credenciales inválidas");
     }
@@ -59,12 +70,14 @@ public class AuthController {
         logger.warn("Login rechazado (usuario inactivo): {}", request.username());
         return ResponseEntity.status(403).body("La cuenta está inactiva");
       }
+      loginRateLimiter.reset(request.username());
       logger.info("Login exitoso para usuario: {}", request.username());
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
       String modules = role != null ? role.getModules() : "";
       return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules));
     }
 
+    loginRateLimiter.recordFailure(request.username());
     logger.warn("Login fallido para usuario: {}", request.username());
     return ResponseEntity.status(401).body("Credenciales inválidas");
   }
