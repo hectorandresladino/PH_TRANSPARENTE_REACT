@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { BarChart3, FileText, Clock, CheckCircle, AlertCircle, TrendingUp, Calendar, MessageSquare } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function PqrStatistics({ user }) {
   const [pqrs, setPqrs] = useState([]);

@@ -7,6 +7,13 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5174,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     minify: 'esbuild',

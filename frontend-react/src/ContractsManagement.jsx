@@ -2,7 +2,7 @@
 import { FileText, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function ContractsManagement() {
   const [contracts, setContracts] = useState([]);
@@ -89,7 +89,7 @@ export default function ContractsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este contrato?')) {
+    if (window.confirm('¿Estás seguro de eliminar este contrato?')) {
       try {
         const response = await fetch(`${API_URL}/contracts/${id}`, {
           method: 'DELETE'
@@ -158,7 +158,7 @@ export default function ContractsManagement() {
       <div className="contracts-header">
         <div className="header-title">
           <FileText size={32} />
-          <h1>GestiÃ³n de Contratos</h1>
+          <h1>Gestión de Contratos</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingContract(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -242,7 +242,7 @@ export default function ContractsManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Contrato</label>
+                  <label>Número de Contrato</label>
                   <input
                     type="text"
                     value={formData.contractNumber}
@@ -325,7 +325,7 @@ export default function ContractsManagement() {
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
@@ -333,7 +333,7 @@ export default function ContractsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ©rminos y Condiciones</label>
+                  <label>Términos y Condiciones</label>
                   <textarea
                     value={formData.terms}
                     onChange={e => setFormData({...formData, terms: e.target.value})}

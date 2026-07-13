@@ -2,7 +2,7 @@
 import { Users, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function CouncilsManagement() {
   const [councils, setCouncils] = useState([]);
@@ -85,7 +85,7 @@ export default function CouncilsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este miembro del consejo?')) {
+    if (window.confirm('¿Estás seguro de eliminar este miembro del consejo?')) {
       try {
         const response = await fetch(`${API_URL}/councils/${id}`, {
           method: 'DELETE'
@@ -146,7 +146,7 @@ export default function CouncilsManagement() {
       <div className="councils-header">
         <div className="header-title">
           <Users size={32} />
-          <h1>GestiÃ³n del Consejo</h1>
+          <h1>Gestión del Consejo</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingCouncil(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -305,7 +305,7 @@ export default function CouncilsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>Teléfono</label>
                   <input
                     type="tel"
                     value={formData.contactPhone}
@@ -313,7 +313,7 @@ export default function CouncilsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

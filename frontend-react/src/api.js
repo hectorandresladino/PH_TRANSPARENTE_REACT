@@ -1,4 +1,15 @@
-﻿const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+﻿import { Capacitor } from '@capacitor/core';
+
+const isNative = Capacitor.isNativePlatform();
+const platform = Capacitor.getPlatform();
+
+// En web usamos el proxy de Vite (/api). En Android nativo usamos 10.0.2.2 (emulador).
+// Para dispositivos reales, configure VITE_API_URL al compilar o modifique este valor.
+const defaultApiUrl = isNative
+  ? (platform === 'android' ? 'http://10.0.2.2:8081/api' : 'http://localhost:8081/api')
+  : '/api';
+
+export const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl;
 
 const TOKEN_KEY = 'pht_token';
 

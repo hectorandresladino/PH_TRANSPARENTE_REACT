@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Building2, ShieldCheck, Vote, FileText, Bell, Car, Search, Users, BarChart3, LogOut, LayoutGrid, Grid, DollarSign, Calendar, Shield, FileText as FileTextIcon, AlertTriangle, Folder, Users as UsersIcon, Vote as VoteIcon, UserCheck, Building, PiggyBank, CreditCard, BookOpen, Bell as BellIcon, Star, TrendingUp, Menu, Send } from 'lucide-react';
-import { getDashboard, getModules, removeToken, fetchMe } from './api.js';
+import { getDashboard, getModules, removeToken, fetchMe, setToken } from './api.js';
 import { roles } from './modules.js';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
@@ -44,12 +44,13 @@ import SecurityReportsManagement from './SecurityReportsManagement.jsx';
 import CleaningTasksManagement from './CleaningTasksManagement.jsx';
 import StaffInfoManagement from './StaffInfoManagement.jsx';
 import StaffRatingsManagement from './StaffRatingsManagement.jsx';
+import AuditLogManagement from './AuditLogManagement.jsx';
+import IdleTimer from './IdleTimer.jsx';
 import './styles.css';
-import { getToken } from './api.js';
+import { getToken, API_URL } from './api.js';
 
 // Parche global de fetch: inyecta el JWT en las peticiones a la API para que
 // todos los componentes existentes se beneficien sin editarlos uno a uno.
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 const originalFetch = window.fetch;
 window.fetch = async function patchedFetch(url, options = {}) {
   const token = getToken();
@@ -161,6 +162,9 @@ function App() {
     console.log('handleLogin llamado con:', userData);
     console.log('Rol del usuario:', userData.role);
     console.log('Módulos permitidos:', userData.modules);
+    if (userData.token) {
+      setToken(userData.token);
+    }
     setUser(userData);
     setAuthView('login');
     // Actualizar módulos permitidos
@@ -172,17 +176,20 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    console.log('handleLogout llamado');
+  const handleLogout = useCallback(() => {
+    console.log('handleLogout llamado por inactividad');
     setUser(null);
     setAuthView('login');
     setAllowedModules([]);
     removeToken();
     localStorage.removeItem('allowedModules');
-  };
+  }, []);
 
   const handleRegister = (userData) => {
     console.log('handleRegister llamado con:', userData);
+    if (userData.token) {
+      setToken(userData.token);
+    }
     setUser(userData);
     setAuthView('login');
   };
@@ -492,12 +499,23 @@ function App() {
             <span>App Store</span>
           </button>
           )}
+          {(user?.role === 'ADMIN' || user?.role === 'REVISOR_FISCAL') && (
+          <button 
+            className={`nav-item ${currentView === 'audit' ? 'active' : ''}`}
+            onClick={() => setCurrentView('audit')}
+          >
+            <ShieldCheck size={18} />
+            <span>Auditoría ISO</span>
+          </button>
+          )}
         </nav>
         <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={18} />
           <span>Cerrar sesión</span>
         </button>
       </aside>
+
+      {user && <IdleTimer onLogout={handleLogout} timeoutMs={5 * 60 * 1000} />}
 
       <main className="dashboard-content">
         {currentView === 'dashboard' ? (
@@ -628,6 +646,8 @@ function App() {
           <StaffInfoManagement userRole={user?.role} onBack={() => setCurrentView('dashboard')} />
         ) : currentView === 'staff-ratings' ? (
           <StaffRatingsManagement userRole={user?.role} onBack={() => setCurrentView('dashboard')} />
+        ) : currentView === 'audit' ? (
+          <AuditLogManagement />
         ) : (
           <AppStore />
         )}

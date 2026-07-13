@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Shield, ArrowLeft, RefreshCw } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function VerificationCode({ username, onVerified, onBack, sentCode }) {
   const [code, setCode] = useState('');

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Search, Plus, Edit, Trash2, Filter, DollarSign, Calendar, FileText } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function InsurancePoliciesManagement() {
   const [policies, setPolicies] = useState([]);
@@ -110,7 +110,7 @@ export default function InsurancePoliciesManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta pÃ³liza?')) {
+    if (window.confirm('¿Está seguro de eliminar esta póliza?')) {
       try {
         const response = await fetch(`${API_URL}/insurance-policies/${id}`, {
           method: 'DELETE'
@@ -170,11 +170,11 @@ export default function InsurancePoliciesManagement() {
       <div className="contractors-header">
         <div className="header-title">
           <ShieldCheck size={32} />
-          <h1>PÃ³lizas de Seguro</h1>
+          <h1>Pólizas de Seguro</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
           <Plus size={20} />
-          Nueva PÃ³liza
+          Nueva Póliza
         </button>
       </div>
 
@@ -183,7 +183,7 @@ export default function InsurancePoliciesManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por pÃ³liza o compaÃ±Ã­a..."
+            placeholder="Buscar por póliza o compañía..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -213,8 +213,8 @@ export default function InsurancePoliciesManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>PÃ³liza</th>
-              <th>CompaÃ±Ã­a</th>
+              <th>Póliza</th>
+              <th>Compañía</th>
               <th>Tipo</th>
               <th>Cobertura</th>
               <th>Prima Anual</th>
@@ -272,13 +272,13 @@ export default function InsurancePoliciesManagement() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingPolicy ? 'Editar PÃ³liza' : 'Nueva PÃ³liza'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <h2>{editingPolicy ? 'Editar Póliza' : 'Nueva Póliza'}</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de PÃ³liza *</label>
+                  <label>Número de Póliza *</label>
                   <input
                     type="text"
                     value={formData.policyNumber}
@@ -287,7 +287,7 @@ export default function InsurancePoliciesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>CompaÃ±Ã­a de Seguros *</label>
+                  <label>Compañía de Seguros *</label>
                   <input
                     type="text"
                     value={formData.insuranceCompany}

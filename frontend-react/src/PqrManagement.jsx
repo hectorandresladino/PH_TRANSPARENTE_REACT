@@ -2,7 +2,7 @@
 import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X, MessageSquare } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function PqrManagement({ user }) {
   const [pqrs, setPqrs] = useState([]);
@@ -126,7 +126,7 @@ export default function PqrManagement({ user }) {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar esta PQR?')) {
+    if (window.confirm('¿Estás seguro de eliminar esta PQR?')) {
       try {
         const response = await fetch(`${API_URL}/pqrs/${id}`, {
           method: 'DELETE'
@@ -199,7 +199,7 @@ export default function PqrManagement({ user }) {
       <div className="pqr-header">
         <div className="header-title">
           <FileText size={32} />
-          <h1>GestiÃ³n de PQR</h1>
+          <h1>Gestión de PQR</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingPqr(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -249,7 +249,7 @@ export default function PqrManagement({ user }) {
               <div style={{ marginTop: '8px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                 <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <MessageSquare size={12} />
-                  Respuesta de la administraciÃ³n:
+                  Respuesta de la administración:
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#166534' }}>
                   {pqr.response}
@@ -306,7 +306,7 @@ export default function PqrManagement({ user }) {
                     value={formData.type}
                     onChange={e => setFormData({...formData, type: e.target.value})}
                   >
-                    <option value="PETICION">PeticiÃ³n</option>
+                    <option value="PETICION">Petición</option>
                     <option value="QUEJA">Queja</option>
                     <option value="RECLAMO">Reclamo</option>
                     <option value="SUGERENCIA">Sugerencia</option>
@@ -324,7 +324,7 @@ export default function PqrManagement({ user }) {
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -333,7 +333,7 @@ export default function PqrManagement({ user }) {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}
@@ -363,7 +363,7 @@ export default function PqrManagement({ user }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>Teléfono</label>
                   <input
                     type="tel"
                     value={formData.phone}

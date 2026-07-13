@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Star, Search, Plus, Filter, Calendar, User, Building, Shield, Briefcase, Home, Trash2, Edit, TrendingUp } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 const PERSON_TYPES = ['ADMINISTRADOR', 'CONSEJERO', 'COPIROPIETARIO', 'SEGURIDAD', 'EMPRESA', 'CONTRATISTA'];
 const RATING_CATEGORIES = ['SERVICIO', 'ACTITUD', 'PROFESIONALISMO', 'RESPONSABILIDAD', 'COMUNICACION'];
@@ -76,7 +76,7 @@ export default function PersonnelRatingsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta calificaciÃ³n?')) {
+    if (window.confirm('¿Está seguro de eliminar esta calificación?')) {
       try {
         const response = await fetch(`${API_URL}/personnel-ratings/${id}`, {
           method: 'DELETE'
@@ -154,7 +154,7 @@ export default function PersonnelRatingsManagement() {
       <div className="contractors-header">
         <div className="header-title">
           <Star size={32} />
-          <h1>CalificaciÃ³n de Personal</h1>
+          <h1>Calificación de Personal</h1>
         </div>
         <div className="rating-summary">
           <div className="summary-card">
@@ -166,7 +166,7 @@ export default function PersonnelRatingsManagement() {
           </div>
           <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
             <Plus size={20} />
-            Nueva CalificaciÃ³n
+            Nueva Calificación
           </button>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function PersonnelRatingsManagement() {
         <div className="filter-group">
           <Calendar size={18} />
           <select value={filterPeriod} onChange={(e) => setFilterPeriod(e.target.value)}>
-            <option value="all">Todos los perÃ­odos</option>
+            <option value="all">Todos los períodos</option>
             {RATING_PERIODS.map(period => (
               <option key={period} value={period}>{period}</option>
             ))}
@@ -218,9 +218,9 @@ export default function PersonnelRatingsManagement() {
               <th>Rol</th>
               <th>Calificador</th>
               <th>Casa/Unidad</th>
-              <th>CalificaciÃ³n</th>
-              <th>CategorÃ­a</th>
-              <th>PerÃ­odo</th>
+              <th>Calificación</th>
+              <th>Categoría</th>
+              <th>Período</th>
               <th>Fecha</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -274,8 +274,8 @@ export default function PersonnelRatingsManagement() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Nueva CalificaciÃ³n de Personal</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <h2>Nueva Calificación de Personal</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -343,7 +343,7 @@ export default function PersonnelRatingsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>CalificaciÃ³n General (1-5) *</label>
+                  <label>Calificación General (1-5) *</label>
                   <input
                     type="number"
                     min="1"
@@ -384,7 +384,7 @@ export default function PersonnelRatingsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>ComunicaciÃ³n (1-5)</label>
+                  <label>Comunicación (1-5)</label>
                   <input
                     type="number"
                     min="1"
@@ -420,7 +420,7 @@ export default function PersonnelRatingsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Ãreas de Mejora</label>
+                  <label>íreas de Mejora</label>
                   <textarea
                     value={formData.improvementAreas}
                     onChange={(e) => setFormData({...formData, improvementAreas: e.target.value})}
@@ -428,7 +428,7 @@ export default function PersonnelRatingsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>PerÃ­odo</label>
+                  <label>Período</label>
                   <select
                     value={formData.ratingPeriod}
                     onChange={(e) => setFormData({...formData, ratingPeriod: e.target.value})}
@@ -439,7 +439,7 @@ export default function PersonnelRatingsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>CategorÃ­a</label>
+                  <label>Categoría</label>
                   <select
                     value={formData.ratingCategory}
                     onChange={(e) => setFormData({...formData, ratingCategory: e.target.value})}
@@ -456,7 +456,7 @@ export default function PersonnelRatingsManagement() {
                       checked={formData.isAnonymous}
                       onChange={(e) => setFormData({...formData, isAnonymous: e.target.checked})}
                     />
-                    CalificaciÃ³n AnÃ³nima
+                    Calificación Anónima
                   </label>
                 </div>
               </div>
@@ -465,7 +465,7 @@ export default function PersonnelRatingsManagement() {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-primary">
-                  Guardar CalificaciÃ³n
+                  Guardar Calificación
                 </button>
               </div>
             </form>

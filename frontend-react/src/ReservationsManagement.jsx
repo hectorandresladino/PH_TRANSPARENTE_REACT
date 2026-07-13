@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Plus, Edit, Trash2, Search, Clock, CheckCircle, XCircle, 
   Users as UsersIcon, DollarSign, Upload, Eye, AlertCircle,
   CreditCard, FileText, Building, Phone, Paperclip, X, ChevronLeft, ChevronRight, LayoutGrid
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function ReservationsManagement({ userRole = 'admin' }) {
   const [reservations, setReservations] = useState([]);

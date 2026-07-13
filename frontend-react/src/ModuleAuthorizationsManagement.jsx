@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Shield, Search, Plus, Edit, Trash2, Filter, Calendar, User, Key, Lock, Unlock, CheckCircle, XCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 const MODULES = [
   'dashboard', 'users', 'pqr', 'payments', 'reservations', 'visitors', 
@@ -104,7 +104,7 @@ export default function ModuleAuthorizationsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta autorizaciÃ³n?')) {
+    if (window.confirm('¿Está seguro de eliminar esta autorización?')) {
       try {
         const response = await fetch(`${API_URL}/module-authorizations/${id}`, {
           method: 'DELETE'
@@ -119,7 +119,7 @@ export default function ModuleAuthorizationsManagement() {
   };
 
   const handleRevoke = async (auth) => {
-    const revocationReason = prompt('Motivo de revocaciÃ³n:');
+    const revocationReason = prompt('Motivo de revocación:');
     if (revocationReason) {
       try {
         const response = await fetch(`${API_URL}/module-authorizations/${auth.id}/revoke`, {
@@ -183,11 +183,11 @@ export default function ModuleAuthorizationsManagement() {
       <div className="contractors-header">
         <div className="header-title">
           <Shield size={32} />
-          <h1>Autorizaciones de MÃ³dulos</h1>
+          <h1>Autorizaciones de Módulos</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
           <Plus size={20} />
-          Nueva AutorizaciÃ³n
+          Nueva Autorización
         </button>
       </div>
 
@@ -196,7 +196,7 @@ export default function ModuleAuthorizationsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por usuario o mÃ³dulo..."
+            placeholder="Buscar por usuario o módulo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -216,7 +216,7 @@ export default function ModuleAuthorizationsManagement() {
             <option value="all">Todos los permisos</option>
             <option value="LECTURA">Lectura</option>
             <option value="ESCRITURA">Escritura</option>
-            <option value="ADMINISTRACION">AdministraciÃ³n</option>
+            <option value="ADMINISTRACION">Administración</option>
           </select>
         </div>
       </div>
@@ -226,11 +226,11 @@ export default function ModuleAuthorizationsManagement() {
           <thead>
             <tr>
               <th>Usuario</th>
-              <th>MÃ³dulo</th>
+              <th>Módulo</th>
               <th>Permiso</th>
               <th>Estado</th>
-              <th>Fecha ConcesiÃ³n</th>
-              <th>ExpiraciÃ³n</th>
+              <th>Fecha Concesión</th>
+              <th>Expiración</th>
               <th>Permanente</th>
               <th>Acciones</th>
             </tr>
@@ -305,8 +305,8 @@ export default function ModuleAuthorizationsManagement() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingAuth ? 'Editar AutorizaciÃ³n' : 'Nueva AutorizaciÃ³n'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <h2>{editingAuth ? 'Editar Autorización' : 'Nueva Autorización'}</h2>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -324,13 +324,13 @@ export default function ModuleAuthorizationsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>MÃ³dulo *</label>
+                  <label>Módulo *</label>
                   <select
                     value={formData.moduleName}
                     onChange={(e) => setFormData({...formData, moduleName: e.target.value})}
                     required
                   >
-                    <option value="">Seleccionar mÃ³dulo...</option>
+                    <option value="">Seleccionar módulo...</option>
                     {MODULES.map(module => (
                       <option key={module} value={module}>{module}</option>
                     ))}
@@ -360,7 +360,7 @@ export default function ModuleAuthorizationsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Fecha de ExpiraciÃ³n</label>
+                  <label>Fecha de Expiración</label>
                   <input
                     type="date"
                     value={formData.expiryDate}
@@ -374,11 +374,11 @@ export default function ModuleAuthorizationsManagement() {
                     onChange={(e) => setFormData({...formData, isPermanent: e.target.value === 'true'})}
                   >
                     <option value="false">No</option>
-                    <option value="true">SÃ­</option>
+                    <option value="true">Sí</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>RazÃ³n de AutorizaciÃ³n</label>
+                  <label>Razón de Autorización</label>
                   <textarea
                     value={formData.authorizationReason}
                     onChange={(e) => setFormData({...formData, authorizationReason: e.target.value})}

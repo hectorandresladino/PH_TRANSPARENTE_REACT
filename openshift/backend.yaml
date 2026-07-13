@@ -1,0 +1,115 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ph-backend
+  labels:
+    app: ph-backend
+spec:
+  source:
+    type: Git
+    git:
+      uri: "https://github.com/tu-usuario/ph_transparente.git"
+      ref: "main"
+    contextDir: "backend-springboot"
+  strategy:
+    type: Docker
+    dockerfilePath: "Dockerfile"
+  output:
+    to:
+      kind: ImageStreamTag
+      name: ph-backend:latest
+  triggers:
+    - type: ConfigChange
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ph-backend
+  labels:
+    app: ph-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ph-backend
+  template:
+    metadata:
+      labels:
+        app: ph-backend
+    spec:
+      containers:
+        - name: backend
+          image: image-registry.openshift-image-registry.svc:5000/ph-transparente/ph-backend:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SERVER_PORT
+              value: "8081"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: database-url
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: database-username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: database-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: jwt-secret
+            - name: CORS_ALLOWED_ORIGINS
+              value: "*"
+            - name: EMAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: email-username
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ph-transparente-secrets
+                  key: email-password
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ph-backend
+  labels:
+    app: ph-backend
+spec:
+  selector:
+    app: ph-backend
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ph-backend
+  labels:
+    app: ph-backend
+spec:
+  to:
+    kind: Service
+    name: ph-backend
+  port:
+    targetPort: 8081
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

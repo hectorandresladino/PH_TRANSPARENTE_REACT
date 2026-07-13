@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   FileText, Upload, Download, Eye, Calendar, Users, 
   Search, Filter, Plus, Trash2, Edit, Clock, CheckCircle,
   AlertCircle, X, Save
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function CouncilMinutesManagement({ userRole = 'admin' }) {
   const [minutes, setMinutes] = useState([]);

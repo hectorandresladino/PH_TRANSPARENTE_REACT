@@ -2,7 +2,7 @@
 import { FileText, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, Download, Upload } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function DocumentsManagement() {
   const [documents, setDocuments] = useState([]);
@@ -93,7 +93,7 @@ export default function DocumentsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este documento?')) {
+    if (window.confirm('¿Estás seguro de eliminar este documento?')) {
       try {
         const response = await fetch(`${API_URL}/documents/${id}`, {
           method: 'DELETE'
@@ -164,7 +164,7 @@ export default function DocumentsManagement() {
       <div className="documents-header">
         <div className="header-title">
           <FileText size={32} />
-          <h1>GestiÃ³n de Documentos</h1>
+          <h1>Gestión de Documentos</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingDocument(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -214,7 +214,7 @@ export default function DocumentsManagement() {
                 <span>Archivo: {document.fileName || '-'}</span>
               </div>
               <div className="detail-row">
-                <span>TamaÃ±o: {formatFileSize(document.fileSize)}</span>
+                <span>Tamaño: {formatFileSize(document.fileSize)}</span>
               </div>
               <div className="detail-row">
                 <Upload size={16} />
@@ -260,7 +260,7 @@ export default function DocumentsManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -278,7 +278,7 @@ export default function DocumentsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>CategorÃ­a</label>
+                  <label>Categoría</label>
                   <select
                     value={formData.category}
                     onChange={e => setFormData({...formData, category: e.target.value})}
@@ -320,7 +320,7 @@ export default function DocumentsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TamaÃ±o (bytes)</label>
+                  <label>Tamaño (bytes)</label>
                   <input
                     type="number"
                     value={formData.fileSize}
@@ -355,7 +355,7 @@ export default function DocumentsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

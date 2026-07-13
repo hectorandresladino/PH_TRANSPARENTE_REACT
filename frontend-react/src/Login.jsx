@@ -1,9 +1,8 @@
 ﻿import React, { useState } from 'react';
 import { Lock, User } from 'lucide-react';
+import { API_URL, setToken } from './api.js';
 import VerificationCode from './VerificationCode';
 import './styles.css';
-
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 
 export default function Login({ onLogin, onShowRegister, onShowForgotPassword }) {
   const [username, setUsername] = useState('');
@@ -27,6 +26,9 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
       if (response.ok) {
         const data = await response.json();
         console.log('Login exitoso:', data);
+        if (data.token) {
+          setToken(data.token);
+        }
         
         // Enviar código de verificación
         try {
@@ -58,8 +60,9 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
           onLogin(data);
         }
       } else {
-        console.error('Error en login:', response.status);
-        setError('Credenciales invalidas');
+        const errorText = await response.text().catch(() => '');
+        console.error('Error en login:', response.status, errorText, 'URL:', `${API_URL}/auth/login`);
+        setError(`Credenciales invalidas (${response.status})${errorText ? ': ' + errorText : ''}`);
       }
     } catch (err) {
       console.error('Error de conexion:', err);
@@ -116,7 +119,7 @@ export default function Login({ onLogin, onShowRegister, onShowForgotPassword })
             <Lock size={20} />
             <input
               type="password"
-              placeholder="Contrasena"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

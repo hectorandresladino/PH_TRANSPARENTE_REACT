@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   DollarSign, Send, CheckCircle, Clock, FileText, Search, Eye,
   Paperclip, X, TrendingUp, Calendar, User, Building, Calculator,
   ArrowRight, AlertCircle, Download, BarChart3, CreditCard
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function PaymentReports({ userRole = 'admin' }) {
   const [reports, setReports] = useState([]);

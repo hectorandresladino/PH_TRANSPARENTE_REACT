@@ -1,0 +1,84 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ph-frontend
+  labels:
+    app: ph-frontend
+spec:
+  source:
+    type: Git
+    git:
+      uri: "https://github.com/tu-usuario/ph_transparente.git"
+      ref: "main"
+    contextDir: "frontend-react"
+  strategy:
+    type: Docker
+    dockerStrategy:
+      buildArgs:
+        - name: "VITE_API_URL"
+          value: "/api"
+      dockerfilePath: "Dockerfile"
+  output:
+    to:
+      kind: ImageStreamTag
+      name: ph-frontend:latest
+  triggers:
+    - type: ConfigChange
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ph-frontend
+  labels:
+    app: ph-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ph-frontend
+  template:
+    metadata:
+      labels:
+        app: ph-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: image-registry.openshift-image-registry.svc:5000/ph-transparente/ph-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ph-frontend
+  labels:
+    app: ph-frontend
+spec:
+  selector:
+    app: ph-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ph-frontend
+  labels:
+    app: ph-frontend
+spec:
+  to:
+    kind: Service
+    name: ph-frontend
+  port:
+    targetPort: 80
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

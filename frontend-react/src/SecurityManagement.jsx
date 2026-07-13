@@ -2,7 +2,7 @@
 import { Shield, Users, MapPin, AlertTriangle, FileText, Plus, Edit, Trash2, Search, Check, X, Clock, Car, User as UserIcon } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function SecurityManagement() {
   const [activeTab, setActiveTab] = useState('access-control');
@@ -410,7 +410,7 @@ export default function SecurityManagement() {
   };
 
   const handleDelete = async (id, endpoint) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este registro?')) {
+    if (window.confirm('¿Estás seguro de eliminar este registro?')) {
       try {
         const response = await fetch(`${API_URL}/${endpoint}/${id}`, {
           method: 'DELETE'
@@ -433,7 +433,7 @@ export default function SecurityManagement() {
       <div className="tab-header">
         <div className="header-title">
           <Car size={32} />
-          <h1>PorterÃ­a - Control de Accesos</h1>
+          <h1>Portería - Control de Accesos</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetAccessForm(); setEditingAccess(null); setShowAccessModal(true); }}>
           <Plus size={20} />
@@ -459,7 +459,7 @@ export default function SecurityManagement() {
               <th>Tipo</th>
               <th>Persona</th>
               <th>Documento</th>
-              <th>VehÃ­culo</th>
+              <th>Vehículo</th>
               <th>Destino</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -529,30 +529,30 @@ export default function SecurityManagement() {
                 <div className="form-group">
                   <label>Tipo Documento</label>
                   <select value={accessFormData.documentType} onChange={e => setAccessFormData({...accessFormData, documentType: e.target.value})}>
-                    <option value="CC">CÃ©dula</option>
+                    <option value="CC">Cédula</option>
                     <option value="TI">Tarjeta Identidad</option>
-                    <option value="CE">CÃ©dula ExtranjerÃ­a</option>
+                    <option value="CE">Cédula Extranjería</option>
                     <option value="PP">Pasaporte</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>NÃºmero Documento</label>
+                  <label>Número Documento</label>
                   <input type="text" value={accessFormData.documentNumber} onChange={e => setAccessFormData({...accessFormData, documentNumber: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>Placa VehÃ­culo</label>
+                  <label>Placa Vehículo</label>
                   <input type="text" value={accessFormData.vehiclePlate} onChange={e => setAccessFormData({...accessFormData, vehiclePlate: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>Tipo VehÃ­culo</label>
+                  <label>Tipo Vehículo</label>
                   <input type="text" value={accessFormData.vehicleType} onChange={e => setAccessFormData({...accessFormData, vehicleType: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>PortÃ³n Entrada</label>
+                  <label>Portón Entrada</label>
                   <input type="text" value={accessFormData.entryGate} onChange={e => setAccessFormData({...accessFormData, entryGate: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>PortÃ³n Salida</label>
+                  <label>Portón Salida</label>
                   <input type="text" value={accessFormData.exitGate} onChange={e => setAccessFormData({...accessFormData, exitGate: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -560,15 +560,15 @@ export default function SecurityManagement() {
                   <input type="text" value={accessFormData.destination} onChange={e => setAccessFormData({...accessFormData, destination: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>PropÃ³sito</label>
+                  <label>Propósito</label>
                   <input type="text" value={accessFormData.purpose} onChange={e => setAccessFormData({...accessFormData, purpose: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>Nombre AnfitriÃ³n</label>
+                  <label>Nombre Anfitrión</label>
                   <input type="text" value={accessFormData.hostName} onChange={e => setAccessFormData({...accessFormData, hostName: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>Unidad AnfitriÃ³n</label>
+                  <label>Unidad Anfitrión</label>
                   <input type="text" value={accessFormData.hostUnit} onChange={e => setAccessFormData({...accessFormData, hostUnit: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -626,9 +626,9 @@ export default function SecurityManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>CÃ³digo</th>
+              <th>Código</th>
               <th>Nombre</th>
-              <th>UbicaciÃ³n</th>
+              <th>Ubicación</th>
               <th>Zona</th>
               <th>Tipo</th>
               <th>Guardia Asignado</th>
@@ -683,7 +683,7 @@ export default function SecurityManagement() {
             <form onSubmit={handlePointSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>CÃ³digo</label>
+                  <label>Código</label>
                   <input type="text" value={pointFormData.code} onChange={e => setPointFormData({...pointFormData, code: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -691,7 +691,7 @@ export default function SecurityManagement() {
                   <input type="text" value={pointFormData.name} onChange={e => setPointFormData({...pointFormData, name: e.target.value})} required />
                 </div>
                 <div className="form-group">
-                  <label>UbicaciÃ³n</label>
+                  <label>Ubicación</label>
                   <input type="text" value={pointFormData.location} onChange={e => setPointFormData({...pointFormData, location: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -702,7 +702,7 @@ export default function SecurityManagement() {
                   <label>Tipo</label>
                   <select value={pointFormData.type} onChange={e => setPointFormData({...pointFormData, type: e.target.value})}>
                     <option value="FIJO">Fijo</option>
-                    <option value="MOVIL">MÃ³vil</option>
+                    <option value="MOVIL">Móvil</option>
                     <option value="TEMPORAL">Temporal</option>
                   </select>
                 </div>
@@ -711,7 +711,7 @@ export default function SecurityManagement() {
                   <input type="text" value={pointFormData.assignedGuard} onChange={e => setPointFormData({...pointFormData, assignedGuard: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono Contacto</label>
+                  <label>Teléfono Contacto</label>
                   <input type="text" value={pointFormData.contactPhone} onChange={e => setPointFormData({...pointFormData, contactPhone: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -722,11 +722,11 @@ export default function SecurityManagement() {
                   </select>
                 </div>
                 <div className="form-group full-width">
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea value={pointFormData.description} onChange={e => setPointFormData({...pointFormData, description: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
-                  <label>Ãrea de Vigilancia</label>
+                  <label>írea de Vigilancia</label>
                   <textarea value={pointFormData.surveillanceArea} onChange={e => setPointFormData({...pointFormData, surveillanceArea: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
@@ -779,7 +779,7 @@ export default function SecurityManagement() {
             <tr>
               <th>Nombre</th>
               <th>Documento</th>
-              <th>TelÃ©fono</th>
+              <th>Teléfono</th>
               <th>Turno</th>
               <th>Zona Asignada</th>
               <th>Punto Asignado</th>
@@ -839,17 +839,17 @@ export default function SecurityManagement() {
                 <div className="form-group">
                   <label>Tipo Documento</label>
                   <select value={guardFormData.documentType} onChange={e => setGuardFormData({...guardFormData, documentType: e.target.value})}>
-                    <option value="CC">CÃ©dula</option>
+                    <option value="CC">Cédula</option>
                     <option value="TI">Tarjeta Identidad</option>
-                    <option value="CE">CÃ©dula ExtranjerÃ­a</option>
+                    <option value="CE">Cédula Extranjería</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>NÃºmero Documento</label>
+                  <label>Número Documento</label>
                   <input type="text" value={guardFormData.documentNumber} onChange={e => setGuardFormData({...guardFormData, documentNumber: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>Teléfono</label>
                   <input type="text" value={guardFormData.phone} onChange={e => setGuardFormData({...guardFormData, phone: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -878,7 +878,7 @@ export default function SecurityManagement() {
                   <select value={guardFormData.status} onChange={e => setGuardFormData({...guardFormData, status: e.target.value})}>
                     <option value="ACTIVO">Activo</option>
                     <option value="INACTIVO">Inactivo</option>
-                    <option value="VACACION">VacaciÃ³n</option>
+                    <option value="VACACION">Vacación</option>
                     <option value="LICENCIA">Licencia</option>
                   </select>
                 </div>
@@ -903,7 +903,7 @@ export default function SecurityManagement() {
                   <input type="text" value={guardFormData.emergencyContact} onChange={e => setGuardFormData({...guardFormData, emergencyContact: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono Emergencia</label>
+                  <label>Teléfono Emergencia</label>
                   <input type="text" value={guardFormData.emergencyPhone} onChange={e => setGuardFormData({...guardFormData, emergencyPhone: e.target.value})} />
                 </div>
               </div>
@@ -946,10 +946,10 @@ export default function SecurityManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>TÃ­tulo</th>
+              <th>Título</th>
               <th>Tipo</th>
               <th>Severidad</th>
-              <th>UbicaciÃ³n</th>
+              <th>Ubicación</th>
               <th>Reportado Por</th>
               <th>Asignado A</th>
               <th>Estado</th>
@@ -1006,11 +1006,11 @@ export default function SecurityManagement() {
             <form onSubmit={handleFindingSubmit}>
               <div className="form-grid">
                 <div className="form-group full-width">
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input type="text" value={findingFormData.title} onChange={e => setFindingFormData({...findingFormData, title: e.target.value})} required />
                 </div>
                 <div className="form-group full-width">
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea value={findingFormData.description} onChange={e => setFindingFormData({...findingFormData, description: e.target.value})} rows="3" />
                 </div>
                 <div className="form-group">
@@ -1029,11 +1029,11 @@ export default function SecurityManagement() {
                     <option value="BAJA">Baja</option>
                     <option value="MEDIA">Media</option>
                     <option value="ALTA">Alta</option>
-                    <option value="CRITICA">CrÃ­tica</option>
+                    <option value="CRITICA">Crítica</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>UbicaciÃ³n</label>
+                  <label>Ubicación</label>
                   <input type="text" value={findingFormData.location} onChange={e => setFindingFormData({...findingFormData, location: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -1067,15 +1067,15 @@ export default function SecurityManagement() {
                   </select>
                 </div>
                 <div className="form-group full-width">
-                  <label>CategorÃ­a</label>
+                  <label>Categoría</label>
                   <input type="text" value={findingFormData.category} onChange={e => setFindingFormData({...findingFormData, category: e.target.value})} />
                 </div>
                 <div className="form-group full-width">
-                  <label>AcciÃ³n Tomada</label>
+                  <label>Acción Tomada</label>
                   <textarea value={findingFormData.actionTaken} onChange={e => setFindingFormData({...findingFormData, actionTaken: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
-                  <label>ResoluciÃ³n</label>
+                  <label>Resolución</label>
                   <textarea value={findingFormData.resolution} onChange={e => setFindingFormData({...findingFormData, resolution: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
@@ -1122,10 +1122,10 @@ export default function SecurityManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>TÃ­tulo</th>
+              <th>Título</th>
               <th>Tipo</th>
               <th>Severidad</th>
-              <th>UbicaciÃ³n</th>
+              <th>Ubicación</th>
               <th>Reportado Por</th>
               <th>Asignado A</th>
               <th>Estado</th>
@@ -1182,11 +1182,11 @@ export default function SecurityManagement() {
             <form onSubmit={handleEventSubmit}>
               <div className="form-grid">
                 <div className="form-group full-width">
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input type="text" value={eventFormData.title} onChange={e => setEventFormData({...eventFormData, title: e.target.value})} required />
                 </div>
                 <div className="form-group full-width">
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea value={eventFormData.description} onChange={e => setEventFormData({...eventFormData, description: e.target.value})} rows="3" />
                 </div>
                 <div className="form-group">
@@ -1206,11 +1206,11 @@ export default function SecurityManagement() {
                     <option value="BAJA">Baja</option>
                     <option value="MEDIA">Media</option>
                     <option value="ALTA">Alta</option>
-                    <option value="CRITICA">CrÃ­tica</option>
+                    <option value="CRITICA">Crítica</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>UbicaciÃ³n</label>
+                  <label>Ubicación</label>
                   <input type="text" value={eventFormData.location} onChange={e => setEventFormData({...eventFormData, location: e.target.value})} />
                 </div>
                 <div className="form-group">
@@ -1244,7 +1244,7 @@ export default function SecurityManagement() {
                   </select>
                 </div>
                 <div className="form-group full-width">
-                  <label>CategorÃ­a</label>
+                  <label>Categoría</label>
                   <input type="text" value={eventFormData.category} onChange={e => setEventFormData({...eventFormData, category: e.target.value})} />
                 </div>
                 <div className="form-group full-width">
@@ -1256,11 +1256,11 @@ export default function SecurityManagement() {
                   <textarea value={eventFormData.involvedPersons} onChange={e => setEventFormData({...eventFormData, involvedPersons: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
-                  <label>AcciÃ³n Tomada</label>
+                  <label>Acción Tomada</label>
                   <textarea value={eventFormData.actionTaken} onChange={e => setEventFormData({...eventFormData, actionTaken: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
-                  <label>ResoluciÃ³n</label>
+                  <label>Resolución</label>
                   <textarea value={eventFormData.resolution} onChange={e => setEventFormData({...eventFormData, resolution: e.target.value})} rows="2" />
                 </div>
                 <div className="form-group full-width">
@@ -1275,7 +1275,7 @@ export default function SecurityManagement() {
                   <label>Seguimiento Requerido</label>
                   <select value={eventFormData.followUpRequired} onChange={e => setEventFormData({...eventFormData, followUpRequired: e.target.value})}>
                     <option value="">Seleccionar</option>
-                    <option value="SI">SÃ­</option>
+                    <option value="SI">Sí</option>
                     <option value="NO">No</option>
                   </select>
                 </div>
@@ -1296,7 +1296,7 @@ export default function SecurityManagement() {
       <div className="security-header">
         <div className="header-title">
           <Shield size={32} />
-          <h1>GestiÃ³n de Seguridad</h1>
+          <h1>Gestión de Seguridad</h1>
         </div>
       </div>
 
@@ -1306,7 +1306,7 @@ export default function SecurityManagement() {
           onClick={() => setActiveTab('access-control')}
         >
           <Car size={18} />
-          <span>PorterÃ­a</span>
+          <span>Portería</span>
         </button>
         <button 
           className={`tab-button ${activeTab === 'security-points' ? 'active' : ''}`}

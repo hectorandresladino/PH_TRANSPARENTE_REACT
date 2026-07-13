@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { ShieldCheck, AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, Building, PieChart, CheckCircle, XCircle, Clock } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function TransparencyDashboard() {
   const [metrics, setMetrics] = useState([]);
@@ -72,7 +72,7 @@ export default function TransparencyDashboard() {
   if (loading) {
     return (
       <div className="transparency-dashboard">
-        <div className="loading">Cargando mÃ©tricas de transparencia...</div>
+        <div className="loading">Cargando métricas de transparencia...</div>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function TransparencyDashboard() {
         </div>
         <div className="period-selector">
           <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
-            <option value="actual">PerÃ­odo Actual</option>
+            <option value="actual">Período Actual</option>
             <option value="mensual">Mensual</option>
             <option value="trimestral">Trimestral</option>
             <option value="anual">Anual</option>
@@ -106,7 +106,7 @@ export default function TransparencyDashboard() {
                 {complianceRate}%
               </span>
             </div>
-            <p>de {metrics.length} mÃ©tricas legales</p>
+            <p>de {metrics.length} métricas legales</p>
           </div>
         </div>
 
@@ -121,7 +121,7 @@ export default function TransparencyDashboard() {
                 {alerts.length}
               </span>
             </div>
-            <p>requieren atenciÃ³n</p>
+            <p>requieren atención</p>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function TransparencyDashboard() {
             <CheckCircle size={40} />
           </div>
           <div className="compliance-info">
-            <h3>MÃ©tricas Cumplidas</h3>
+            <h3>Métricas Cumplidas</h3>
             <div className="compliance-rate">
               <span className="rate-value rate-good">
                 {metrics.filter(m => m.isCompliant).length}
@@ -145,13 +145,13 @@ export default function TransparencyDashboard() {
             <XCircle size={40} />
           </div>
           <div className="compliance-info">
-            <h3>MÃ©tricas Incumplidas</h3>
+            <h3>Métricas Incumplidas</h3>
             <div className="compliance-rate">
               <span className={`rate-value ${metrics.filter(m => !m.isCompliant).length === 0 ? 'rate-good' : 'rate-bad'}`}>
                 {metrics.filter(m => !m.isCompliant).length}
               </span>
             </div>
-            <p>requieren acciÃ³n</p>
+            <p>requieren acción</p>
           </div>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function TransparencyDashboard() {
       <div className="metrics-section">
         <h2>
           <FileText size={24} />
-          MÃ©tricas de Cumplimiento Legal - Ley 675 de 2001
+          Métricas de Cumplimiento Legal - Ley 675 de 2001
         </h2>
         
         {Object.entries(groupedMetrics).map(([category, categoryMetrics]) => (
@@ -259,8 +259,8 @@ export default function TransparencyDashboard() {
       {metrics.length === 0 && (
         <div className="no-metrics">
           <Clock size={48} />
-          <h3>No hay mÃ©tricas registradas para este perÃ­odo</h3>
-          <p>La administraciÃ³n debe cargar las mÃ©tricas de transparencia</p>
+          <h3>No hay métricas registradas para este período</h3>
+          <p>La administración debe cargar las métricas de transparencia</p>
         </div>
       )}
     </div>

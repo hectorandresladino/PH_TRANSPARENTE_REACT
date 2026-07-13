@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { 
   BarChart3, Calendar, Clock, TrendingUp, Filter,
   ChevronLeft, ChevronRight, Activity, CheckCircle,

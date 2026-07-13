@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { CreditCard, Search, Plus, Edit, Trash2, Filter, DollarSign, Building2, Calendar } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function BankAccountsManagement() {
   const [accounts, setAccounts] = useState([]);
@@ -112,7 +112,7 @@ export default function BankAccountsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta cuenta?')) {
+    if (window.confirm('¿Está seguro de eliminar esta cuenta?')) {
       try {
         const response = await fetch(`${API_URL}/bank-accounts/${id}`, {
           method: 'DELETE'
@@ -186,7 +186,7 @@ export default function BankAccountsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nÃºmero o banco..."
+            placeholder="Buscar por número o banco..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -215,11 +215,11 @@ export default function BankAccountsManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>NÃºmero</th>
+              <th>Número</th>
               <th>Banco</th>
               <th>Tipo</th>
               <th>Saldo</th>
-              <th>PropÃ³sito</th>
+              <th>Propósito</th>
               <th>Operacional</th>
               <th>Fondo Reserva</th>
               <th>Estado</th>
@@ -246,12 +246,12 @@ export default function BankAccountsManagement() {
                 <td>{account.accountPurpose}</td>
                 <td>
                   <span className={`status-badge ${account.isOperational ? 'activo' : 'inactivo'}`}>
-                    {account.isOperational ? 'SÃ­' : 'No'}
+                    {account.isOperational ? 'Sí' : 'No'}
                   </span>
                 </td>
                 <td>
                   <span className={`status-badge ${account.isReserveFund ? 'activo' : 'inactivo'}`}>
-                    {account.isReserveFund ? 'SÃ­' : 'No'}
+                    {account.isReserveFund ? 'Sí' : 'No'}
                   </span>
                 </td>
                 <td>
@@ -280,12 +280,12 @@ export default function BankAccountsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingAccount ? 'Editar Cuenta' : 'Nueva Cuenta'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Cuenta *</label>
+                  <label>Número de Cuenta *</label>
                   <input
                     type="text"
                     value={formData.accountNumber}
@@ -322,7 +322,7 @@ export default function BankAccountsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>PropÃ³sito</label>
+                  <label>Propósito</label>
                   <input
                     type="text"
                     value={formData.accountPurpose}
@@ -336,7 +336,7 @@ export default function BankAccountsManagement() {
                     onChange={(e) => setFormData({...formData, isOperational: e.target.value === 'true'})}
                   >
                     <option value="false">No</option>
-                    <option value="true">SÃ­</option>
+                    <option value="true">Sí</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -346,7 +346,7 @@ export default function BankAccountsManagement() {
                     onChange={(e) => setFormData({...formData, isReserveFund: e.target.value === 'true'})}
                   >
                     <option value="false">No</option>
-                    <option value="true">SÃ­</option>
+                    <option value="true">Sí</option>
                   </select>
                 </div>
                 <div className="form-group">

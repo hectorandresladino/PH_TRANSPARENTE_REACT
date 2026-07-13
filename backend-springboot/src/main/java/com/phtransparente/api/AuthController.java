@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -21,8 +23,10 @@ public class AuthController {
   private final PasswordEncoder passwordEncoder;
   private final LoginRateLimiter loginRateLimiter;
   private final JwtUtil jwtUtil;
+  private final AuditLogService auditLogService;
+  private final PasswordPolicy passwordPolicy;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil, AuditLogService auditLogService, PasswordPolicy passwordPolicy) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.verificationService = verificationService;
@@ -30,6 +34,8 @@ public class AuthController {
     this.passwordEncoder = passwordEncoder;
     this.loginRateLimiter = loginRateLimiter;
     this.jwtUtil = jwtUtil;
+    this.auditLogService = auditLogService;
+    this.passwordPolicy = passwordPolicy;
   }
 
   private static boolean isBCryptHash(String value) {
@@ -37,7 +43,7 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+  public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
     logger.info("Intento de login para usuario: {}", request.username());
 
     if (loginRateLimiter.isBlocked(request.username())) {
@@ -51,6 +57,7 @@ public class AuthController {
 
     if (user == null) {
       loginRateLimiter.recordFailure(request.username());
+      auditLogService.log("LOGIN_FAILED", request.username(), "UNKNOWN", "Usuario no existe", httpRequest, "FAIL");
       logger.warn("Login fallido para usuario: {}", request.username());
       return ResponseEntity.status(401).body("Credenciales inválidas");
     }
@@ -70,10 +77,12 @@ public class AuthController {
 
     if (passwordMatches) {
       if (Boolean.FALSE.equals(user.getActive())) {
+        auditLogService.log("LOGIN_BLOCKED", user.getUsername(), user.getRole(), "Usuario inactivo intentó iniciar sesión", httpRequest, "BLOCKED");
         logger.warn("Login rechazado (usuario inactivo): {}", request.username());
         return ResponseEntity.status(403).body("La cuenta está inactiva");
       }
       loginRateLimiter.reset(request.username());
+      auditLogService.log("LOGIN_SUCCESS", user.getUsername(), user.getRole(), "Inicio de sesión exitoso", httpRequest, "SUCCESS");
       logger.info("Login exitoso para usuario: {}", request.username());
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
       String modules = role != null ? role.getModules() : "";
@@ -82,16 +91,23 @@ public class AuthController {
     }
 
     loginRateLimiter.recordFailure(request.username());
+    auditLogService.log("LOGIN_FAILED", request.username(), user.getRole(), "Contraseña incorrecta", httpRequest, "FAIL");
     logger.warn("Login fallido para usuario: {}", request.username());
     return ResponseEntity.status(401).body("Credenciales inválidas");
   }
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+  public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
     User existingUser = userRepository.findByUsername(request.username());
     
     if (existingUser != null) {
+      auditLogService.log("REGISTER_FAILED", request.username(), "COPROPIETARIO", "Intento de registro con usuario existente", httpRequest, "FAIL");
       return ResponseEntity.status(400).body("El usuario ya existe");
+    }
+
+    PasswordPolicy.PasswordValidationResult validation = passwordPolicy.validate(request.password());
+    if (!validation.valid()) {
+      return ResponseEntity.status(400).body("Contraseña débil: " + String.join(", ", validation.errors()));
     }
     
     User newUser = new User();
@@ -102,12 +118,13 @@ public class AuthController {
     newUser.setActive(true);
     
     User savedUser = userRepository.save(newUser);
-    
+    auditLogService.log("REGISTER_SUCCESS", savedUser.getUsername(), savedUser.getRole(), "Nuevo usuario registrado", "USER", savedUser.getId(), httpRequest, "SUCCESS");
+
     // Obtener módulos del rol
     Role role = roleRepository.findByName(savedUser.getRole()).orElse(null);
     String modules = role != null ? role.getModules() : "";
     String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole());
-    
+
     return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules, token));
   }
 
@@ -145,6 +162,11 @@ public class AuthController {
     
     if (user == null) {
       return ResponseEntity.status(404).body("Usuario no encontrado");
+    }
+
+    PasswordPolicy.PasswordValidationResult validation = passwordPolicy.validate(request.newPassword());
+    if (!validation.valid()) {
+      return ResponseEntity.status(400).body("Contraseña débil: " + String.join(", ", validation.errors()));
     }
     
     user.setPassword(passwordEncoder.encode(request.newPassword()));

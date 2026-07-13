@@ -2,7 +2,7 @@
 import { AlertTriangle, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, DollarSign, User as UserIcon } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function FinesManagement() {
   const [fines, setFines] = useState([]);
@@ -87,7 +87,7 @@ export default function FinesManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar esta multa?')) {
+    if (window.confirm('¿Estás seguro de eliminar esta multa?')) {
       try {
         const response = await fetch(`${API_URL}/fines/${id}`, {
           method: 'DELETE'
@@ -171,7 +171,7 @@ export default function FinesManagement() {
       <div className="fines-header">
         <div className="header-title">
           <AlertTriangle size={32} />
-          <h1>GestiÃ³n de Multas</h1>
+          <h1>Gestión de Multas</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingFine(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -263,7 +263,7 @@ export default function FinesManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Multa</label>
+                  <label>Número de Multa</label>
                   <input
                     type="text"
                     value={formData.fineNumber}
@@ -345,7 +345,7 @@ export default function FinesManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

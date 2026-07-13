@@ -1,19 +1,17 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Search, Shield, Mail, Phone, User as UserIcon, Check, X, KeyRound } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Search, Shield, Mail, Phone, User as UserIcon, Check, X } from 'lucide-react';
+import { fetchWithAuth, API_URL, removeToken } from './api.js';
 import './styles.css';
-
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
 
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    role: 'USER',
+    role: 'COPIROPIETARIO',
     email: '',
     fullName: '',
     phone: '',
@@ -27,25 +25,31 @@ export default function UsersManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_URL}/users`);
+      const response = await fetchWithAuth(`${API_URL}/users`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
+      } else {
+        const errorText = await response.text();
+        console.error('Error al cargar usuarios:', errorText);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
     try {
       const url = editingUser 
         ? `${API_URL}/users/${editingUser.id}`
         : `${API_URL}/users`;
       const method = editingUser ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -56,14 +60,22 @@ export default function UsersManagement() {
         setShowModal(false);
         setEditingUser(null);
         resetForm();
+      } else if (response.status === 401 || response.status === 403) {
+        setErrorMessage('Sesión expirada o inválida. Cierre sesión y vuelva a ingresar.');
+        removeToken();
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        const errorText = await response.text();
+        setErrorMessage(errorText || 'Error al guardar el usuario');
       }
     } catch (error) {
-      console.error('Error saving user:', error);
+      setErrorMessage('No se pudo conectar con el servidor: ' + error.message);
     }
   };
 
   const handleEdit = (user) => {
     setEditingUser(user);
+    setErrorMessage('');
     setFormData({
       username: user.username,
       password: '',
@@ -77,20 +89,10 @@ export default function UsersManagement() {
     setShowModal(true);
   };
 
-  const handleGeneratePassword = async () => {
-    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData({ ...formData, password });
-    setPasswordMessage('ContraseÃ±a generada. El admin debe entregarla al usuario.');
-  };
-
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este usuario?')) {
+    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
       try {
-        const response = await fetch(`${API_URL}/users/${id}`, {
+        const response = await fetchWithAuth(`${API_URL}/users/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -106,7 +108,7 @@ export default function UsersManagement() {
     setFormData({
       username: '',
       password: '',
-      role: 'USER',
+      role: 'COPIROPIETARIO',
       email: '',
       fullName: '',
       phone: '',
@@ -126,9 +128,9 @@ export default function UsersManagement() {
       <div className="users-header">
         <div className="header-title">
           <Users size={32} />
-          <h1>GestiÃ³n de Usuarios</h1>
+          <h1>Gestión de Usuarios</h1>
         </div>
-        <button className="btn-primary" onClick={() => { resetForm(); setEditingUser(null); setShowModal(true); }}>
+        <button className="btn-primary" onClick={() => { resetForm(); setEditingUser(null); setErrorMessage(''); setShowModal(true); }}>
           <Plus size={20} />
           <span>Nuevo Usuario</span>
         </button>
@@ -152,7 +154,7 @@ export default function UsersManagement() {
               <th>Usuario</th>
               <th>Nombre Completo</th>
               <th>Email</th>
-              <th>TelÃ©fono</th>
+              <th>Teléfono</th>
               <th>Casa/Apto</th>
               <th>Rol</th>
               <th>Estado</th>
@@ -211,6 +213,11 @@ export default function UsersManagement() {
                 <X size={20} />
               </button>
             </div>
+            {errorMessage && (
+              <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', margin: '0 20px 16px', fontSize: '0.9rem' }}>
+                {errorMessage}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
@@ -224,32 +231,17 @@ export default function UsersManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>ContraseÃ±a</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      value={formData.password}
-                      onChange={e => setFormData({...formData, password: e.target.value})}
-                      required={!editingUser}
-                      placeholder={editingUser ? 'Dejar vacÃ­o para mantener la actual' : 'Ingrese o genere una contraseÃ±a'}
-                      style={{ flex: 1 }}
-                    />
-                    {!editingUser && (
-                    <button
-                      type="button"
-                      onClick={handleGeneratePassword}
-                      style={{ whiteSpace: 'nowrap', padding: '0 12px', background: '#123b62', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
-                    >
-                      <KeyRound size={16} style={{ display: 'inline', marginRight: '4px' }} />
-                      Generar
-                    </button>
-                    )}
-                  </div>
-                  {passwordMessage && (
-                    <small style={{ color: passwordMessage.includes('Error') ? '#dc2626' : '#136f43', display: 'block', marginTop: '4px', fontSize: '0.8rem' }}>
-                      {passwordMessage}
-                    </small>
-                  )}
+                  <label>Contraseña</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={e => setFormData({...formData, password: e.target.value})}
+                    required={!editingUser}
+                    placeholder={editingUser ? 'Dejar vacío para mantener la actual' : 'Asigne una contraseña'}
+                  />
+                  <small style={{ color: '#65758a', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                    ISO 27001: mínimo 8 caracteres, mayúscula, minúscula, número y especial.
+                  </small>
                 </div>
                 <div className="form-group">
                   <label>Nombre Completo</label>
@@ -268,7 +260,7 @@ export default function UsersManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono (Obligatorio para verificación)</label>
+                  <label>Teléfono (Obligatorio para verificación)</label>
                   <input
                     type="tel"
                     value={formData.phone}

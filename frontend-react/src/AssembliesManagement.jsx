@@ -2,7 +2,7 @@
 import { Users, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, Calendar, MapPin } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function AssembliesManagement() {
   const [assemblies, setAssemblies] = useState([]);
@@ -93,7 +93,7 @@ export default function AssembliesManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar esta asamblea?')) {
+    if (window.confirm('¿Estás seguro de eliminar esta asamblea?')) {
       try {
         const response = await fetch(`${API_URL}/assemblies/${id}`, {
           method: 'DELETE'
@@ -158,7 +158,7 @@ export default function AssembliesManagement() {
       <div className="assemblies-header">
         <div className="header-title">
           <Users size={32} />
-          <h1>GestiÃ³n de Asambleas</h1>
+          <h1>Gestión de Asambleas</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingAssembly(null); setShowModal(true); }}>
           <Plus size={20} />
@@ -213,12 +213,12 @@ export default function AssembliesManagement() {
               {assembly.location && (
                 <div className="detail-row">
                   <MapPin size={16} />
-                  <span>UbicaciÃ³n: {assembly.location}</span>
+                  <span>Ubicación: {assembly.location}</span>
                 </div>
               )}
               {assembly.quorumRequired && (
                 <div className="detail-row">
-                  <span>QuÃ³rum: {assembly.quorumAttended || 0}/{assembly.quorumRequired}</span>
+                  <span>Quórum: {assembly.quorumAttended || 0}/{assembly.quorumRequired}</span>
                 </div>
               )}
             </div>
@@ -246,7 +246,7 @@ export default function AssembliesManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -289,7 +289,7 @@ export default function AssembliesManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>UbicaciÃ³n</label>
+                  <label>Ubicación</label>
                   <input
                     type="text"
                     value={formData.location}
@@ -297,7 +297,7 @@ export default function AssembliesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>QuÃ³rum Requerido</label>
+                  <label>Quórum Requerido</label>
                   <input
                     type="number"
                     value={formData.quorumRequired}
@@ -305,7 +305,7 @@ export default function AssembliesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>QuÃ³rum AsistiÃ³</label>
+                  <label>Quórum Asistió</label>
                   <input
                     type="number"
                     value={formData.quorumAttended}
@@ -321,7 +321,7 @@ export default function AssembliesManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

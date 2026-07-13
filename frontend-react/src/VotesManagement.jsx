@@ -2,7 +2,7 @@
 import { Vote as VoteIcon, Plus, Edit, Trash2, Search, CheckCircle, XCircle, Clock, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function VotesManagement() {
   const [votes, setVotes] = useState([]);
@@ -96,7 +96,7 @@ export default function VotesManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar esta votaciÃ³n?')) {
+    if (window.confirm('¿Estás seguro de eliminar esta votación?')) {
       try {
         const response = await fetch(`${API_URL}/votes/${id}`, {
           method: 'DELETE'
@@ -160,11 +160,11 @@ export default function VotesManagement() {
       <div className="votes-header">
         <div className="header-title">
           <VoteIcon size={32} />
-          <h1>GestiÃ³n de Votaciones</h1>
+          <h1>Gestión de Votaciones</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setEditingVote(null); setShowModal(true); }}>
           <Plus size={20} />
-          <span>Nueva VotaciÃ³n</span>
+          <span>Nueva Votación</span>
         </button>
       </div>
 
@@ -229,7 +229,7 @@ export default function VotesManagement() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingVote ? 'Editar VotaciÃ³n' : 'Nueva VotaciÃ³n'}</h2>
+              <h2>{editingVote ? 'Editar Votación' : 'Nueva Votación'}</h2>
               <button className="btn-close" onClick={() => setShowModal(false)}>
                 <XCircle size={20} />
               </button>
@@ -237,7 +237,7 @@ export default function VotesManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ­tulo</label>
+                  <label>Título</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -272,7 +272,7 @@ export default function VotesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>QuÃ³rum Requerido</label>
+                  <label>Quórum Requerido</label>
                   <input
                     type="number"
                     value={formData.quorumRequired}
@@ -328,7 +328,7 @@ export default function VotesManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

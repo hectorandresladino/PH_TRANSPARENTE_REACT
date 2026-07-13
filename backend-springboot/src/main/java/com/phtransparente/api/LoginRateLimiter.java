@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LoginRateLimiter {
-  private static final int MAX_ATTEMPTS = 5;
-  private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(15);
+  private static final int MAX_ATTEMPTS = 10;
+  private static final Duration LOCKOUT_DURATION = Duration.ofMinutes(5);
 
   private static final class Attempt {
     int count;

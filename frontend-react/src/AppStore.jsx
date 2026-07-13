@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Building2, ShieldCheck, Vote, FileText, Bell, Car, Search, Users, BarChart3, Download, Check, Star, Grid } from 'lucide-react';
 import { getModules } from './api.js';
 import './styles.css';

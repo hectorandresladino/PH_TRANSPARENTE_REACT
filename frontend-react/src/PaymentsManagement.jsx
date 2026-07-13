@@ -2,7 +2,7 @@
 import { DollarSign, Plus, Edit, Trash2, Search, CheckCircle, Clock, AlertCircle, Calendar } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function PaymentsManagement() {
   const [payments, setPayments] = useState([]);
@@ -83,7 +83,7 @@ export default function PaymentsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este pago?')) {
+    if (window.confirm('¿Estás seguro de eliminar este pago?')) {
       try {
         const response = await fetch(`${API_URL}/payments/${id}`, {
           method: 'DELETE'
@@ -183,7 +183,7 @@ export default function PaymentsManagement() {
               <th>Concepto</th>
               <th>Monto</th>
               <th>Estado</th>
-              <th>MÃ©todo</th>
+              <th>Método</th>
               <th>Vencimiento</th>
               <th>Acciones</th>
             </tr>
@@ -248,7 +248,7 @@ export default function PaymentsManagement() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Factura</label>
+                  <label>Número de Factura</label>
                   <input
                     type="text"
                     value={formData.invoiceNumber}
@@ -276,7 +276,7 @@ export default function PaymentsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>MÃ©todo de Pago</label>
+                  <label>Método de Pago</label>
                   <select
                     value={formData.paymentMethod}
                     onChange={e => setFormData({...formData, paymentMethod: e.target.value})}
@@ -316,7 +316,7 @@ export default function PaymentsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={e => setFormData({...formData, description: e.target.value})}

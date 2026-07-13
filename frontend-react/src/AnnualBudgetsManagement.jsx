@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Calendar, Search, Plus, Edit, Trash2, Filter, DollarSign, TrendingUp, PieChart } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function AnnualBudgetsManagement() {
   const [budgets, setBudgets] = useState([]);
@@ -85,7 +85,7 @@ export default function AnnualBudgetsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar este presupuesto?')) {
+    if (window.confirm('¿Está seguro de eliminar este presupuesto?')) {
       try {
         const response = await fetch(`${API_URL}/annual-budgets/${id}`, {
           method: 'DELETE'
@@ -145,7 +145,7 @@ export default function AnnualBudgetsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nombre o aÃ±o..."
+            placeholder="Buscar por nombre o año..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -156,7 +156,7 @@ export default function AnnualBudgetsManagement() {
             <option value="all">Todos los estados</option>
             <option value="BORRADOR">Borrador</option>
             <option value="APROBADO">Aprobado</option>
-            <option value="EJECUCION">En EjecuciÃ³n</option>
+            <option value="EJECUCION">En Ejecución</option>
             <option value="CERRADO">Cerrado</option>
           </select>
         </div>
@@ -166,13 +166,13 @@ export default function AnnualBudgetsManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>AÃ±o</th>
+              <th>Año</th>
               <th>Nombre</th>
               <th>Tipo</th>
               <th>Presupuestado</th>
               <th>Ejecutado</th>
               <th>Restante</th>
-              <th>% EjecuciÃ³n</th>
+              <th>% Ejecución</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -228,12 +228,12 @@ export default function AnnualBudgetsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingBudget ? 'Editar Presupuesto' : 'Nuevo Presupuesto'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>AÃ±o *</label>
+                  <label>Año *</label>
                   <input
                     type="number"
                     value={formData.budgetYear}
@@ -257,7 +257,7 @@ export default function AnnualBudgetsManagement() {
                     onChange={(e) => setFormData({...formData, budgetType: e.target.value})}
                   >
                     <option value="OPERATIVO">Operativo</option>
-                    <option value="INVERSION">InversiÃ³n</option>
+                    <option value="INVERSION">Inversión</option>
                     <option value="MANTENIMIENTO">Mantenimiento</option>
                   </select>
                 </div>
@@ -278,7 +278,7 @@ export default function AnnualBudgetsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>% EjecuciÃ³n</label>
+                  <label>% Ejecución</label>
                   <input
                     type="number"
                     step="0.01"
@@ -294,12 +294,12 @@ export default function AnnualBudgetsManagement() {
                   >
                     <option value="BORRADOR">Borrador</option>
                     <option value="APROBADO">Aprobado</option>
-                    <option value="EJECUCION">En EjecuciÃ³n</option>
+                    <option value="EJECUCION">En Ejecución</option>
                     <option value="CERRADO">Cerrado</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>ResoluciÃ³n de Asamblea</label>
+                  <label>Resolución de Asamblea</label>
                   <input
                     type="text"
                     value={formData.assemblyResolution}

@@ -2,7 +2,7 @@
 import { Lock, User, Mail, ArrowLeft } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL, setToken } from './api.js';
 
 export default function Register({ onRegister, onBackToLogin }) {
   const [username, setUsername] = useState('');
@@ -18,12 +18,18 @@ export default function Register({ onRegister, onBackToLogin }) {
     setSuccess('');
 
     if (password !== confirmPassword) {
-      setError('Las contraseÃ±as no coinciden');
+      setError('Las contraseñas no coinciden');
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseÃ±a debe tener al menos 6 caracteres');
+    const passwordErrors = [];
+    if (password.length < 8) passwordErrors.push('mínimo 8 caracteres');
+    if (!/[A-Z]/.test(password)) passwordErrors.push('una mayúscula');
+    if (!/[a-z]/.test(password)) passwordErrors.push('una minúscula');
+    if (!/\d/.test(password)) passwordErrors.push('un número');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) passwordErrors.push('un carácter especial');
+    if (passwordErrors.length > 0) {
+      setError('La contraseña debe cumplir ISO 27001: ' + passwordErrors.join(', '));
       return;
     }
 
@@ -36,7 +42,10 @@ export default function Register({ onRegister, onBackToLogin }) {
 
       if (response.ok) {
         const data = await response.json();
-        setSuccess('Â¡Registro exitoso! Redirigiendo al login...');
+        if (data.token) {
+          setToken(data.token);
+        }
+        setSuccess('¡Registro exitoso! Redirigiendo al login...');
         setTimeout(() => {
           onRegister(data);
         }, 1500);
@@ -45,7 +54,7 @@ export default function Register({ onRegister, onBackToLogin }) {
         setError(errorMessage || 'Error al registrar usuario');
       }
     } catch (err) {
-      setError('Error de conexiÃ³n con el servidor');
+      setError('Error de conexión con el servidor');
     }
   };
 
@@ -57,7 +66,7 @@ export default function Register({ onRegister, onBackToLogin }) {
           <span>Volver al login</span>
         </button>
         <h1>Crear Cuenta</h1>
-        <p>RegÃ­strate en PH Transparente</p>
+        <p>Regístrate en PH Transparente</p>
         <form onSubmit={handleSubmit}>
           <div className="login-form-group">
             <User size={20} />
@@ -73,7 +82,7 @@ export default function Register({ onRegister, onBackToLogin }) {
             <Mail size={20} />
             <input
               type="email"
-              placeholder="Correo electrÃ³nico"
+              placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -83,7 +92,7 @@ export default function Register({ onRegister, onBackToLogin }) {
             <Lock size={20} />
             <input
               type="password"
-              placeholder="ContraseÃ±a"
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -93,7 +102,7 @@ export default function Register({ onRegister, onBackToLogin }) {
             <Lock size={20} />
             <input
               type="password"
-              placeholder="Confirmar contraseÃ±a"
+              placeholder="Confirmar contraseña"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -103,7 +112,7 @@ export default function Register({ onRegister, onBackToLogin }) {
           {success && <p className="success">{success}</p>}
           <button type="submit" disabled={success}>Registrarse</button>
         </form>
-        <p className="hint">La contraseÃ±a debe tener al menos 6 caracteres</p>
+        <p className="hint">ISO 27001: mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
       </div>
     </div>
   );

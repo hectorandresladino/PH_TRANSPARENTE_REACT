@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { BookOpen, Search, Plus, Edit, Trash2, Filter, Calendar, FileText, Building, Scale } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function HorizontalPropertyRegulationsManagement() {
   const [regulations, setRegulations] = useState([]);
@@ -119,7 +119,7 @@ export default function HorizontalPropertyRegulationsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar este reglamento?')) {
+    if (window.confirm('¿Está seguro de eliminar este reglamento?')) {
       try {
         const response = await fetch(`${API_URL}/horizontal-property-regulations/${id}`, {
           method: 'DELETE'
@@ -196,7 +196,7 @@ export default function HorizontalPropertyRegulationsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nÃºmero o nombre..."
+            placeholder="Buscar por número o nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -216,12 +216,12 @@ export default function HorizontalPropertyRegulationsManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>NÃºmero</th>
+              <th>Número</th>
               <th>Nombre</th>
-              <th>VersiÃ³n</th>
+              <th>Versión</th>
               <th>Unidades</th>
               <th>Vigencia</th>
-              <th>NotarÃ­a</th>
+              <th>Notaría</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -271,12 +271,12 @@ export default function HorizontalPropertyRegulationsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingRegulation ? 'Editar Reglamento' : 'Nuevo Reglamento'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Reglamento *</label>
+                  <label>Número de Reglamento *</label>
                   <input
                     type="text"
                     value={formData.regulationNumber}
@@ -294,7 +294,7 @@ export default function HorizontalPropertyRegulationsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>VersiÃ³n</label>
+                  <label>Versión</label>
                   <input
                     type="text"
                     value={formData.regulationVersion}
@@ -310,7 +310,7 @@ export default function HorizontalPropertyRegulationsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Fecha AprobaciÃ³n</label>
+                  <label>Fecha Aprobación</label>
                   <input
                     type="date"
                     value={formData.approvalDate}
@@ -326,7 +326,7 @@ export default function HorizontalPropertyRegulationsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>ResoluciÃ³n de Asamblea</label>
+                  <label>Resolución de Asamblea</label>
                   <input
                     type="text"
                     value={formData.assemblyResolution}
@@ -334,7 +334,7 @@ export default function HorizontalPropertyRegulationsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>NotarÃ­a</label>
+                  <label>Notaría</label>
                   <input
                     type="text"
                     value={formData.notaryOffice}
@@ -342,7 +342,7 @@ export default function HorizontalPropertyRegulationsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Ciudad NotarÃ­a</label>
+                  <label>Ciudad Notaría</label>
                   <input
                     type="text"
                     value={formData.notaryCity}

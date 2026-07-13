@@ -2,7 +2,7 @@
 import { Plus, Search, Filter, CheckCircle, Clock, AlertCircle, Calendar, User, Building, FileText, Trash2, Edit2 } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function SupportTasksManagement() {
   const [tasks, setTasks] = useState([]);
@@ -113,7 +113,7 @@ export default function SupportTasksManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta tarea?')) {
+    if (window.confirm('¿Está seguro de eliminar esta tarea?')) {
       try {
         const response = await fetch(`${API_URL}/support-tasks/${id}`, {
           method: 'DELETE'
@@ -163,7 +163,7 @@ export default function SupportTasksManagement() {
     <div className="support-tasks-container">
       <div className="support-tasks-header">
         <h1>Soporte y Tareas</h1>
-        <p>GestiÃ³n de tareas de mantenimiento y soporte administrativo</p>
+        <p>Gestión de tareas de mantenimiento y soporte administrativo</p>
       </div>
 
       <div className="support-tasks-filters">
@@ -190,11 +190,11 @@ export default function SupportTasksManagement() {
         <div className="filter-group">
           <Filter size={20} />
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            <option value="TODOS">Todas las categorÃ­as</option>
+            <option value="TODOS">Todas las categorías</option>
             <option value="MANTENIMIENTO">Mantenimiento</option>
             <option value="SEGURIDAD">Seguridad</option>
             <option value="LIMPIEZA">Limpieza</option>
-            <option value="ADMINISTRACION">AdministraciÃ³n</option>
+            <option value="ADMINISTRACION">Administración</option>
             <option value="OTRO">Otro</option>
           </select>
         </div>
@@ -255,12 +255,12 @@ export default function SupportTasksManagement() {
           <div className="modal-content">
             <div className="modal-header">
               <h2>{editingTask ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="close-btn" onClick={() => setShowModal(false)}>í—</button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>TÃ­tulo</label>
+                <label>Título</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -270,7 +270,7 @@ export default function SupportTasksManagement() {
               </div>
 
               <div className="form-group">
-                <label>DescripciÃ³n</label>
+                <label>Descripción</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -280,7 +280,7 @@ export default function SupportTasksManagement() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>CategorÃ­a</label>
+                  <label>Categoría</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
@@ -288,7 +288,7 @@ export default function SupportTasksManagement() {
                     <option value="MANTENIMIENTO">Mantenimiento</option>
                     <option value="SEGURIDAD">Seguridad</option>
                     <option value="LIMPIEZA">Limpieza</option>
-                    <option value="ADMINISTRACION">AdministraciÃ³n</option>
+                    <option value="ADMINISTRACION">Administración</option>
                     <option value="OTRO">Otro</option>
                   </select>
                 </div>

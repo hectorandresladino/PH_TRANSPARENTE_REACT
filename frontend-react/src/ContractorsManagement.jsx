@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Building2, Search, Plus, Edit, Trash2, Filter, FileText, Phone, Mail, MapPin, Calendar, DollarSign, ShieldCheck, User, Briefcase } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function ContractorsManagement() {
   const [contractors, setContractors] = useState([]);
@@ -104,7 +104,7 @@ export default function ContractorsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar este contratista?')) {
+    if (window.confirm('¿Está seguro de eliminar este contratista?')) {
       try {
         const response = await fetch(`${API_URL}/contractors/${id}`, {
           method: 'DELETE'
@@ -165,7 +165,7 @@ export default function ContractorsManagement() {
       <div className="contractors-header">
         <div className="header-title">
           <Building2 size={32} />
-          <h1>GestiÃ³n de Contrataciones</h1>
+          <h1>Gestión de Contrataciones</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
           <Plus size={20} />
@@ -298,7 +298,7 @@ export default function ContractorsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingContractor ? 'Editar Contratista' : 'Nuevo Contratista'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -317,14 +317,14 @@ export default function ContractorsManagement() {
                     value={formData.documentType}
                     onChange={(e) => setFormData({...formData, documentType: e.target.value})}
                   >
-                    <option value="CC">CÃ©dula</option>
+                    <option value="CC">Cédula</option>
                     <option value="NIT">NIT</option>
-                    <option value="CE">CÃ©dula ExtranjerÃ­a</option>
+                    <option value="CE">Cédula Extranjería</option>
                     <option value="PAS">Pasaporte</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>NÃºmero de Documento</label>
+                  <label>Número de Documento</label>
                   <input
                     type="text"
                     value={formData.documentNumber}
@@ -340,7 +340,7 @@ export default function ContractorsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>Teléfono</label>
                   <input
                     type="text"
                     value={formData.phone}
@@ -356,7 +356,7 @@ export default function ContractorsManagement() {
                   />
                 </div>
                 <div className="form-group full-width">
-                  <label>DirecciÃ³n</label>
+                  <label>Dirección</label>
                   <input
                     type="text"
                     value={formData.address}
@@ -382,14 +382,14 @@ export default function ContractorsManagement() {
                     <option value="VIGILANCIA">Vigilancia</option>
                     <option value="ASEO">Aseo</option>
                     <option value="MANTENIMIENTO">Mantenimiento</option>
-                    <option value="JARDINERIA">JardinerÃ­a</option>
-                    <option value="CONSTRUCCION">ConstrucciÃ³n</option>
-                    <option value="CONSULTORIA">ConsultorÃ­a</option>
+                    <option value="JARDINERIA">Jardinería</option>
+                    <option value="CONSTRUCCION">Construcción</option>
+                    <option value="CONSULTORIA">Consultoría</option>
                     <option value="OTRO">Otro</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>EspecializaciÃ³n</label>
+                  <label>Especialización</label>
                   <input
                     type="text"
                     value={formData.specialization}
@@ -397,7 +397,7 @@ export default function ContractorsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>NÃºmero de Contrato</label>
+                  <label>Número de Contrato</label>
                   <input
                     type="text"
                     value={formData.contractNumber}
@@ -457,7 +457,7 @@ export default function ContractorsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono Contacto</label>
+                  <label>Teléfono Contacto</label>
                   <input
                     type="text"
                     value={formData.contactPhone}

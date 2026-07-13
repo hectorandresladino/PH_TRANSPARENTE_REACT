@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { PiggyBank, Search, Plus, Edit, Trash2, Filter, DollarSign, Calendar, TrendingUp } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function ReserveFundsManagement() {
   const [funds, setFunds] = useState([]);
@@ -103,7 +103,7 @@ export default function ReserveFundsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar este fondo?')) {
+    if (window.confirm('¿Está seguro de eliminar este fondo?')) {
       try {
         const response = await fetch(`${API_URL}/reserve-funds/${id}`, {
           method: 'DELETE'
@@ -246,7 +246,7 @@ export default function ReserveFundsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingFund ? 'Editar Fondo' : 'Nuevo Fondo'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -279,7 +279,7 @@ export default function ReserveFundsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>% Requerido (10% mÃ­nimo)</label>
+                  <label>% Requerido (10% mínimo)</label>
                   <input
                     type="number"
                     step="0.01"

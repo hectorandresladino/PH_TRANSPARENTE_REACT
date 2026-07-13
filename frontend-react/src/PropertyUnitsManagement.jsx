@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Building, Search, Plus, Edit, Trash2, Filter, MapPin, Home, User, Calendar, DollarSign } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function PropertyUnitsManagement() {
   const [units, setUnits] = useState([]);
@@ -116,7 +116,7 @@ export default function PropertyUnitsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta unidad?')) {
+    if (window.confirm('¿Está seguro de eliminar esta unidad?')) {
       try {
         const response = await fetch(`${API_URL}/property-units/${id}`, {
           method: 'DELETE'
@@ -180,7 +180,7 @@ export default function PropertyUnitsManagement() {
       <div className="contractors-header">
         <div className="header-title">
           <Building size={32} />
-          <h1>GestiÃ³n de Unidades</h1>
+          <h1>Gestión de Unidades</h1>
         </div>
         <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
           <Plus size={20} />
@@ -193,7 +193,7 @@ export default function PropertyUnitsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nÃºmero, bloque o edificio..."
+            placeholder="Buscar por número, bloque o edificio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -224,9 +224,9 @@ export default function PropertyUnitsManagement() {
             <tr>
               <th>Unidad</th>
               <th>Tipo</th>
-              <th>Ãrea</th>
+              <th>írea</th>
               <th>Coeficiente</th>
-              <th>UbicaciÃ³n</th>
+              <th>Ubicación</th>
               <th>Propietario</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -282,12 +282,12 @@ export default function PropertyUnitsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingUnit ? 'Editar Unidad' : 'Nueva Unidad'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Unidad *</label>
+                  <label>Número de Unidad *</label>
                   <input
                     type="text"
                     value={formData.unitNumber}
@@ -308,7 +308,7 @@ export default function PropertyUnitsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Ãrea Total (mÂ²)</label>
+                  <label>írea Total (mÂ²)</label>
                   <input
                     type="number"
                     value={formData.totalArea}

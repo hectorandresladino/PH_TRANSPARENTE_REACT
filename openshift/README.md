@@ -1,161 +1,146 @@
-# Despliegue en OpenShift Sandbox
+# Despliegue en Red Hat OpenShift Sandbox
 
-Este proyecto incluye todos los componentes necesarios para desplegar PH Transparente en Red Hat OpenShift Sandbox.
+Configuración lista para desplegar PH Transparente en Red Hat OpenShift Sandbox.
 
-## Requisitos Previos
-
-- Cuenta en [Red Hat OpenShift Sandbox](https://developers.redhat.com/developer-sandbox)
-- CLI de OpenShift (`oc`) instalado
-- Acceso a un cluster de OpenShift
-
-## Estructura de Archivos
+## Archivos incluidos
 
 ```
 openshift/
-├── backend-deployment.yaml    # Deployment del backend Spring Boot
-├── backend-service.yaml       # Service del backend
-├── frontend-deployment.yaml   # Deployment del frontend React
-├── frontend-service.yaml      # Service del frontend
-├── route.yaml                # Route para acceso externo
-├── db-secret.yaml            # Secret para credenciales de BD
-└── deploy.sh                 # Script de despliegue automatizado
+├── secrets.yaml        # Secret con credenciales de BD, JWT y email
+├── postgresql.yaml     # PostgreSQL con almacenamiento persistente
+├── backend.yaml        # BuildConfig + Deployment + Service + Route del backend
+├── frontend.yaml       # BuildConfig + Deployment + Service + Route del frontend
+└── README.md           # Esta guía
 ```
 
-## Instrucciones de Despliegue
+## Requisitos
 
-### Opción 1: Script Automatizado
+- Cuenta en [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox)
+- CLI `oc` instalado
+- Repositorio en GitHub/GitLab (los BuildConfig apuntan a él)
 
-1. **Obtener token de OpenShift**
-   - Inicia sesión en [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox)
-   - Copia tu token de acceso desde la consola de OpenShift
+## Pasos de despliegue
 
-2. **Ejecutar el script**
-   ```bash
-   cd openshift
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
+### 1. Configurar secret
 
-3. **Seguir las instrucciones del script**
-   - El script te pedirá que te loguees con tu token
-   - Construirá y desplegará ambos componentes
-   - Al final mostrará la URL de acceso
+Edite `secrets.yaml` y cambie al menos estas claves:
 
-### Opción 2: Despliegue Manual
-
-1. **Login en OpenShift**
-   ```bash
-   oc login --token=<YOUR_TOKEN> --server=<YOUR_SERVER>
-   ```
-
-2. **Crear proyecto**
-   ```bash
-   oc new-project ph-transparente
-   ```
-
-3. **Desplegar secret de base de datos**
-   ```bash
-   oc apply -f db-secret.yaml
-   ```
-
-4. **Construir y desplegar backend**
-   ```bash
-   cd ../backend-springboot
-   oc new-build --name ph-transparente-backend --binary --strategy=docker
-   oc start-build ph-transparente-backend --from-dir=. --follow
-   cd ../openshift
-   oc apply -f backend-deployment.yaml
-   oc apply -f backend-service.yaml
-   ```
-
-5. **Construir y desplegar frontend**
-   ```bash
-   cd ../frontend-react
-   oc new-build --name ph-transparente-frontend --binary --strategy=docker
-   oc start-build ph-transparente-frontend --from-dir=. --follow
-   cd ../openshift
-   oc apply -f frontend-deployment.yaml
-   oc apply -f frontend-service.yaml
-   ```
-
-6. **Crear route para acceso externo**
-   ```bash
-   oc apply -f route.yaml
-   ```
-
-## Verificar el Despliegue
-
-**Verificar pods:**
-```bash
-oc get pods -n ph-transparente
+```yaml
+stringData:
+  database-url: "jdbc:postgresql://ph-postgresql:5432/phdb"
+  database-username: "postgres"
+  database-password: "UNA_CONTRASEÑA_SEGURA"
+  jwt-secret: "UN_SECRET_BASE64_O_TEXTO_LARGO"
+  email-password: "SU_CLAVE_DE_APLICACION_GMAIL"
 ```
 
-**Verificar servicios:**
-```bash
-oc get services -n ph-transparente
+> El JWT secret debe ser largo y seguro. En producción nunca use el valor por defecto.
+
+### 2. Actualizar URL del repositorio Git
+
+En `backend.yaml` y `frontend.yaml` reemplace la URL de Git por la suya:
+
+```yaml
+spec:
+  source:
+    git:
+      uri: "https://github.com/SU_USUARIO/ph_transparente.git"
 ```
 
-**Verificar route:**
+### 3. Login y crear proyecto
+
 ```bash
-oc get route ph-transparente-route -n ph-transparente
+oc login --token=SU_TOKEN --server=https://api.sandbox-...:6443
+oc new-project ph-transparente
 ```
 
-**Ver logs del backend:**
+### 4. Aplicar manifiestos
+
 ```bash
-oc logs -f deployment/ph-transparente-backend -n ph-transparente
+cd openshift
+oc apply -f secrets.yaml
+oc apply -f postgresql.yaml
+oc apply -f backend.yaml
 ```
 
-**Ver logs del frontend:**
+### 5. Obtener URL pública del backend
+
+Espere a que el backend esté desplegado y obtenga su URL:
+
 ```bash
-oc logs -f deployment/ph-transparente-frontend -n ph-transparente
+oc get route ph-backend
 ```
 
-## Configuración de Base de Datos
+La URL será similar a:
+`https://ph-backend-ph-transparente.apps.sandbox-...openshiftapps.com`
 
-El deployment está configurado para usar PostgreSQL. Necesitas:
+### 6. Configurar frontend con URL del backend
 
-1. **Configurar el secret** (editar `db-secret.yaml`):
-   ```yaml
-   stringData:
-     username: tu_usuario
-     password: tu_password
-   ```
+Edite `frontend.yaml` y reemplace el valor de `VITE_API_URL`:
 
-2. **Desplegar PostgreSQL** (opcional - usar servicio de OpenShift):
-   ```bash
-   oc new-app postgresql-ephemeral --name postgresql \
-     -e POSTGRESQL_USER=postgres \
-     -e POSTGRESQL_PASSWORD=changeme \
-     -e POSTGRESQL_DATABASE=phdb
-   ```
-
-## Credenciales de Acceso
-
-- **Usuario admin:** `admin`
-- **Contraseña:** `admin123`
-
-## Solución de Problemas
-
-**Pod no inicia:**
-```bash
-oc describe pod <pod-name> -n ph-transparente
-oc logs <pod-name> -n ph-transparente
+```yaml
+      dockerStrategy:
+        buildArgs:
+          - name: "VITE_API_URL"
+            value: "https://ph-backend-ph-transparente.apps.sandbox-...openshiftapps.com/api"
 ```
 
-**Reconstruir imagen:**
+### 7. Desplegar frontend
+
 ```bash
-oc start-build ph-transparente-backend --from-dir=../backend-springboot --follow -n ph-transparente
-oc start-build ph-transparente-frontend --from-dir=../frontend-react --follow -n ph-transparente
+oc apply -f frontend.yaml
 ```
 
-**Escalar replicas:**
+### 8. Ver URLs públicas
+
 ```bash
-oc scale deployment ph-transparente-backend --replicas=2 -n ph-transparente
-oc scale deployment ph-transparente-frontend --replicas=2 -n ph-transparente
+oc get routes
+```
+
+Acceda a la URL del frontend (`ph-frontend`) para usar la aplicación.
+
+## Verificación rápida
+
+```bash
+# Ver pods
+oc get pods
+
+# Ver logs del backend
+oc logs -f deployment/ph-backend
+
+# Ver logs del frontend
+oc logs -f deployment/ph-frontend
+
+# Ver logs de PostgreSQL
+oc logs -f deployment/ph-postgresql
+```
+
+## Credenciales de prueba
+
+| Rol        | Usuario         | Contraseña   |
+|------------|-----------------|--------------|
+| Admin      | admin           | admin123     |
+| Contador   | contador        | contador123  |
+| Revisor    | revisor         | revisor123   |
+| Consejero  | consejero       | consejero123 |
+| Copropietario | copropietario | copropietario123 |
+| Vigilancia | vigilancia      | vigilancia123 |
+
+## Notas importantes
+
+- El backend está configurado para escuchar en 0.0.0.0:8081 dentro del pod.
+- Las variables de entorno `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` y `JWT_SECRET` toman prioridad sobre `application.properties`.
+- El frontend se construye con `VITE_API_URL` apuntando al backend. Si la URL del backend cambia, debe reconstruir la imagen del frontend.
+- Para producción desactive `CORS_ALLOWED_ORIGINS=*` en `backend.yaml` y especifique solo el origen del frontend.
+
+## Reconstruir imágenes
+
+```bash
+oc start-build ph-backend --follow
+oc start-build ph-frontend --follow
 ```
 
 ## Recursos
 
-- [Documentación de OpenShift](https://docs.openshift.com/)
 - [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox)
-- [CLI de OpenShift](https://docs.openshift.com/cli-reference/openshift-cli/index.html)
+- [OpenShift CLI](https://docs.openshift.com/container-platform/4.15/cli_reference/openshift_cli/getting-started-cli.html)

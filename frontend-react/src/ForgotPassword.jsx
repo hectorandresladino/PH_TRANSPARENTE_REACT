@@ -2,7 +2,7 @@
 import { User, ArrowLeft, CheckCircle } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function ForgotPassword({ onBackToLogin }) {
   const [username, setUsername] = useState('');
@@ -42,8 +42,8 @@ export default function ForgotPassword({ onBackToLogin }) {
           <ArrowLeft size={20} />
           <span>Volver al login</span>
         </button>
-        <h1>Recuperar ContraseÃ±a</h1>
-        <p>Ingresa tu usuario para recuperar tu contraseÃ±a</p>
+        <h1>Recuperar Contraseña</h1>
+        <p>Ingresa tu usuario para recuperar tu contraseña</p>
         <form onSubmit={handleSubmit}>
           <div className="login-form-group">
             <User size={20} />

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Search, Plus, Edit, Trash2, Filter, Calendar, CheckCircle, XCircle, Bell, Eye, EyeOff } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function AlertsManagement() {
   const [alerts, setAlerts] = useState([]);
@@ -88,7 +88,7 @@ export default function AlertsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta alerta?')) {
+    if (window.confirm('¿Está seguro de eliminar esta alerta?')) {
       try {
         const response = await fetch(`${API_URL}/alerts/${id}`, {
           method: 'DELETE'
@@ -103,7 +103,7 @@ export default function AlertsManagement() {
   };
 
   const handleResolve = async (alert) => {
-    const resolutionNotes = prompt('Notas de resoluciÃ³n:');
+    const resolutionNotes = prompt('Notas de resolución:');
     if (resolutionNotes) {
       try {
         const response = await fetch(`${API_URL}/alerts/${alert.id}/resolve`, {
@@ -180,7 +180,7 @@ export default function AlertsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por tÃ­tulo o descripciÃ³n..."
+            placeholder="Buscar por título o descripción..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -211,11 +211,11 @@ export default function AlertsManagement() {
             <tr>
               <th>Tipo</th>
               <th>Severidad</th>
-              <th>TÃ­tulo</th>
-              <th>MÃ³dulo</th>
+              <th>Título</th>
+              <th>Módulo</th>
               <th>Fecha</th>
               <th>Estado</th>
-              <th>PÃºblico</th>
+              <th>Público</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -275,7 +275,7 @@ export default function AlertsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingAlert ? 'Editar Alerta' : 'Nueva Alerta'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -304,7 +304,7 @@ export default function AlertsManagement() {
                   </select>
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>TÃ­tulo *</label>
+                  <label>Título *</label>
                   <input
                     type="text"
                     value={formData.title}
@@ -313,7 +313,7 @@ export default function AlertsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -321,7 +321,7 @@ export default function AlertsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>MÃ³dulo Relacionado</label>
+                  <label>Módulo Relacionado</label>
                   <select
                     value={formData.relatedModule}
                     onChange={(e) => setFormData({...formData, relatedModule: e.target.value})}
@@ -383,12 +383,12 @@ export default function AlertsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>PÃºblico</label>
+                  <label>Público</label>
                   <select
                     value={formData.isPublic}
                     onChange={(e) => setFormData({...formData, isPublic: e.target.value === 'true'})}
                   >
-                    <option value="true">SÃ­</option>
+                    <option value="true">Sí</option>
                     <option value="false">No</option>
                   </select>
                 </div>

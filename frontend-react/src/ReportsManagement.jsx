@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { FileText, Search, Plus, Download, Filter, Calendar, Printer, FileSpreadsheet, FileImage, Trash2, Eye } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 const MODULES = [
   'property-units', 'reserve-funds', 'annual-budgets', 'insurance-policies', 
@@ -70,7 +70,7 @@ export default function ReportsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar este reporte?')) {
+    if (window.confirm('¿Está seguro de eliminar este reporte?')) {
       try {
         const response = await fetch(`${API_URL}/reports/${id}`, {
           method: 'DELETE'
@@ -85,12 +85,12 @@ export default function ReportsManagement() {
   };
 
   const handleDownload = (report) => {
-    // SimulaciÃ³n de descarga
+    // Simulación de descarga
     alert(`Descargando reporte: ${report.reportName} (${report.reportFormat})`);
   };
 
   const handleView = (report) => {
-    // SimulaciÃ³n de vista
+    // Simulación de vista
     alert(`Viendo reporte: ${report.reportName}`);
   };
 
@@ -146,7 +146,7 @@ export default function ReportsManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nombre o mÃ³dulo..."
+            placeholder="Buscar por nombre o módulo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -154,7 +154,7 @@ export default function ReportsManagement() {
         <div className="filter-group">
           <Filter size={18} />
           <select value={filterModule} onChange={(e) => setFilterModule(e.target.value)}>
-            <option value="all">Todos los mÃ³dulos</option>
+            <option value="all">Todos los módulos</option>
             {MODULES.map(module => (
               <option key={module} value={module}>{module}</option>
             ))}
@@ -177,9 +177,9 @@ export default function ReportsManagement() {
             <tr>
               <th>Nombre</th>
               <th>Tipo</th>
-              <th>MÃ³dulo</th>
+              <th>Módulo</th>
               <th>Formato</th>
-              <th>PerÃ­odo</th>
+              <th>Período</th>
               <th>Registros</th>
               <th>Estado</th>
               <th>Fecha</th>
@@ -249,7 +249,7 @@ export default function ReportsManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Generar Nuevo Reporte</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
@@ -274,13 +274,13 @@ export default function ReportsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>MÃ³dulo *</label>
+                  <label>Módulo *</label>
                   <select
                     value={formData.moduleName}
                     onChange={(e) => setFormData({...formData, moduleName: e.target.value})}
                     required
                   >
-                    <option value="">Seleccionar mÃ³dulo...</option>
+                    <option value="">Seleccionar módulo...</option>
                     {MODULES.map(module => (
                       <option key={module} value={module}>{module}</option>
                     ))}
@@ -314,7 +314,7 @@ export default function ReportsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>DescripciÃ³n</label>
+                  <label>Descripción</label>
                   <textarea
                     value={formData.reportDescription}
                     onChange={(e) => setFormData({...formData, reportDescription: e.target.value})}

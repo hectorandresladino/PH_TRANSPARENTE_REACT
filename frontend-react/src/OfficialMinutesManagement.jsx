@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { FileText, Search, Plus, Edit, Trash2, Filter, Calendar, Users, CheckCircle, XCircle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function OfficialMinutesManagement() {
   const [minutes, setMinutes] = useState([]);
@@ -114,7 +114,7 @@ export default function OfficialMinutesManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡ seguro de eliminar esta acta?')) {
+    if (window.confirm('¿Está seguro de eliminar esta acta?')) {
       try {
         const response = await fetch(`${API_URL}/official-minutes/${id}`, {
           method: 'DELETE'
@@ -189,7 +189,7 @@ export default function OfficialMinutesManagement() {
           <Search size={18} />
           <input
             type="text"
-            placeholder="Buscar por nÃºmero o presidente..."
+            placeholder="Buscar por número o presidente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -217,10 +217,10 @@ export default function OfficialMinutesManagement() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>NÃºmero</th>
+              <th>Número</th>
               <th>Tipo</th>
               <th>Fecha</th>
-              <th>QuÃ³rum</th>
+              <th>Quórum</th>
               <th>Votos</th>
               <th>Presidente</th>
               <th>Estado</th>
@@ -279,12 +279,12 @@ export default function OfficialMinutesManagement() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingMinute ? 'Editar Acta' : 'Nueva Acta'}</h2>
-              <button className="btn-close" onClick={() => setShowModal(false)}>Ã—</button>
+              <button className="btn-close" onClick={() => setShowModal(false)}>í—</button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-grid">
                 <div className="form-group">
-                  <label>NÃºmero de Acta *</label>
+                  <label>Número de Acta *</label>
                   <input
                     type="text"
                     value={formData.minuteNumber}
@@ -303,7 +303,7 @@ export default function OfficialMinutesManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Fecha de ReuniÃ³n *</label>
+                  <label>Fecha de Reunión *</label>
                   <input
                     type="date"
                     value={formData.meetingDate}
@@ -320,7 +320,7 @@ export default function OfficialMinutesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>UbicaciÃ³n</label>
+                  <label>Ubicación</label>
                   <input
                     type="text"
                     value={formData.meetingLocation}
@@ -328,7 +328,7 @@ export default function OfficialMinutesManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>% QuÃ³rum</label>
+                  <label>% Quórum</label>
                   <input
                     type="number"
                     step="0.01"

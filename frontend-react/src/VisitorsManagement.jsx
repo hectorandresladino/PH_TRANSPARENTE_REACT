@@ -2,7 +2,7 @@
 import { Shield, Plus, Edit, Trash2, Search, LogOut, LogIn, Clock, User as UserIcon, Car } from 'lucide-react';
 import './styles.css';
 
-const API_URL = import.meta.env.VITE_API_URL || `http://${location.hostname}:8081/api`;
+import { API_URL } from './api.js';
 
 export default function VisitorsManagement() {
   const [visitors, setVisitors] = useState([]);
@@ -86,7 +86,7 @@ export default function VisitorsManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Â¿EstÃ¡s seguro de eliminar este visitante?')) {
+    if (window.confirm('¿Estás seguro de eliminar este visitante?')) {
       try {
         const response = await fetch(`${API_URL}/visitors/${id}`, {
           method: 'DELETE'
@@ -214,7 +214,7 @@ export default function VisitorsManagement() {
                 <span>{visitor.documentNumber || '-'}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">AnfitriÃ³n:</span>
+                <span className="detail-label">Anfitrión:</span>
                 <span>{visitor.hostName || '-'}</span>
               </div>
               <div className="detail-row">
@@ -286,14 +286,14 @@ export default function VisitorsManagement() {
                     value={formData.documentType}
                     onChange={e => setFormData({...formData, documentType: e.target.value})}
                   >
-                    <option value="CC">CÃ©dula</option>
-                    <option value="CE">CÃ©dula ExtranjerÃ­a</option>
+                    <option value="CC">Cédula</option>
+                    <option value="CE">Cédula Extranjería</option>
                     <option value="TI">Tarjeta Identidad</option>
                     <option value="PP">Pasaporte</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>NÃºmero Documento</label>
+                  <label>Número Documento</label>
                   <input
                     type="text"
                     value={formData.documentNumber}
@@ -301,7 +301,7 @@ export default function VisitorsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>TelÃ©fono</label>
+                  <label>Teléfono</label>
                   <input
                     type="tel"
                     value={formData.phone}
@@ -331,7 +331,7 @@ export default function VisitorsManagement() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Nombre AnfitriÃ³n</label>
+                  <label>Nombre Anfitrión</label>
                   <input
                     type="text"
                     value={formData.hostName}
@@ -347,7 +347,7 @@ export default function VisitorsManagement() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Placa VehÃ­culo</label>
+                  <label>Placa Vehículo</label>
                   <input
                     type="text"
                     value={formData.vehiclePlate}
@@ -355,7 +355,7 @@ export default function VisitorsManagement() {
                   />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>PropÃ³sito</label>
+                  <label>Propósito</label>
                   <textarea
                     value={formData.purpose}
                     onChange={e => setFormData({...formData, purpose: e.target.value})}

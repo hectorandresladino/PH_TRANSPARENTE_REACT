@@ -18,19 +18,21 @@ public class CorsConfig {
       @Override
       public void addCorsMappings(@NonNull CorsRegistry registry) {
         if (allowAll) {
-          // Desarrollo: cualquier origen, pero sin credenciales.
+          // Desarrollo: web, emulador Android y 127.0.0.1
           registry.addMapping("/api/**")
-            .allowedOriginPatterns("*")
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedOriginPatterns("http://localhost", "http://localhost:*", "http://127.0.0.1", "http://127.0.0.1:*", "http://10.0.2.2:*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
-            .allowCredentials(false);
+            .allowCredentials(false)
+            .maxAge(3600);
         } else {
           // Producción: solo orígenes explícitos configurados en app.cors.allowed-origins.
           registry.addMapping("/api/**")
             .allowedOrigins(allowedOrigins)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
-            .allowCredentials(true);
+            .allowCredentials(true)
+            .maxAge(3600);
         }
       }
     };
