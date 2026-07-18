@@ -18,9 +18,9 @@ public class CorsConfig {
       @Override
       public void addCorsMappings(@NonNull CorsRegistry registry) {
         if (allowAll) {
-          // Desarrollo: web, emulador Android y 127.0.0.1
+          // Desarrollo y OpenShift: permitir cualquier origen
           registry.addMapping("/api/**")
-            .allowedOriginPatterns("http://localhost", "http://localhost:*", "http://127.0.0.1", "http://127.0.0.1:*", "http://10.0.2.2:*")
+            .allowedOriginPatterns("*")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
             .allowedHeaders("*")
             .allowCredentials(false)
