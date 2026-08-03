@@ -193,7 +193,7 @@ const ROLES_CONFIG = {
   }
 };
 
-export default function AdminDashboard({ onModuleSelect, currentView, userRole }) {
+export default function AdminDashboard({ onModuleSelect, currentView, userRole, allowedModules = [] }) {
   // Mapeo de roles del backend a roles del frontend
   const roleMapping = {
     'ADMIN': 'ADMIN',
@@ -224,6 +224,10 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
 
   const userRoleConfig = ROLES_CONFIG[mappedRole];
 
+  const visibleModules = userRoleConfig
+    ? userRoleConfig.modules.filter(m => allowedModules.includes(m.name))
+    : [];
+
   if (!userRoleConfig) {
     return (
       <div className="admin-dashboard">
@@ -250,7 +254,7 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
               <div className="role-details">
                 <h3>{userRoleConfig.name}</h3>
                 <p className="role-description">{userRoleConfig.description}</p>
-                <span className="module-count">{userRoleConfig.modules.length} módulos disponibles</span>
+                <span className="module-count">{visibleModules.length} módulos disponibles</span>
               </div>
             </div>
             <div className="expand-icon">
@@ -265,7 +269,7 @@ export default function AdminDashboard({ onModuleSelect, currentView, userRole }
                 <span>Módulos disponibles para tu rol</span>
               </div>
               <div className="modules-list">
-                {userRoleConfig.modules.map(module => {
+                {visibleModules.map(module => {
                   const isActive = currentView === module.name;
                   return (
                     <button

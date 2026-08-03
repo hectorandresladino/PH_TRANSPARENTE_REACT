@@ -572,7 +572,7 @@ function App() {
               </div>
             </section>
 
-            <AdminDashboard onModuleSelect={setCurrentView} currentView={currentView} userRole={user?.role} />
+            <AdminDashboard onModuleSelect={setCurrentView} currentView={currentView} userRole={user?.role} allowedModules={allowedModules} />
           </div>
         ) : currentView === 'users' ? (
           <UsersManagement />
