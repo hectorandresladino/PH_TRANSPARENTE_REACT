@@ -838,6 +838,47 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
   .admin-dashboard .module-label { font-size: 0.85rem; }
 }
 
+/* Budget Module Styles */
+.budget-module { padding: 0; }
+.budget-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
+.budget-tab { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; transition: all 0.2s; margin-bottom: -2px; }
+.budget-tab:hover { color: #123b62; background: #f8fafc; border-radius: 8px 8px 0 0; }
+.budget-tab.active { color: #123b62; border-bottom-color: #123b62; }
+
+/* Inquiries */
+.inquiries-list { display: flex; flex-direction: column; gap: 16px; }
+.inquiry-card { background: white; border: 1px solid #d8e4ec; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 8px rgba(16,32,51,.04); }
+.inquiry-header { display: flex; justify-content: space-between; align-items: center; }
+.inquiry-author { font-weight: 700; color: #123b62; font-size: 0.9rem; }
+.inquiry-role { font-weight: 400; color: #64748b; font-size: 0.8rem; }
+.inquiry-status { padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+.inquiry-status.pendiente { background: #fef3c7; color: #d97706; }
+.inquiry-status.respondida { background: #dcfce7; color: #16a34a; }
+.inquiry-question { display: flex; align-items: flex-start; gap: 10px; }
+.inquiry-question p { margin: 0; color: #102033; font-size: 0.9rem; line-height: 1.5; }
+.inquiry-time { font-size: 0.75rem; color: #94a3b8; }
+.inquiry-answer { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #f0fdf4; border-radius: 10px; border-left: 4px solid #10b981; }
+.inquiry-answer p { margin: 0 0 4px; color: #102033; font-size: 0.88rem; line-height: 1.5; }
+.inquiry-answer-meta { font-size: 0.75rem; color: #64748b; }
+.inquiry-answer-form { display: flex; flex-direction: column; gap: 8px; }
+.inquiry-answer-form textarea { padding: 10px 14px; border: 1px solid #d8e4ec; border-radius: 8px; font-size: 0.88rem; resize: vertical; font-family: inherit; }
+.inquiry-answer-form textarea:focus { outline: none; border-color: #123b62; }
+.inquiry-answer-form button { align-self: flex-start; }
+
+/* Proposal extras */
+.proposal-cost { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #102033; font-weight: 600; }
+.proposal-meta { font-size: 0.8rem; color: #64748b; }
+
+/* Budget year bars */
+.budget-year-bars { display: flex; flex-direction: column; gap: 10px; }
+.year-bar-item { display: flex; align-items: center; gap: 12px; }
+.year-label { font-weight: 700; color: #123b62; min-width: 60px; font-size: 0.9rem; }
+.year-bar-bg { flex: 1; height: 24px; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
+.year-bar-fill { height: 100%; background: linear-gradient(90deg, #123b62, #3b82f6); border-radius: 12px; transition: width 0.3s; }
+.year-count { font-weight: 700; color: #123b62; min-width: 30px; text-align: right; font-size: 0.9rem; }
+
+@media (max-width: 768px) { .budget-tabs { flex-direction: column; border-bottom: none; } .budget-tab { border-bottom: none; border-left: 3px solid transparent; } .budget-tab.active { border-bottom: none; border-left-color: #123b62; } .stats-summary-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+
 /* Safe area para iPhone con notch (iPhone X y posteriores) */
 @supports (padding-top: env(safe-area-inset-top)) {
   .dashboard-content {
