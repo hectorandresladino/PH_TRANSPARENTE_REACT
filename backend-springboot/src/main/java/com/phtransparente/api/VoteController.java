@@ -1,8 +1,7 @@
 package com.phtransparente.api;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
@@ -68,7 +67,6 @@ public class VoteController {
         existingVote.setVotesAgainst(vote.getVotesAgainst());
         existingVote.setVotesAbstain(vote.getVotesAbstain());
         existingVote.setQuorumRequired(vote.getQuorumRequired());
-        
         Vote updatedVote = voteRepository.save(existingVote);
         return ResponseEntity.ok(updatedVote);
       })
@@ -78,7 +76,7 @@ public class VoteController {
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteVote(@PathVariable @NonNull Long id) {
     if (voteRepository.existsById(id)) {
-      voteRecordRepository.deleteAll(voteRecordRepository.findByVoteId(id));
+      voteRecordRepository.findByVoteId(id).forEach(voteRecordRepository::delete);
       voteRepository.deleteById(id);
       return ResponseEntity.ok().build();
     }
@@ -111,109 +109,150 @@ public class VoteController {
     if (voteOpt.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-
     Vote vote = voteOpt.get();
     if (!"ABIERTA".equals(vote.getStatus())) {
-      return ResponseEntity.badRequest().body("La votación no está abierta");
+      return ResponseEntity.badRequest().body("La votacion no esta abierta");
     }
 
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String username = auth != null ? auth.getName() : request.username();
+    String username = currentUsername();
     User user = userRepository.findByUsername(username);
     if (user == null) {
-      return ResponseEntity.badRequest().body("Usuario no encontrado");
+      return ResponseEntity.status(401).body("Usuario no encontrado");
     }
 
-    Optional<VoteRecord> existing = voteRecordRepository.findByVoteIdAndUserId(id, user.getId());
-    if (existing.isPresent()) {
-      return ResponseEntity.badRequest().body("El usuario ya votó");
+    if (voteRecordRepository.existsByVoteIdAndUserId(id, user.getId())) {
+      return ResponseEntity.badRequest().body("Ya has votado en esta propuesta");
     }
 
-    String option = request.option();
-    if (option == null || (!option.equals("A_FAVOR") && !option.equals("EN_CONTRA") && !option.equals("ABSTENCION"))) {
-      return ResponseEntity.badRequest().body("Opción inválida");
+    String choice = request.choice().toUpperCase();
+    if (!choice.equals("FAVOR") && !choice.equals("CONTRA") && !choice.equals("ABSTENCION")) {
+      return ResponseEntity.badRequest().body("Opcion invalida. Use: FAVOR, CONTRA o ABSTENCION");
     }
 
     VoteRecord record = new VoteRecord();
     record.setVoteId(id);
     record.setUserId(user.getId());
-    record.setUsername(user.getUsername());
-    record.setOption(option);
+    record.setUsername(username);
+    record.setChoice(choice);
     record.setVotedAt(LocalDateTime.now());
     voteRecordRepository.save(record);
 
-    if ("A_FAVOR".equals(option)) {
-      vote.setVotesFor((vote.getVotesFor() != null ? vote.getVotesFor() : 0) + 1);
-    } else if ("EN_CONTRA".equals(option)) {
-      vote.setVotesAgainst((vote.getVotesAgainst() != null ? vote.getVotesAgainst() : 0) + 1);
-    } else {
-      vote.setVotesAbstain((vote.getVotesAbstain() != null ? vote.getVotesAbstain() : 0) + 1);
-    }
-    voteRepository.save(vote);
+    recalculateVoteCounts(vote);
 
-    return ResponseEntity.ok(record);
+    return ResponseEntity.ok(Map.of("message", "Voto registrado exitosamente", "choice", choice));
   }
 
-  @GetMapping("/{id}/statistics")
-  public ResponseEntity<?> getStatistics(@PathVariable @NonNull Long id) {
+  @GetMapping("/{id}/stats")
+  public ResponseEntity<?> getVoteStats(@PathVariable @NonNull Long id) {
     Optional<Vote> voteOpt = voteRepository.findById(id);
     if (voteOpt.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-
     Vote vote = voteOpt.get();
-    List<VoteRecord> records = voteRecordRepository.findByVoteId(id);
-    List<User> activeUsers = userRepository.findByActive(true);
 
-    List<VoterInfo> voted = records.stream()
-      .map(r -> new VoterInfo(r.getUserId(), r.getUsername(), r.getOption(), r.getVotedAt()))
-      .toList();
+    List<VoteRecord> records = voteRecordRepository.findByVoteIdOrderByVotedAtDesc(id);
+    long favor = voteRecordRepository.countByVoteIdAndChoice(id, "FAVOR");
+    long contra = voteRecordRepository.countByVoteIdAndChoice(id, "CONTRA");
+    long abstencion = voteRecordRepository.countByVoteIdAndChoice(id, "ABSTENCION");
 
-    List<Long> votedUserIds = records.stream().map(VoteRecord::getUserId).toList();
-    List<VoterInfo> missing = activeUsers.stream()
-      .filter(u -> !votedUserIds.contains(u.getId()))
-      .map(u -> new VoterInfo(u.getId(), u.getUsername(), null, null))
-      .toList();
+    List<User> allUsers = userRepository.findAll();
+    Set<Long> votedUserIds = new HashSet<>();
+    List<Map<String, Object>> votedList = new ArrayList<>();
+    for (VoteRecord r : records) {
+      votedUserIds.add(r.getUserId());
+      Map<String, Object> entry = new LinkedHashMap<>();
+      entry.put("username", r.getUsername());
+      entry.put("choice", r.getChoice());
+      entry.put("votedAt", r.getVotedAt());
+      votedList.add(entry);
+    }
 
-    int votesFor = (int) records.stream().filter(r -> "A_FAVOR".equals(r.getOption())).count();
-    int votesAgainst = (int) records.stream().filter(r -> "EN_CONTRA".equals(r.getOption())).count();
-    int votesAbstain = (int) records.stream().filter(r -> "ABSTENCION".equals(r.getOption())).count();
-    int totalVotes = records.size();
+    List<Map<String, Object>> notVotedList = new ArrayList<>();
+    for (User u : allUsers) {
+      if (Boolean.TRUE.equals(u.getActive()) && !votedUserIds.contains(u.getId())) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("username", u.getUsername());
+        entry.put("fullName", u.getFullName());
+        entry.put("houseUnit", u.getHouseUnit());
+        notVotedList.add(entry);
+      }
+    }
 
-    Integer quorumRequired = vote.getQuorumRequired();
-    boolean quorumMet = quorumRequired == null || totalVotes >= quorumRequired;
-    boolean won = quorumMet && votesFor > votesAgainst;
+    long totalEligible = allUsers.stream().filter(u -> Boolean.TRUE.equals(u.getActive())).count();
+    long totalVoted = votedUserIds.size();
+    double participation = totalEligible > 0 ? (totalVoted * 100.0 / totalEligible) : 0;
 
-    return ResponseEntity.ok(new VoteStatistics(
-      vote.getId(),
-      vote.getTitle(),
-      totalVotes,
-      votesFor,
-      votesAgainst,
-      votesAbstain,
-      activeUsers.size(),
-      quorumMet,
-      won,
-      voted,
-      missing
-    ));
+    boolean approved = favor > contra;
+    boolean tie = favor == contra;
+    String result;
+    if (tie) {
+      result = "EMPATE";
+    } else if (approved) {
+      result = "APROBADA";
+    } else {
+      result = "RECHAZADA";
+    }
+
+    Map<String, Object> stats = new LinkedHashMap<>();
+    stats.put("voteId", id);
+    stats.put("title", vote.getTitle());
+    stats.put("status", vote.getStatus());
+    stats.put("favor", favor);
+    stats.put("contra", contra);
+    stats.put("abstencion", abstencion);
+    stats.put("totalVoted", totalVoted);
+    stats.put("totalEligible", totalEligible);
+    stats.put("pending", totalEligible - totalVoted);
+    stats.put("participation", Math.round(participation * 100.0) / 100.0);
+    stats.put("result", result);
+    stats.put("approved", approved);
+    stats.put("votedList", votedList);
+    stats.put("notVotedList", notVotedList);
+
+    return ResponseEntity.ok(stats);
   }
 
-  public record CastVoteRequest(String option, String username) {}
+  @PostMapping("/{id}/close")
+  public ResponseEntity<?> closeVote(@PathVariable @NonNull Long id) {
+    Optional<Vote> voteOpt = voteRepository.findById(id);
+    if (voteOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    Vote vote = voteOpt.get();
+    recalculateVoteCounts(vote);
+    vote.setStatus("CERRADA");
+    voteRepository.save(vote);
+    return ResponseEntity.ok(Map.of("message", "Votacion cerrada", "votesFor", vote.getVotesFor(), "votesAgainst", vote.getVotesAgainst(), "votesAbstain", vote.getVotesAbstain()));
+  }
 
-  public record VoterInfo(Long userId, String username, String option, LocalDateTime votedAt) {}
+  @GetMapping("/{id}/my-vote")
+  public ResponseEntity<?> getMyVote(@PathVariable @NonNull Long id) {
+    String username = currentUsername();
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      return ResponseEntity.status(401).body("Usuario no encontrado");
+    }
+    Optional<VoteRecord> record = voteRecordRepository.findByVoteIdAndUserId(id, user.getId());
+    if (record.isPresent()) {
+      return ResponseEntity.ok(Map.of("choice", record.get().getChoice(), "votedAt", record.get().getVotedAt()));
+    }
+    return ResponseEntity.ok(Map.of("voted", false));
+  }
 
-  public record VoteStatistics(
-    Long voteId,
-    String title,
-    int totalVotes,
-    int votesFor,
-    int votesAgainst,
-    int votesAbstain,
-    int eligibleVoters,
-    boolean quorumMet,
-    boolean won,
-    List<VoterInfo> voted,
-    List<VoterInfo> missing
-  ) {}
+  private void recalculateVoteCounts(Vote vote) {
+    long favor = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "FAVOR");
+    long contra = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "CONTRA");
+    long abstencion = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "ABSTENCION");
+    vote.setVotesFor((int) favor);
+    vote.setVotesAgainst((int) contra);
+    vote.setVotesAbstain((int) abstencion);
+    voteRepository.save(vote);
+  }
+
+  private String currentUsername() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    return (auth != null && auth.isAuthenticated()) ? auth.getName() : "SYSTEM";
+  }
+
+  public record CastVoteRequest(String choice) {}
 }

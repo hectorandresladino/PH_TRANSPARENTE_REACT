@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vote_records")
+@Table(name = "vote_records", uniqueConstraints = @UniqueConstraint(columnNames = {"vote_id", "user_id"}))
 public class VoteRecord {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,11 +16,11 @@ public class VoteRecord {
   @Column(name = "user_id", nullable = false)
   private Long userId;
 
-  @Column(nullable = false)
+  @Column(name = "username", nullable = false)
   private String username;
 
   @Column(nullable = false)
-  private String option;
+  private String choice;
 
   @Column(name = "voted_at")
   private LocalDateTime votedAt;
@@ -39,8 +39,8 @@ public class VoteRecord {
   public String getUsername() { return username; }
   public void setUsername(String username) { this.username = username; }
 
-  public String getOption() { return option; }
-  public void setOption(String option) { this.option = option; }
+  public String getChoice() { return choice; }
+  public void setChoice(String choice) { this.choice = choice; }
 
   public LocalDateTime getVotedAt() { return votedAt; }
   public void setVotedAt(LocalDateTime votedAt) { this.votedAt = votedAt; }
