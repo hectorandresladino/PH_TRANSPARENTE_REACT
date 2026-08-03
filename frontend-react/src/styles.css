@@ -879,6 +879,94 @@ h1 { font-size: clamp(2.2rem, 5vw, 4.5rem); margin: 12px 0; line-height: 1; } h2
 
 @media (max-width: 768px) { .budget-tabs { flex-direction: column; border-bottom: none; } .budget-tab { border-bottom: none; border-left: 3px solid transparent; } .budget-tab.active { border-bottom: none; border-left-color: #123b62; } .stats-summary-grid { grid-template-columns: repeat(2, 1fr) !important; } }
 
+/* AI Component Styles */
+.btn-ai-suggest { padding: 6px 12px; background: linear-gradient(135deg, #7c3aed, #a78bfa); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 700; transition: all 0.2s; }
+.btn-ai-suggest:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,.3); }
+
+.ai-suggestion-modal, .ai-analysis-modal { max-width: 800px; max-height: 85vh; overflow-y: auto; }
+
+.ai-loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 16px; }
+.ai-loading-container p { color: #7c3aed; font-weight: 600; font-size: 0.9rem; }
+.ai-spinner { animation: ai-spin 1s linear infinite; color: #7c3aed; }
+@keyframes ai-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.ai-suggestion-content, .ai-analysis-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.ai-analysis-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.ai-analysis-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+.ai-analysis-label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #64748b; font-weight: 600; }
+
+.ai-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+.ai-badge-blue { background: #dbeafe; color: #1d4ed8; }
+.ai-badge-red { background: #fee2e2; color: #dc2626; }
+.ai-badge-orange { background: #ffedd5; color: #ea580c; }
+.ai-badge-green { background: #dcfce7; color: #16a34a; }
+.ai-badge-gray { background: #f1f5f9; color: #64748b; }
+.ai-badge-purple { background: #ede9fe; color: #7c3aed; }
+
+.ai-escalation-warning { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #dc2626; font-size: 0.85rem; font-weight: 600; }
+
+.ai-suggestion-response { display: flex; flex-direction: column; gap: 8px; }
+.ai-suggestion-response-header { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #7c3aed; font-size: 0.9rem; }
+.ai-response-textarea { width: 100%; padding: 14px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 0.88rem; line-height: 1.6; resize: vertical; font-family: inherit; background: #faf5ff; color: #1e1b4b; }
+.ai-response-textarea:focus { outline: none; border-color: #7c3aed; }
+
+.ai-suggestion-actions { display: flex; flex-direction: column; gap: 8px; }
+.ai-suggestion-label { display: flex; align-items: center; gap: 6px; font-weight: 700; color: #123b62; font-size: 0.9rem; }
+.ai-actions-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.ai-actions-list li { padding: 8px 12px 8px 28px; background: #f0f9ff; border-radius: 8px; font-size: 0.85rem; color: #0c4a6e; position: relative; }
+.ai-actions-list li::before { content: '→'; position: absolute; left: 10px; color: #0284c7; font-weight: 700; }
+
+.ai-suggestion-footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
+
+/* AI Budget Analysis */
+.ai-section { display: flex; flex-direction: column; gap: 10px; }
+.ai-section-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #123b62; font-size: 0.95rem; padding-bottom: 6px; border-bottom: 2px solid #e9d5ff; }
+.ai-executive-summary { font-size: 0.88rem; line-height: 1.7; color: #334155; margin: 0; padding: 12px; background: #faf5ff; border-radius: 10px; border-left: 4px solid #7c3aed; }
+
+.ai-indicators-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ai-indicator { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.ai-indicator strong { font-size: 1.5rem; color: #7c3aed; }
+.ai-indicator span { font-size: 0.75rem; color: #64748b; }
+
+.ai-alerts-list { display: flex; flex-direction: column; gap: 8px; }
+.ai-alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
+.ai-alert-high { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.ai-alert-medium { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+.ai-category-table { overflow-x: auto; }
+.ai-category-table table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.ai-category-table th { padding: 10px 12px; background: #f8fafc; text-align: left; font-weight: 700; color: #475569; border-bottom: 2px solid #e2e8f0; }
+.ai-category-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+.ai-category-table tr:hover { background: #faf5ff; }
+.ai-over-budget { color: #dc2626; font-weight: 700; }
+
+.ai-risks-list { display: flex; flex-direction: column; gap: 10px; }
+.ai-risk-item { padding: 12px 16px; border-radius: 10px; border-left: 4px solid; }
+.ai-risk-high { background: #fef2f2; border-color: #ef4444; }
+.ai-risk-medium { background: #fffbeb; border-color: #f59e0b; }
+.ai-risk-bajo { background: #f0fdf4; border-color: #10b981; }
+.ai-risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.ai-risk-header strong { color: #1e293b; font-size: 0.88rem; }
+.ai-risk-badge { padding: 2px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; }
+.ai-risk-badge-high { background: #fee2e2; color: #dc2626; }
+.ai-risk-badge-medium { background: #ffedd5; color: #ea580c; }
+.ai-risk-badge-bajo { background: #dcfce7; color: #16a34a; }
+.ai-risk-item p { margin: 0; font-size: 0.82rem; color: #64748b; line-height: 1.5; }
+
+.ai-recommendations-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.ai-recommendations-list li { padding: 10px 14px 10px 36px; background: #f0fdf4; border-radius: 8px; font-size: 0.85rem; color: #166534; position: relative; line-height: 1.5; }
+.ai-recommendations-list li::before { content: '💡'; position: absolute; left: 10px; }
+
+.ai-conclusion { background: #faf5ff; padding: 16px; border-radius: 12px; border: 1px solid #e9d5ff; }
+.ai-conclusion p { margin: 0; font-size: 0.88rem; line-height: 1.7; color: #1e1b4b; }
+
+@media (max-width: 768px) {
+  .ai-analysis-grid { grid-template-columns: 1fr; }
+  .ai-indicators-grid { grid-template-columns: repeat(2, 1fr); }
+  .ai-suggestion-modal, .ai-analysis-modal { max-width: 95vw; }
+}
+
 /* Safe area para iPhone con notch (iPhone X y posteriores) */
 @supports (padding-top: env(safe-area-inset-top)) {
   .dashboard-content {

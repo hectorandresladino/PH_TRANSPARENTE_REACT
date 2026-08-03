@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X, MessageSquare } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Search, AlertCircle, CheckCircle, Clock, AlertTriangle, Paperclip, Eye, X, MessageSquare, Sparkles, Loader, AlertOctagon, Lightbulb, TrendingUp, ShieldAlert } from 'lucide-react';
 import './styles.css';
 
 import { API_URL } from './api.js';
@@ -26,6 +26,9 @@ export default function PqrManagement({ user }) {
   });
   const [viewingAttachment, setViewingAttachment] = useState(null);
   const fileInputRef = useRef(null);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPqrId, setAiPqrId] = useState(null);
 
   const isCopropietario = user?.role === 'COPIROPIETARIO';
 
@@ -185,6 +188,36 @@ export default function PqrManagement({ user }) {
     }
   };
 
+  const handleAiSuggest = async (pqrId) => {
+    setAiLoading(true);
+    setAiPqrId(pqrId);
+    setAiSuggestion(null);
+    try {
+      const response = await fetch(`${API_URL}/ai/pqr/${pqrId}/suggest`);
+      if (response.ok) {
+        const data = await response.json();
+        setAiSuggestion(data);
+      } else {
+        alert('No se pudo generar la sugerencia de IA');
+      }
+    } catch (error) {
+      console.error('Error fetching AI suggestion:', error);
+      alert('Error al conectar con el asistente de IA');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleApplyAiResponse = () => {
+    if (aiSuggestion && aiSuggestion.suggestedResponse) {
+      setFormData(prev => ({ ...prev, response: aiSuggestion.suggestedResponse }));
+      if (aiSuggestion.suggestedStatus) setFormData(prev => ({ ...prev, status: aiSuggestion.suggestedStatus }));
+      if (aiSuggestion.suggestedPriority) setFormData(prev => ({ ...prev, priority: aiSuggestion.suggestedPriority }));
+      setAiSuggestion(null);
+      setAiPqrId(null);
+    }
+  };
+
   const filteredPqrs = pqrs.filter(pqr => {
     const matchesSearch = 
       pqr.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -276,6 +309,16 @@ export default function PqrManagement({ user }) {
                 >
                   <MessageSquare size={14} />
                   Responder
+                </button>
+              )}
+              {!isCopropietario && (
+                <button 
+                  onClick={() => handleAiSuggest(pqr.id)} 
+                  className="btn-ai-suggest"
+                  title="Asistente IA"
+                >
+                  <Sparkles size={14} />
+                  IA
                 </button>
               )}
               <button className="btn-edit" onClick={() => handleEdit(pqr)}>
@@ -461,6 +504,88 @@ export default function PqrManagement({ user }) {
                 )}
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {(aiLoading || aiSuggestion) && (
+        <div className="modal-overlay" onClick={() => { setAiSuggestion(null); setAiPqrId(null); }}>
+          <div className="modal-content ai-suggestion-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={22} color="#7c3aed" />
+                Asistente IA - Analisis de PQR
+              </h2>
+              <button className="btn-close" onClick={() => { setAiSuggestion(null); setAiPqrId(null); }}>
+                <X size={20} />
+              </button>
+            </div>
+            {aiLoading ? (
+              <div className="ai-loading-container">
+                <Loader size={40} className="ai-spinner" />
+                <p>Analizando PQR con inteligencia artificial...</p>
+              </div>
+            ) : aiSuggestion && (
+              <div className="ai-suggestion-content">
+                <div className="ai-analysis-grid">
+                  <div className="ai-analysis-card">
+                    <div className="ai-analysis-label"><Lightbulb size={16} /> Categoria detectada</div>
+                    <span className="ai-badge ai-badge-blue">{aiSuggestion.category}</span>
+                  </div>
+                  <div className="ai-analysis-card">
+                    <div className="ai-analysis-label"><TrendingUp size={16} /> Urgencia</div>
+                    <span className={`ai-badge ${aiSuggestion.urgency === 'CRITICA' ? 'ai-badge-red' : aiSuggestion.urgency === 'ALTA' ? 'ai-badge-orange' : 'ai-badge-green'}`}>{aiSuggestion.urgency}</span>
+                  </div>
+                  <div className="ai-analysis-card">
+                    <div className="ai-analysis-label"><MessageSquare size={16} /> Sentimiento</div>
+                    <span className={`ai-badge ${aiSuggestion.sentiment === 'NEGATIVO' || aiSuggestion.sentiment === 'INSATISFECHO' ? 'ai-badge-red' : aiSuggestion.sentiment === 'POSITIVO' ? 'ai-badge-green' : 'ai-badge-gray'}`}>{aiSuggestion.sentiment}</span>
+                  </div>
+                  <div className="ai-analysis-card">
+                    <div className="ai-analysis-label"><Clock size={16} /> Tiempo estimado</div>
+                    <span className="ai-badge ai-badge-purple">{aiSuggestion.estimatedResponseTime}</span>
+                  </div>
+                </div>
+
+                {aiSuggestion.requiresEscalation && (
+                  <div className="ai-escalation-warning">
+                    <ShieldAlert size={20} />
+                    <span>Esta PQR requiere escalamiento. Se recomienda notificar al administrador y/o autoridades competentes.</span>
+                  </div>
+                )}
+
+                <div className="ai-suggestion-response">
+                  <div className="ai-suggestion-response-header">
+                    <Sparkles size={18} color="#7c3aed" />
+                    <span>Respuesta sugerida por IA</span>
+                  </div>
+                  <textarea 
+                    value={aiSuggestion.suggestedResponse} 
+                    readOnly 
+                    rows={10}
+                    className="ai-response-textarea"
+                  />
+                </div>
+
+                <div className="ai-suggestion-actions">
+                  <div className="ai-suggestion-label"><AlertOctagon size={16} /> Acciones recomendadas:</div>
+                  <ul className="ai-actions-list">
+                    {aiSuggestion.recommendedActions?.map((action, i) => (
+                      <li key={i}>{action}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="ai-suggestion-footer">
+                  <button className="btn-secondary" onClick={() => { setAiSuggestion(null); setAiPqrId(null); }}>
+                    Cerrar
+                  </button>
+                  <button className="btn-primary" style={{ background: '#7c3aed' }} onClick={handleApplyAiResponse}>
+                    <Sparkles size={16} />
+                    Aplicar sugerencia
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

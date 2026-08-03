@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Plus, Edit, Trash2, Filter, DollarSign, TrendingUp, BarChart3, MessageSquare, Vote, ThumbsUp, ThumbsDown, Minus, CheckCircle, XCircle, Clock, Trophy, Users, UserX, X, Send, FileText } from 'lucide-react';
+import { Calendar, Search, Plus, Edit, Trash2, Filter, DollarSign, TrendingUp, BarChart3, MessageSquare, Vote, ThumbsUp, ThumbsDown, Minus, CheckCircle, XCircle, Clock, Trophy, Users, UserX, X, Send, FileText, Sparkles, Loader, AlertTriangle, Lightbulb, Activity, PieChart } from 'lucide-react';
 import './styles.css';
 
 import { API_URL } from './api.js';
@@ -42,6 +42,9 @@ export default function AnnualBudgetsManagement() {
   const [inquiryForm, setInquiryForm] = useState({ question: '' });
   const [answerText, setAnswerText] = useState({});
   const [editingItem, setEditingItem] = useState(null);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiBudgetId, setAiBudgetId] = useState(null);
 
   useEffect(() => {
     fetchBudgets();
@@ -57,6 +60,26 @@ export default function AnnualBudgetsManagement() {
   }, [selectedBudget]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const handleAiAnalyze = async (budgetId) => {
+    setAiLoading(true);
+    setAiBudgetId(budgetId);
+    setAiAnalysis(null);
+    try {
+      const res = await fetch(`${API_URL}/ai/budget/${budgetId}/analyze`);
+      if (res.ok) {
+        const data = await res.json();
+        setAiAnalysis(data);
+      } else {
+        showToast('No se pudo generar el analisis de IA');
+      }
+    } catch (e) {
+      console.error('Error fetching AI analysis:', e);
+      showToast('Error al conectar con el asistente de IA');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const fetchBudgets = async () => {
     try {
@@ -504,6 +527,28 @@ export default function AnnualBudgetsManagement() {
               <BarChart3 size={32} />
               <h1>Estadisticas Generales</h1>
             </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <select 
+                id="ai-budget-select"
+                defaultValue=""
+                style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #d8e4ec', fontSize: '0.85rem' }}
+              >
+                <option value="" disabled>Seleccione presupuesto...</option>
+                {budgets.map(b => <option key={b.id} value={b.id}>{b.budgetName} ({b.budgetYear})</option>)}
+              </select>
+              <button 
+                className="btn-primary" 
+                style={{ background: '#7c3aed', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={() => {
+                  const select = document.getElementById('ai-budget-select');
+                  if (select && select.value) handleAiAnalyze(select.value);
+                  else showToast('Seleccione un presupuesto primero');
+                }}
+              >
+                <Sparkles size={18} />
+                Analizar con IA
+              </button>
+            </div>
           </div>
 
           <div className="stats-summary-grid">
@@ -555,6 +600,134 @@ export default function AnnualBudgetsManagement() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ==================== MODAL: AI ANALYSIS ==================== */}
+      {(aiLoading || aiAnalysis) && (
+        <div className="modal-overlay" onClick={() => { setAiAnalysis(null); setAiBudgetId(null); }}>
+          <div className="modal-content ai-analysis-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={22} color="#7c3aed" />
+                Analisis IA del Presupuesto
+              </h2>
+              <button className="btn-close" onClick={() => { setAiAnalysis(null); setAiBudgetId(null); }}><X size={20} /></button>
+            </div>
+            {aiLoading ? (
+              <div className="ai-loading-container">
+                <Loader size={40} className="ai-spinner" />
+                <p>Analizando presupuesto con inteligencia artificial...</p>
+              </div>
+            ) : aiAnalysis && (
+              <div className="ai-analysis-content">
+                {/* Resumen ejecutivo */}
+                <div className="ai-section">
+                  <div className="ai-section-title"><FileText size={18} color="#7c3aed" /> Resumen Ejecutivo</div>
+                  <p className="ai-executive-summary">{aiAnalysis.executiveSummary}</p>
+                </div>
+
+                {/* Indicadores clave */}
+                {aiAnalysis.keyIndicators && (
+                  <div className="ai-section">
+                    <div className="ai-section-title"><Activity size={18} color="#7c3aed" /> Indicadores Clave</div>
+                    <div className="ai-indicators-grid">
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.totalRubros}</strong><span>Rubros totales</span></div>
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.rubrosEjecutadosAl80}</strong><span>Rubros {'>'}80% ejecucion</span></div>
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.rubrosSinEjecucion}</strong><span>Rubros sin ejecucion</span></div>
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.totalConsultas}</strong><span>Consultas</span></div>
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.consultasPendientes}</strong><span>Consultas pendientes</span></div>
+                      <div className="ai-indicator"><strong>{aiAnalysis.keyIndicators.participacionVotos}</strong><span>Votos totales</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Alertas */}
+                {aiAnalysis.alerts && aiAnalysis.alerts.length > 0 && (
+                  <div className="ai-section">
+                    <div className="ai-section-title"><AlertTriangle size={18} color="#ef4444" /> Alertas y Anomalias ({aiAnalysis.alerts.length})</div>
+                    <div className="ai-alerts-list">
+                      {aiAnalysis.alerts.map((alert, i) => (
+                        <div key={i} className={`ai-alert-item ${alert.severity === 'ALTA' ? 'ai-alert-high' : 'ai-alert-medium'}`}>
+                          <AlertTriangle size={16} color={alert.severity === 'ALTA' ? '#ef4444' : '#f59e0b'} />
+                          <div>
+                            <strong>{alert.type.replace(/_/g, ' ')}</strong> - <span>{alert.message}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Analisis por categoria */}
+                {aiAnalysis.categoryAnalysis && aiAnalysis.categoryAnalysis.length > 0 && (
+                  <div className="ai-section">
+                    <div className="ai-section-title"><PieChart size={18} color="#7c3aed" /> Analisis por Categoria</div>
+                    <div className="ai-category-table">
+                      <table>
+                        <thead>
+                          <tr><th>Categoria</th><th>Presupuestado</th><th>Ejecutado</th><th>% Ejecucion</th><th>Participacion</th></tr>
+                        </thead>
+                        <tbody>
+                          {aiAnalysis.categoryAnalysis.map((cat, i) => (
+                            <tr key={i}>
+                              <td>{cat.category}</td>
+                              <td>${cat.budgeted.toLocaleString()}</td>
+                              <td>${cat.executed.toLocaleString()}</td>
+                              <td className={cat.executionRate > 100 ? 'ai-over-budget' : ''}>{cat.executionRate}%</td>
+                              <td>{cat.participation}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Riesgos */}
+                {aiAnalysis.risks && aiAnalysis.risks.length > 0 && (
+                  <div className="ai-section">
+                    <div className="ai-section-title"><AlertTriangle size={18} color="#f59e0b" /> Riesgos Identificados</div>
+                    <div className="ai-risks-list">
+                      {aiAnalysis.risks.map((risk, i) => (
+                        <div key={i} className={`ai-risk-item ai-risk-${risk.level.toLowerCase()}`}>
+                          <div className="ai-risk-header">
+                            <strong>{risk.risk}</strong>
+                            <span className={`ai-risk-badge ai-risk-badge-${risk.level.toLowerCase()}`}>{risk.level}</span>
+                          </div>
+                          <p>{risk.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recomendaciones */}
+                {aiAnalysis.recommendations && aiAnalysis.recommendations.length > 0 && (
+                  <div className="ai-section">
+                    <div className="ai-section-title"><Lightbulb size={18} color="#7c3aed" /> Recomendaciones</div>
+                    <ul className="ai-recommendations-list">
+                      {aiAnalysis.recommendations.map((rec, i) => (
+                        <li key={i}>{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Conclusion */}
+                {aiAnalysis.conclusion && (
+                  <div className="ai-section ai-conclusion">
+                    <div className="ai-section-title"><Sparkles size={18} color="#7c3aed" /> Conclusion</div>
+                    <p>{aiAnalysis.conclusion}</p>
+                  </div>
+                )}
+
+                <div className="ai-suggestion-footer">
+                  <button className="btn-secondary" onClick={() => { setAiAnalysis(null); setAiBudgetId(null); }}>Cerrar</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
