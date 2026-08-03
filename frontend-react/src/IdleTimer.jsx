@@ -14,6 +14,8 @@ export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
   const warningTimerRef = useRef(null);
   const countdownRef = useRef(null);
 
+  const resetTimerRef = useRef(null);
+
   const resetTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
@@ -37,15 +39,17 @@ export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
     }, warningMs);
   };
 
+  resetTimerRef.current = resetTimer;
+
   useEffect(() => {
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
 
     const handleActivity = () => {
-      resetTimer();
+      resetTimerRef.current();
     };
 
     events.forEach(event => window.addEventListener(event, handleActivity, { passive: true }));
-    resetTimer();
+    resetTimerRef.current();
 
     return () => {
       events.forEach(event => window.removeEventListener(event, handleActivity));
@@ -53,7 +57,7 @@ export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
       if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [timeoutMs, warningMs, warningDuration, onLogout, warning]);
+  }, [timeoutMs, onLogout]);
 
   if (!warning) return null;
 
