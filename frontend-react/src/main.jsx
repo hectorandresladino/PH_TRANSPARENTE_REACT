@@ -19,6 +19,7 @@ import FinesManagement from './FinesManagement.jsx';
 import DocumentsManagement from './DocumentsManagement.jsx';
 import AssembliesManagement from './AssembliesManagement.jsx';
 import VotesManagement from './VotesManagement.jsx';
+import ProposalVotesManagement from './ProposalVotesManagement.jsx';
 import CouncilsManagement from './CouncilsManagement.jsx';
 import SecurityManagement from './SecurityManagement.jsx';
 import ContractorsManagement from './ContractorsManagement.jsx';
@@ -355,6 +356,15 @@ function App() {
             <span>Votaciones</span>
           </button>
           )}
+          {allowedModules.includes('votes') && (
+          <button
+            className={`nav-item ${currentView === 'proposal-votes' ? 'active' : ''}`}
+            onClick={() => setCurrentView('proposal-votes')}
+          >
+            <BarChart3 size={18} />
+            <span>Votaciones de Propuestas</span>
+          </button>
+          )}
           {allowedModules.includes('councils') && (
           <button 
             className={`nav-item ${currentView === 'councils' ? 'active' : ''}`}
@@ -598,6 +608,8 @@ function App() {
           <AssembliesManagement />
         ) : currentView === 'votes' ? (
           <VotesManagement />
+        ) : currentView === 'proposal-votes' ? (
+          <ProposalVotesManagement />
         ) : currentView === 'councils' ? (
           <CouncilsManagement />
         ) : currentView === 'security' ? (
