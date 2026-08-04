@@ -17,18 +17,20 @@ public class SecurityFindingController {
 
   @GetMapping
   public List<SecurityFinding> getAllSecurityFindings() {
-    return securityFindingRepository.findAll();
+    return securityFindingRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<SecurityFinding> getSecurityFindingById(@PathVariable @NonNull Long id) {
     return securityFindingRepository.findById(id)
+      .filter(f -> f.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<SecurityFinding> createSecurityFinding(@RequestBody SecurityFinding securityFinding) {
+    securityFinding.setOrganizationId(TenantContext.getOrganizationId());
     securityFinding.setCreatedAt(LocalDateTime.now());
     if (securityFinding.getStatus() == null) {
       securityFinding.setStatus("PENDIENTE");
@@ -48,7 +50,9 @@ public class SecurityFindingController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateSecurityFinding(@PathVariable @NonNull Long id, @RequestBody SecurityFinding securityFinding) {
+    Long orgId = TenantContext.getOrganizationId();
     return securityFindingRepository.findById(id)
+      .filter(existingSecurityFinding -> existingSecurityFinding.getOrganizationId().equals(orgId))
       .map(existingSecurityFinding -> {
         existingSecurityFinding.setTitle(securityFinding.getTitle());
         existingSecurityFinding.setDescription(securityFinding.getDescription());
@@ -78,40 +82,43 @@ public class SecurityFindingController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteSecurityFinding(@PathVariable @NonNull Long id) {
-    if (securityFindingRepository.existsById(id)) {
-      securityFindingRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return securityFindingRepository.findById(id)
+      .filter(f -> f.getOrganizationId().equals(orgId))
+      .map(f -> {
+        securityFindingRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<SecurityFinding> getSecurityFindingsByStatus(@PathVariable String status) {
-    return securityFindingRepository.findByStatus(status);
+    return securityFindingRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<SecurityFinding> getSecurityFindingsByType(@PathVariable String type) {
-    return securityFindingRepository.findByType(type);
+    return securityFindingRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/severity/{severity}")
   public List<SecurityFinding> getSecurityFindingsBySeverity(@PathVariable String severity) {
-    return securityFindingRepository.findBySeverity(severity);
+    return securityFindingRepository.findByOrganizationIdAndSeverity(TenantContext.getOrganizationId(), severity);
   }
 
   @GetMapping("/zone/{zone}")
   public List<SecurityFinding> getSecurityFindingsByZone(@PathVariable String zone) {
-    return securityFindingRepository.findByZone(zone);
+    return securityFindingRepository.findByOrganizationIdAndZone(TenantContext.getOrganizationId(), zone);
   }
 
   @GetMapping("/assigned/{assignedTo}")
   public List<SecurityFinding> getSecurityFindingsByAssigned(@PathVariable String assignedTo) {
-    return securityFindingRepository.findByAssignedTo(assignedTo);
+    return securityFindingRepository.findByOrganizationIdAndAssignedTo(TenantContext.getOrganizationId(), assignedTo);
   }
 
   @GetMapping("/reported/{reportedBy}")
   public List<SecurityFinding> getSecurityFindingsByReported(@PathVariable String reportedBy) {
-    return securityFindingRepository.findByReportedBy(reportedBy);
+    return securityFindingRepository.findByOrganizationIdAndReportedBy(TenantContext.getOrganizationId(), reportedBy);
   }
 }

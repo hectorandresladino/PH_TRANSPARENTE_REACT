@@ -6,10 +6,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SecurityFindingRepository extends JpaRepository<SecurityFinding, Long> {
-  List<SecurityFinding> findByStatus(String status);
-  List<SecurityFinding> findByType(String type);
-  List<SecurityFinding> findBySeverity(String severity);
-  List<SecurityFinding> findByZone(String zone);
-  List<SecurityFinding> findByAssignedTo(String assignedTo);
-  List<SecurityFinding> findByReportedBy(String reportedBy);
+  List<SecurityFinding> findByOrganizationId(Long organizationId);
+  List<SecurityFinding> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<SecurityFinding> findByOrganizationIdAndType(Long organizationId, String type);
+  List<SecurityFinding> findByOrganizationIdAndSeverity(Long organizationId, String severity);
+  List<SecurityFinding> findByOrganizationIdAndZone(Long organizationId, String zone);
+  List<SecurityFinding> findByOrganizationIdAndAssignedTo(Long organizationId, String assignedTo);
+  List<SecurityFinding> findByOrganizationIdAndReportedBy(Long organizationId, String reportedBy);
 }
