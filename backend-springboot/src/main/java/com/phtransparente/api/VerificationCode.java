@@ -25,6 +25,9 @@ public class VerificationCode {
   @Column(nullable = false)
   private Boolean used = false;
 
+  @Column(name = "organization_id")
+  private Long organizationId;
+
   public VerificationCode() {}
 
   public VerificationCode(String username, String code, LocalDateTime expiresAt) {
@@ -52,6 +55,9 @@ public class VerificationCode {
 
   public Boolean getUsed() { return used; }
   public void setUsed(Boolean used) { this.used = used; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 
   public boolean isExpired() {
     return LocalDateTime.now().isAfter(expiresAt);

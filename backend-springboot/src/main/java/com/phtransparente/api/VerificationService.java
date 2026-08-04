@@ -44,6 +44,7 @@ public class VerificationService {
     LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
 
     VerificationCode verificationCode = new VerificationCode(username, code, expiresAt);
+    verificationCode.setOrganizationId(user.getOrganizationId());
     verificationCodeRepository.save(verificationCode);
 
     // Enviar código por correo electrónico
