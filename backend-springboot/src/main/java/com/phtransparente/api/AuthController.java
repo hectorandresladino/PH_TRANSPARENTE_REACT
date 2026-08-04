@@ -18,6 +18,7 @@ public class AuthController {
   private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final OrganizationRepository organizationRepository;
   private final VerificationService verificationService;
   private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
@@ -26,9 +27,10 @@ public class AuthController {
   private final AuditLogService auditLogService;
   private final PasswordPolicy passwordPolicy;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil, AuditLogService auditLogService, PasswordPolicy passwordPolicy) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, OrganizationRepository organizationRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil, AuditLogService auditLogService, PasswordPolicy passwordPolicy) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
+    this.organizationRepository = organizationRepository;
     this.verificationService = verificationService;
     this.emailService = emailService;
     this.passwordEncoder = passwordEncoder;
@@ -84,10 +86,18 @@ public class AuthController {
       loginRateLimiter.reset(request.username());
       auditLogService.log("LOGIN_SUCCESS", user.getUsername(), user.getRole(), "Inicio de sesión exitoso", httpRequest, "SUCCESS");
       logger.info("Login exitoso para usuario: {}", request.username());
+
+      // Validar organización/tenant
+      Organization org = organizationRepository.findById(user.getOrganizationId()).orElse(null);
+      String orgSlug = org != null ? org.getSlug() : "ph";
+      if (org != null && !"ACTIVE".equals(org.getStatus()) && !"TRIAL".equals(org.getStatus())) {
+        return ResponseEntity.status(403).body("La organización no está activa. Contacte al administrador.");
+      }
+
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
       String modules = role != null ? role.getModules() : "";
-      String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
-      return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, token));
+      String token = jwtUtil.generateToken(user.getUsername(), user.getRole(), user.getOrganizationId(), orgSlug);
+      return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, token, user.getOrganizationId(), orgSlug, org != null ? org.getName() : "PH Transparente"));
     }
 
     loginRateLimiter.recordFailure(request.username());
@@ -116,6 +126,10 @@ public class AuthController {
     newUser.setRole("COPROPIETARIO");
     newUser.setEmail(request.email());
     newUser.setActive(true);
+
+    // Asignar a organizacion demo si no se especifica otra (para MVP)
+    Organization demo = organizationRepository.findBySlug("demo").orElse(null);
+    newUser.setOrganizationId(demo != null ? demo.getId() : 0L);
     
     User savedUser = userRepository.save(newUser);
     auditLogService.log("REGISTER_SUCCESS", savedUser.getUsername(), savedUser.getRole(), "Nuevo usuario registrado", "USER", savedUser.getId(), httpRequest, "SUCCESS");
@@ -123,9 +137,11 @@ public class AuthController {
     // Obtener módulos del rol
     Role role = roleRepository.findByName(savedUser.getRole()).orElse(null);
     String modules = role != null ? role.getModules() : "";
-    String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole());
+    String orgSlug = demo != null ? demo.getSlug() : "ph";
+    String orgName = demo != null ? demo.getName() : "PH Transparente";
+    String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole(), savedUser.getOrganizationId(), orgSlug);
 
-    return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules, token));
+    return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules, token, savedUser.getOrganizationId(), orgSlug, orgName));
   }
 
   @GetMapping("/me")
@@ -140,7 +156,10 @@ public class AuthController {
     }
     Role role = roleRepository.findByName(user.getRole()).orElse(null);
     String modules = role != null ? role.getModules() : "";
-    return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, null));
+    Organization org = organizationRepository.findById(user.getOrganizationId()).orElse(null);
+    String orgSlug = org != null ? org.getSlug() : "ph";
+    String orgName = org != null ? org.getName() : "PH Transparente";
+    return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, null, user.getOrganizationId(), orgSlug, orgName));
   }
 
   @PostMapping("/forgot-password")
@@ -207,7 +226,7 @@ public class AuthController {
   }
 
   public record LoginRequest(String username, String password) {}
-  public record LoginResponse(Long id, String username, String role, String modules, String token) {}
+  public record LoginResponse(Long id, String username, String role, String modules, String token, Long organizationId, String organizationSlug, String organizationName) {}
   public record RegisterRequest(String username, String email, String password, String confirmPassword) {}
   public record ForgotPasswordRequest(String username) {}
   public record ForgotPasswordResponse(String message) {}

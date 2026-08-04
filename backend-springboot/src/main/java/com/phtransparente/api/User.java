@@ -26,6 +26,9 @@ public class User {
   private String houseUnit;
   private Boolean active = true;
 
+  @Column(nullable = false)
+  private Long organizationId = 0L; // 0 = plataforma/superadmin
+
   public User() {}
 
   public User(Long id, String username, String password, String role) {
@@ -61,4 +64,7 @@ public class User {
 
   public Boolean getActive() { return active; }
   public void setActive(Boolean active) { this.active = active; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

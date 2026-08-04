@@ -8,11 +8,17 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements CommandLineRunner {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
+  private final OrganizationRepository organizationRepository;
+  private final PlanRepository planRepository;
+  private final SubscriptionRepository subscriptionRepository;
   private final PasswordEncoder passwordEncoder;
 
-  public DataInitializer(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+  public DataInitializer(UserRepository userRepository, RoleRepository roleRepository, OrganizationRepository organizationRepository, PlanRepository planRepository, SubscriptionRepository subscriptionRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
+    this.organizationRepository = organizationRepository;
+    this.planRepository = planRepository;
+    this.subscriptionRepository = subscriptionRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -123,15 +129,86 @@ public class DataInitializer implements CommandLineRunner {
       System.out.println("Rol ASEO creado");
     }
 
-    // Crear o actualizar usuarios semilla (la contraseña solo se asigna al crearlos)
+    // Crear plan BÁSICO si no existe (para nuevos tenants)
+    if (planRepository.count() == 0) {
+      planRepository.save(new Plan("BASICO", "Básico", "Ideal para copropiedades pequeñas", java.math.BigDecimal.valueOf(99000),
+        "MONTHLY",
+        "dashboard,pqr,payments,reservations,visitors,property-units,alerts,reports,transparency",
+        20, 30, true));
+      planRepository.save(new Plan("PROFESIONAL", "Profesional", "Para administradores profesionales", java.math.BigDecimal.valueOf(249000),
+        "MONTHLY",
+        "dashboard,users,pqr,pqr-statistics,payments,reservations,visitors,contracts,fines,documents,assemblies,votes,councils,security,contractors,property-units,reserve-funds,annual-budgets,insurance-policies,bank-accounts,official-minutes,horizontal-property-regulations,alerts,transparency,authorizations,reports,personnel-ratings,support-tasks",
+        100, 200, true));
+      planRepository.save(new Plan("EMPRESARIAL", "Empresarial", "Multi-copropiedad y roles avanzados", java.math.BigDecimal.valueOf(499000),
+        "MONTHLY",
+        "dashboard,users,pqr,pqr-statistics,payment-reports,payments,reservations,visitors,contracts,fines,documents,assemblies,votes,councils,security,contractors,property-units,reserve-funds,annual-budgets,insurance-policies,bank-accounts,official-minutes,council-minutes,accounting-reports,fiscal-reports,horizontal-property-regulations,alerts,transparency,authorizations,reports,personnel-ratings,support-tasks,task-statistics,staff-info,staff-ratings",
+        500, 1000, true));
+      System.out.println("Planes iniciales creados");
+    }
+
+    // Crear organizacion DEMO si no existe y asignar usuarios legacy a ella
+    Organization demo = organizationRepository.findBySlug("demo").orElse(null);
+    if (demo == null) {
+      Plan firstPlan = planRepository.findByCode("EMPRESARIAL").orElse(planRepository.findAll().get(0));
+      demo = new Organization();
+      demo.setSlug("demo");
+      demo.setName("Copropiedad Demo");
+      demo.setNit("900123456-7");
+      demo.setStatus("ACTIVE");
+      demo.setPlanId(firstPlan.getId());
+      demo.setMaxUsers(firstPlan.getMaxUsers());
+      demo.setMaxUnits(firstPlan.getMaxUnits());
+      demo = organizationRepository.save(demo);
+
+      Subscription sub = new Subscription();
+      sub.setOrganizationId(demo.getId());
+      sub.setPlanId(firstPlan.getId());
+      sub.setStatus("ACTIVE");
+      sub.setBillingPeriod("MONTHLY");
+      subscriptionRepository.save(sub);
+      System.out.println("Organizacion DEMO creada con plan " + firstPlan.getName());
+    }
+
+    // Asignar organizationId a usuarios legacy que no lo tengan
+    for (User u : userRepository.findAll()) {
+      if (u.getOrganizationId() == null || u.getOrganizationId() == 0L) {
+        u.setOrganizationId(demo.getId());
+        userRepository.save(u);
+      }
+    }
+
+    // Crear superadmin de la plataforma
+    upsertUser("superadmin", "superadmin123", "SUPERADMIN", "superadmin@phtransparente.com", "Super Administrador Plataforma", "+57 300 000 0000");
+    User superAdmin = userRepository.findByUsername("superadmin");
+    if (superAdmin != null) {
+      superAdmin.setOrganizationId(0L);
+      userRepository.save(superAdmin);
+    }
+
+    // Crear o actualizar usuarios semilla del tenant DEMO
     upsertUser("admin", "admin123", "ADMIN", "admin@phtransparente.com", "Administrador del Sistema", "+57 300 123 4567");
+    setUserOrganization("admin", demo.getId());
     upsertUser("contador", "contador123", "CONTADOR", "contador@phtransparente.com", "Contador Principal", "+57 300 234 5678");
+    setUserOrganization("contador", demo.getId());
     upsertUser("revisor", "revisor123", "REVISOR_FISCAL", "revisor@phtransparente.com", "Revisor Fiscal", "+57 300 345 6789");
+    setUserOrganization("revisor", demo.getId());
     upsertUser("consejero", "consejero123", "CONSEJERO", "consejero@phtransparente.com", "Consejero Principal", "+57 300 456 7890");
+    setUserOrganization("consejero", demo.getId());
     upsertUser("copropietario", "copropietario123", "COPROPIETARIO", "copropietario@phtransparente.com", "Copropietario Residente", "+57 300 567 8901");
+    setUserOrganization("copropietario", demo.getId());
     upsertUser("vigilancia", "vigilancia123", "VIGILANCIA", "vigilancia@phtransparente.com", "Empresa de Vigilancia", "+57 300 678 9012");
+    setUserOrganization("vigilancia", demo.getId());
     upsertUser("aseo", "aseo123", "ASEO", "aseo@phtransparente.com", "Empresa de Aseo", "+57 300 789 0123");
+    setUserOrganization("aseo", demo.getId());
     
     System.out.println("Usuarios semilla verificados para cada rol");
+  }
+
+  private void setUserOrganization(String username, Long orgId) {
+    User u = userRepository.findByUsername(username);
+    if (u != null) {
+      u.setOrganizationId(orgId);
+      userRepository.save(u);
+    }
   }
 }

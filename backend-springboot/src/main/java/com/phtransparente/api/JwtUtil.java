@@ -38,12 +38,14 @@ public class JwtUtil {
     }
   }
 
-  public String generateToken(String username, String role) {
+  public String generateToken(String username, String role, Long organizationId, String organizationSlug) {
     Date now = new Date();
     Date expiry = new Date(now.getTime() + EXPIRATION_MS);
     return Jwts.builder()
       .subject(username)
       .claim("role", role)
+      .claim("organizationId", organizationId)
+      .claim("organizationSlug", organizationSlug)
       .issuedAt(now)
       .expiration(expiry)
       .id(UUID.randomUUID().toString())
@@ -76,5 +78,15 @@ public class JwtUtil {
   public String extractRole(String token) {
     Object role = parseToken(token).get("role");
     return role == null ? null : role.toString();
+  }
+
+  public Long extractOrganizationId(String token) {
+    Object id = parseToken(token).get("organizationId");
+    return id == null ? null : Long.valueOf(id.toString());
+  }
+
+  public String extractOrganizationSlug(String token) {
+    Object slug = parseToken(token).get("organizationSlug");
+    return slug == null ? null : slug.toString();
   }
 }
