@@ -17,18 +17,20 @@ public class SecurityPointController {
 
   @GetMapping
   public List<SecurityPoint> getAllSecurityPoints() {
-    return securityPointRepository.findAll();
+    return securityPointRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<SecurityPoint> getSecurityPointById(@PathVariable @NonNull Long id) {
     return securityPointRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<SecurityPoint> createSecurityPoint(@RequestBody SecurityPoint securityPoint) {
+    securityPoint.setOrganizationId(TenantContext.getOrganizationId());
     securityPoint.setCreatedAt(LocalDateTime.now());
     if (securityPoint.getStatus() == null) {
       securityPoint.setStatus("ACTIVO");
@@ -39,7 +41,9 @@ public class SecurityPointController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateSecurityPoint(@PathVariable @NonNull Long id, @RequestBody SecurityPoint securityPoint) {
+    Long orgId = TenantContext.getOrganizationId();
     return securityPointRepository.findById(id)
+      .filter(existingSecurityPoint -> existingSecurityPoint.getOrganizationId().equals(orgId))
       .map(existingSecurityPoint -> {
         existingSecurityPoint.setName(securityPoint.getName());
         existingSecurityPoint.setCode(securityPoint.getCode());
@@ -62,30 +66,33 @@ public class SecurityPointController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteSecurityPoint(@PathVariable @NonNull Long id) {
-    if (securityPointRepository.existsById(id)) {
-      securityPointRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return securityPointRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(orgId))
+      .map(p -> {
+        securityPointRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<SecurityPoint> getSecurityPointsByStatus(@PathVariable String status) {
-    return securityPointRepository.findByStatus(status);
+    return securityPointRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<SecurityPoint> getSecurityPointsByType(@PathVariable String type) {
-    return securityPointRepository.findByType(type);
+    return securityPointRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/zone/{zone}")
   public List<SecurityPoint> getSecurityPointsByZone(@PathVariable String zone) {
-    return securityPointRepository.findByZone(zone);
+    return securityPointRepository.findByOrganizationIdAndZone(TenantContext.getOrganizationId(), zone);
   }
 
   @GetMapping("/guard/{guard}")
   public List<SecurityPoint> getSecurityPointsByGuard(@PathVariable String guard) {
-    return securityPointRepository.findByAssignedGuard(guard);
+    return securityPointRepository.findByOrganizationIdAndAssignedGuard(TenantContext.getOrganizationId(), guard);
   }
 }

@@ -41,6 +41,9 @@ public class SecurityPoint {
   @Column(name = "created_by")
   private String createdBy;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public SecurityPoint() {}
 
   public Long getId() { return id; }
@@ -87,4 +90,7 @@ public class SecurityPoint {
 
   public String getCreatedBy() { return createdBy; }
   public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }
