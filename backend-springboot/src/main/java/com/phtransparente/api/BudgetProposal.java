@@ -38,6 +38,9 @@ public class BudgetProposal {
   @Column(name = "votes_abstain")
   private Integer votesAbstain;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public BudgetProposal() {}
 
   public Long getId() { return id; }
@@ -72,4 +75,7 @@ public class BudgetProposal {
 
   public Integer getVotesAbstain() { return votesAbstain; }
   public void setVotesAbstain(Integer votesAbstain) { this.votesAbstain = votesAbstain; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

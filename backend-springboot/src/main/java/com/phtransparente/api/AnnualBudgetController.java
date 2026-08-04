@@ -89,7 +89,7 @@ public class AnnualBudgetController {
       .map(b -> {
         budgetItemRepository.deleteByOrganizationIdAndBudgetId(orgId, id);
         budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(budgetInquiryRepository::delete);
-        budgetProposalRepository.findByBudgetId(id).forEach(p -> {
+        budgetProposalRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(p -> {
           voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
           budgetProposalRepository.delete(p);
         });
@@ -211,15 +211,18 @@ public class AnnualBudgetController {
 
   @GetMapping("/{id}/proposals")
   public ResponseEntity<List<BudgetProposal>> getProposals(@PathVariable @NonNull Long id) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(budgetProposalRepository.findByBudgetId(id));
+    return ResponseEntity.ok(budgetProposalRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/proposals")
   public ResponseEntity<BudgetProposal> createProposal(@PathVariable @NonNull Long id, @RequestBody ProposalRequest request) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
     BudgetProposal proposal = new BudgetProposal();
     proposal.setBudgetId(id);
+    proposal.setOrganizationId(orgId);
     proposal.setTitle(request.title());
     proposal.setDescription(request.description());
     proposal.setEstimatedCost(request.estimatedCost());
@@ -234,7 +237,9 @@ public class AnnualBudgetController {
 
   @PostMapping("/{id}/proposals/{proposalId}/cast")
   public ResponseEntity<?> castProposalVote(@PathVariable @NonNull Long id, @PathVariable @NonNull Long proposalId, @RequestBody CastVoteRequest request) {
-    Optional<BudgetProposal> propOpt = budgetProposalRepository.findById(proposalId);
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<BudgetProposal> propOpt = budgetProposalRepository.findById(proposalId)
+      .filter(p -> p.getOrganizationId().equals(orgId));
     if (propOpt.isEmpty()) return ResponseEntity.notFound().build();
     BudgetProposal proposal = propOpt.get();
     if (!"ABIERTA".equals(proposal.getStatus())) {
@@ -275,7 +280,9 @@ public class AnnualBudgetController {
 
   @PostMapping("/{id}/proposals/{proposalId}/close")
   public ResponseEntity<?> closeProposal(@PathVariable @NonNull Long id, @PathVariable @NonNull Long proposalId) {
+    Long orgId = TenantContext.getOrganizationId();
     return budgetProposalRepository.findById(proposalId)
+      .filter(proposal -> proposal.getOrganizationId().equals(orgId))
       .map(proposal -> {
         proposal.setStatus("CERRADA");
         budgetProposalRepository.save(proposal);
@@ -286,7 +293,9 @@ public class AnnualBudgetController {
 
   @GetMapping("/{id}/proposals/{proposalId}/stats")
   public ResponseEntity<?> getProposalStats(@PathVariable @NonNull Long id, @PathVariable @NonNull Long proposalId) {
-    Optional<BudgetProposal> propOpt = budgetProposalRepository.findById(proposalId);
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<BudgetProposal> propOpt = budgetProposalRepository.findById(proposalId)
+      .filter(p -> p.getOrganizationId().equals(orgId));
     if (propOpt.isEmpty()) return ResponseEntity.notFound().build();
     BudgetProposal proposal = propOpt.get();
 
@@ -356,8 +365,8 @@ public class AnnualBudgetController {
     long pendingInquiries = budgetInquiryRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "PENDIENTE").size();
     long answeredInquiries = budgetInquiryRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "RESPONDIDA").size();
 
-    long totalProposals = budgetProposalRepository.count();
-    long openProposals = budgetProposalRepository.findByStatus("ABIERTA").size();
+    long totalProposals = budgetProposalRepository.findByOrganizationId(TenantContext.getOrganizationId()).size();
+    long openProposals = budgetProposalRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "ABIERTA").size();
 
     Map<String, Object> stats = new LinkedHashMap<>();
     stats.put("totalBudgets", total);
