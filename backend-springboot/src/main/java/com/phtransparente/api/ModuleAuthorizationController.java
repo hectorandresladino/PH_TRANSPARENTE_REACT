@@ -17,38 +17,40 @@ public class ModuleAuthorizationController {
 
   @GetMapping
   public List<ModuleAuthorization> getAllModuleAuthorizations() {
-    return moduleAuthorizationRepository.findAll();
+    return moduleAuthorizationRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/user/{userId}")
   public List<ModuleAuthorization> getAuthorizationsByUser(@PathVariable Long userId) {
-    return moduleAuthorizationRepository.findByUserId(userId);
+    return moduleAuthorizationRepository.findByOrganizationIdAndUserId(TenantContext.getOrganizationId(), userId);
   }
 
   @GetMapping("/user/{userId}/active")
   public List<ModuleAuthorization> getActiveAuthorizationsByUser(@PathVariable Long userId) {
-    return moduleAuthorizationRepository.findByUserIdAndStatus(userId, "ACTIVO");
+    return moduleAuthorizationRepository.findByOrganizationIdAndUserIdAndStatus(TenantContext.getOrganizationId(), userId, "ACTIVO");
   }
 
   @GetMapping("/module/{moduleName}")
   public List<ModuleAuthorization> getAuthorizationsByModule(@PathVariable String moduleName) {
-    return moduleAuthorizationRepository.findByModuleName(moduleName);
+    return moduleAuthorizationRepository.findByOrganizationIdAndModuleName(TenantContext.getOrganizationId(), moduleName);
   }
 
   @GetMapping("/user/{userId}/module/{moduleName}")
   public List<ModuleAuthorization> getUserAuthorizationForModule(@PathVariable Long userId, @PathVariable String moduleName) {
-    return moduleAuthorizationRepository.findByUserIdAndModuleName(userId, moduleName);
+    return moduleAuthorizationRepository.findByOrganizationIdAndUserIdAndModuleName(TenantContext.getOrganizationId(), userId, moduleName);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ModuleAuthorization> getModuleAuthorizationById(@PathVariable @NonNull Long id) {
     return moduleAuthorizationRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<ModuleAuthorization> createModuleAuthorization(@RequestBody ModuleAuthorization moduleAuthorization) {
+    moduleAuthorization.setOrganizationId(TenantContext.getOrganizationId());
     moduleAuthorization.setCreatedAt(LocalDate.now());
     moduleAuthorization.setUpdatedAt(LocalDate.now());
     moduleAuthorization.setGrantedDate(LocalDate.now());
@@ -64,7 +66,9 @@ public class ModuleAuthorizationController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateModuleAuthorization(@PathVariable @NonNull Long id, @RequestBody ModuleAuthorization moduleAuthorization) {
+    Long orgId = TenantContext.getOrganizationId();
     return moduleAuthorizationRepository.findById(id)
+      .filter(existingModuleAuthorization -> existingModuleAuthorization.getOrganizationId().equals(orgId))
       .map(existingModuleAuthorization -> {
         existingModuleAuthorization.setUserId(moduleAuthorization.getUserId());
         existingModuleAuthorization.setModuleName(moduleAuthorization.getModuleName());
@@ -83,16 +87,21 @@ public class ModuleAuthorizationController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteModuleAuthorization(@PathVariable @NonNull Long id) {
-    if (moduleAuthorizationRepository.existsById(id)) {
-      moduleAuthorizationRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return moduleAuthorizationRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(orgId))
+      .map(a -> {
+        moduleAuthorizationRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @PutMapping("/{id}/revoke")
   public ResponseEntity<?> revokeAuthorization(@PathVariable @NonNull Long id, @RequestBody ModuleAuthorization revocation) {
+    Long orgId = TenantContext.getOrganizationId();
     return moduleAuthorizationRepository.findById(id)
+      .filter(existingModuleAuthorization -> existingModuleAuthorization.getOrganizationId().equals(orgId))
       .map(existingModuleAuthorization -> {
         existingModuleAuthorization.setStatus("REVOCADO");
         existingModuleAuthorization.setRevokedBy(revocation.getRevokedBy());

@@ -51,6 +51,9 @@ public class ModuleAuthorization {
   @Column(name = "revocation_reason")
   private String revocationReason;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public ModuleAuthorization() {}
 
   public Long getId() { return id; }
@@ -97,4 +100,7 @@ public class ModuleAuthorization {
 
   public String getRevocationReason() { return revocationReason; }
   public void setRevocationReason(String revocationReason) { this.revocationReason = revocationReason; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

@@ -6,10 +6,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ModuleAuthorizationRepository extends JpaRepository<ModuleAuthorization, Long> {
-  List<ModuleAuthorization> findByUserId(Long userId);
-  List<ModuleAuthorization> findByModuleName(String moduleName);
-  List<ModuleAuthorization> findByUserIdAndStatus(Long userId, String status);
-  List<ModuleAuthorization> findByUserIdAndModuleName(Long userId, String moduleName);
-  List<ModuleAuthorization> findByStatus(String status);
-  List<ModuleAuthorization> findByPermissionType(String permissionType);
+  List<ModuleAuthorization> findByOrganizationId(Long organizationId);
+  List<ModuleAuthorization> findByOrganizationIdAndUserId(Long organizationId, Long userId);
+  List<ModuleAuthorization> findByOrganizationIdAndModuleName(Long organizationId, String moduleName);
+  List<ModuleAuthorization> findByOrganizationIdAndUserIdAndStatus(Long organizationId, Long userId, String status);
+  List<ModuleAuthorization> findByOrganizationIdAndUserIdAndModuleName(Long organizationId, Long userId, String moduleName);
+  List<ModuleAuthorization> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<ModuleAuthorization> findByOrganizationIdAndPermissionType(Long organizationId, String permissionType);
 }
