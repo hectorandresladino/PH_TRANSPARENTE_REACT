@@ -33,6 +33,9 @@ public class Reservation {
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Reservation() {}
 
   public Long getId() { return id; }
@@ -64,4 +67,7 @@ public class Reservation {
 
   public LocalDateTime getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

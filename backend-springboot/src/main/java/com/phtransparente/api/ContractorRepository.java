@@ -6,8 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ContractorRepository extends JpaRepository<Contractor, Long> {
-  List<Contractor> findByStatus(String status);
-  List<Contractor> findByServiceType(String serviceType);
-  List<Contractor> findByCity(String city);
-  List<Contractor> findByContractNumber(String contractNumber);
+  List<Contractor> findByOrganizationId(Long organizationId);
+  List<Contractor> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<Contractor> findByOrganizationIdAndServiceType(Long organizationId, String serviceType);
+  List<Contractor> findByOrganizationIdAndCity(Long organizationId, String city);
+  Contractor findByOrganizationIdAndContractNumber(Long organizationId, String contractNumber);
 }

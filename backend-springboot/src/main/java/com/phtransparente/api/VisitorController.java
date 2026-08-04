@@ -17,18 +17,20 @@ public class VisitorController {
 
   @GetMapping
   public List<Visitor> getAllVisitors() {
-    return visitorRepository.findAll();
+    return visitorRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Visitor> getVisitorById(@PathVariable @NonNull Long id) {
     return visitorRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Visitor> createVisitor(@RequestBody Visitor visitor) {
+    visitor.setOrganizationId(TenantContext.getOrganizationId());
     visitor.setCreatedAt(LocalDateTime.now());
     visitor.setEntryTime(LocalDateTime.now());
     if (visitor.getStatus() == null) {
@@ -40,7 +42,9 @@ public class VisitorController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateVisitor(@PathVariable @NonNull Long id, @RequestBody Visitor visitor) {
+    Long orgId = TenantContext.getOrganizationId();
     return visitorRepository.findById(id)
+      .filter(existingVisitor -> existingVisitor.getOrganizationId().equals(orgId))
       .map(existingVisitor -> {
         existingVisitor.setName(visitor.getName());
         existingVisitor.setDocumentNumber(visitor.getDocumentNumber());
@@ -69,30 +73,33 @@ public class VisitorController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteVisitor(@PathVariable @NonNull Long id) {
-    if (visitorRepository.existsById(id)) {
-      visitorRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return visitorRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(orgId))
+      .map(v -> {
+        visitorRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Visitor> getVisitorsByStatus(@PathVariable String status) {
-    return visitorRepository.findByStatus(status);
+    return visitorRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{visitType}")
   public List<Visitor> getVisitorsByType(@PathVariable String visitType) {
-    return visitorRepository.findByVisitType(visitType);
+    return visitorRepository.findByOrganizationIdAndVisitType(TenantContext.getOrganizationId(), visitType);
   }
 
   @GetMapping("/unit/{hostUnit}")
   public List<Visitor> getVisitorsByUnit(@PathVariable String hostUnit) {
-    return visitorRepository.findByHostUnit(hostUnit);
+    return visitorRepository.findByOrganizationIdAndHostUnit(TenantContext.getOrganizationId(), hostUnit);
   }
 
   @GetMapping("/active")
   public List<Visitor> getActiveVisitors() {
-    return visitorRepository.findByStatus("ACTIVO");
+    return visitorRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "ACTIVO");
   }
 }

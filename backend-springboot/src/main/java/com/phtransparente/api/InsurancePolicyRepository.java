@@ -6,8 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy, Long> {
-  List<InsurancePolicy> findByStatus(String status);
-  List<InsurancePolicy> findByInsuranceType(String insuranceType);
-  List<InsurancePolicy> findByInsuranceCompany(String insuranceCompany);
-  InsurancePolicy findByPolicyNumber(String policyNumber);
+  List<InsurancePolicy> findByOrganizationId(Long organizationId);
+  List<InsurancePolicy> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<InsurancePolicy> findByOrganizationIdAndInsuranceType(Long organizationId, String insuranceType);
+  List<InsurancePolicy> findByOrganizationIdAndInsuranceCompany(Long organizationId, String insuranceCompany);
+  InsurancePolicy findByOrganizationIdAndPolicyNumber(Long organizationId, String policyNumber);
 }

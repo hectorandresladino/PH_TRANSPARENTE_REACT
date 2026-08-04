@@ -17,18 +17,20 @@ public class InsurancePolicyController {
 
   @GetMapping
   public List<InsurancePolicy> getAllInsurancePolicies() {
-    return insurancePolicyRepository.findAll();
+    return insurancePolicyRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<InsurancePolicy> getInsurancePolicyById(@PathVariable @NonNull Long id) {
     return insurancePolicyRepository.findById(id)
+      .filter(i -> i.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<InsurancePolicy> createInsurancePolicy(@RequestBody InsurancePolicy insurancePolicy) {
+    insurancePolicy.setOrganizationId(TenantContext.getOrganizationId());
     insurancePolicy.setCreatedAt(LocalDate.now());
     insurancePolicy.setUpdatedAt(LocalDate.now());
     if (insurancePolicy.getStatus() == null) {
@@ -40,7 +42,9 @@ public class InsurancePolicyController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateInsurancePolicy(@PathVariable @NonNull Long id, @RequestBody InsurancePolicy insurancePolicy) {
+    Long orgId = TenantContext.getOrganizationId();
     return insurancePolicyRepository.findById(id)
+      .filter(existingInsurancePolicy -> existingInsurancePolicy.getOrganizationId().equals(orgId))
       .map(existingInsurancePolicy -> {
         existingInsurancePolicy.setPolicyNumber(insurancePolicy.getPolicyNumber());
         existingInsurancePolicy.setInsuranceCompany(insurancePolicy.getInsuranceCompany());
@@ -77,25 +81,28 @@ public class InsurancePolicyController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteInsurancePolicy(@PathVariable @NonNull Long id) {
-    if (insurancePolicyRepository.existsById(id)) {
-      insurancePolicyRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return insurancePolicyRepository.findById(id)
+      .filter(i -> i.getOrganizationId().equals(orgId))
+      .map(i -> {
+        insurancePolicyRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<InsurancePolicy> getInsurancePoliciesByStatus(@PathVariable String status) {
-    return insurancePolicyRepository.findByStatus(status);
+    return insurancePolicyRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{insuranceType}")
   public List<InsurancePolicy> getInsurancePoliciesByType(@PathVariable String insuranceType) {
-    return insurancePolicyRepository.findByInsuranceType(insuranceType);
+    return insurancePolicyRepository.findByOrganizationIdAndInsuranceType(TenantContext.getOrganizationId(), insuranceType);
   }
 
   @GetMapping("/company/{insuranceCompany}")
   public List<InsurancePolicy> getInsurancePoliciesByCompany(@PathVariable String insuranceCompany) {
-    return insurancePolicyRepository.findByInsuranceCompany(insuranceCompany);
+    return insurancePolicyRepository.findByOrganizationIdAndInsuranceCompany(TenantContext.getOrganizationId(), insuranceCompany);
   }
 }

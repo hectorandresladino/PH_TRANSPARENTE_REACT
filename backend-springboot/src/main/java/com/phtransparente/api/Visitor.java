@@ -46,6 +46,9 @@ public class Visitor {
   @Column(name = "created_at")
   private LocalDateTime createdAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Visitor() {}
 
   public Long getId() { return id; }
@@ -95,4 +98,7 @@ public class Visitor {
 
   public LocalDateTime getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

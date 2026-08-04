@@ -17,18 +17,20 @@ public class SecurityEventController {
 
   @GetMapping
   public List<SecurityEvent> getAllSecurityEvents() {
-    return securityEventRepository.findAll();
+    return securityEventRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<SecurityEvent> getSecurityEventById(@PathVariable @NonNull Long id) {
     return securityEventRepository.findById(id)
+      .filter(s -> s.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<SecurityEvent> createSecurityEvent(@RequestBody SecurityEvent securityEvent) {
+    securityEvent.setOrganizationId(TenantContext.getOrganizationId());
     securityEvent.setCreatedAt(LocalDateTime.now());
     if (securityEvent.getStatus() == null) {
       securityEvent.setStatus("PENDIENTE");
@@ -48,7 +50,9 @@ public class SecurityEventController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateSecurityEvent(@PathVariable @NonNull Long id, @RequestBody SecurityEvent securityEvent) {
+    Long orgId = TenantContext.getOrganizationId();
     return securityEventRepository.findById(id)
+      .filter(existingSecurityEvent -> existingSecurityEvent.getOrganizationId().equals(orgId))
       .map(existingSecurityEvent -> {
         existingSecurityEvent.setTitle(securityEvent.getTitle());
         existingSecurityEvent.setDescription(securityEvent.getDescription());
@@ -82,40 +86,43 @@ public class SecurityEventController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteSecurityEvent(@PathVariable @NonNull Long id) {
-    if (securityEventRepository.existsById(id)) {
-      securityEventRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return securityEventRepository.findById(id)
+      .filter(s -> s.getOrganizationId().equals(orgId))
+      .map(s -> {
+        securityEventRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<SecurityEvent> getSecurityEventsByStatus(@PathVariable String status) {
-    return securityEventRepository.findByStatus(status);
+    return securityEventRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<SecurityEvent> getSecurityEventsByType(@PathVariable String type) {
-    return securityEventRepository.findByType(type);
+    return securityEventRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/severity/{severity}")
   public List<SecurityEvent> getSecurityEventsBySeverity(@PathVariable String severity) {
-    return securityEventRepository.findBySeverity(severity);
+    return securityEventRepository.findByOrganizationIdAndSeverity(TenantContext.getOrganizationId(), severity);
   }
 
   @GetMapping("/zone/{zone}")
   public List<SecurityEvent> getSecurityEventsByZone(@PathVariable String zone) {
-    return securityEventRepository.findByZone(zone);
+    return securityEventRepository.findByOrganizationIdAndZone(TenantContext.getOrganizationId(), zone);
   }
 
   @GetMapping("/assigned/{assignedTo}")
   public List<SecurityEvent> getSecurityEventsByAssigned(@PathVariable String assignedTo) {
-    return securityEventRepository.findByAssignedTo(assignedTo);
+    return securityEventRepository.findByOrganizationIdAndAssignedTo(TenantContext.getOrganizationId(), assignedTo);
   }
 
   @GetMapping("/reported/{reportedBy}")
   public List<SecurityEvent> getSecurityEventsByReported(@PathVariable String reportedBy) {
-    return securityEventRepository.findByReportedBy(reportedBy);
+    return securityEventRepository.findByOrganizationIdAndReportedBy(TenantContext.getOrganizationId(), reportedBy);
   }
 }
