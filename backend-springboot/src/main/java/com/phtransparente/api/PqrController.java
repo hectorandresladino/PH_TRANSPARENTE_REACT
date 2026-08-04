@@ -17,12 +17,13 @@ public class PqrController {
 
   @GetMapping
   public List<Pqr> getAllPqrs() {
-    return pqrRepository.findAll();
+    return pqrRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Pqr> getPqrById(@PathVariable @NonNull Long id) {
     return pqrRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
@@ -34,13 +35,16 @@ public class PqrController {
     if (pqr.getStatus() == null) {
       pqr.setStatus("PENDIENTE");
     }
+    pqr.setOrganizationId(TenantContext.getOrganizationId());
     Pqr savedPqr = pqrRepository.save(pqr);
     return ResponseEntity.ok(savedPqr);
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updatePqr(@PathVariable @NonNull Long id, @RequestBody Pqr pqr) {
+    Long orgId = TenantContext.getOrganizationId();
     return pqrRepository.findById(id)
+      .filter(existingPqr -> existingPqr.getOrganizationId().equals(orgId))
       .map(existingPqr -> {
         existingPqr.setType(pqr.getType());
         existingPqr.setTitle(pqr.getTitle());
@@ -70,25 +74,28 @@ public class PqrController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deletePqr(@PathVariable @NonNull Long id) {
-    if (pqrRepository.existsById(id)) {
-      pqrRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return pqrRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(orgId))
+      .map(p -> {
+        pqrRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Pqr> getPqrsByStatus(@PathVariable String status) {
-    return pqrRepository.findByStatus(status);
+    return pqrRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<Pqr> getPqrsByType(@PathVariable String type) {
-    return pqrRepository.findByType(type);
+    return pqrRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/priority/{priority}")
   public List<Pqr> getPqrsByPriority(@PathVariable String priority) {
-    return pqrRepository.findByPriority(priority);
+    return pqrRepository.findByOrganizationIdAndPriority(TenantContext.getOrganizationId(), priority);
   }
 }

@@ -55,9 +55,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Establecer tenant en el contexto de la petición
+        Object orgId = claims.get("organizationId");
+        if (orgId != null) {
+          TenantContext.setOrganizationId(Long.valueOf(orgId.toString()));
+        }
       }
     }
 
-    filterChain.doFilter(request, response);
+    try {
+      filterChain.doFilter(request, response);
+    } finally {
+      TenantContext.clear();
+    }
   }
 }

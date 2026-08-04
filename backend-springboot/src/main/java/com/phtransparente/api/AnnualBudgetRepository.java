@@ -6,8 +6,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AnnualBudgetRepository extends JpaRepository<AnnualBudget, Long> {
-  List<AnnualBudget> findByBudgetYear(Integer budgetYear);
-  List<AnnualBudget> findByStatus(String status);
-  List<AnnualBudget> findByBudgetType(String budgetType);
-  AnnualBudget findByBudgetYearAndBudgetType(Integer budgetYear, String budgetType);
+  List<AnnualBudget> findByOrganizationId(Long organizationId);
+  List<AnnualBudget> findByOrganizationIdAndBudgetYear(Long organizationId, Integer budgetYear);
+  List<AnnualBudget> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<AnnualBudget> findByOrganizationIdAndBudgetType(Long organizationId, String budgetType);
+  AnnualBudget findByOrganizationIdAndBudgetYearAndBudgetType(Long organizationId, Integer budgetYear, String budgetType);
 }

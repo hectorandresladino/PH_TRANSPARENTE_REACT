@@ -56,6 +56,9 @@ public class AnnualBudget {
   @Column(name = "updated_by")
   private String updatedBy;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public AnnualBudget() {}
 
   public Long getId() { return id; }
@@ -108,4 +111,7 @@ public class AnnualBudget {
 
   public String getUpdatedBy() { return updatedBy; }
   public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

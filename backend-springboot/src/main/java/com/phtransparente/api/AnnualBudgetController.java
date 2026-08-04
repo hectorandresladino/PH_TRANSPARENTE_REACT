@@ -32,12 +32,13 @@ public class AnnualBudgetController {
 
   @GetMapping
   public List<AnnualBudget> getAllAnnualBudgets() {
-    return annualBudgetRepository.findAll();
+    return annualBudgetRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<AnnualBudget> getAnnualBudgetById(@PathVariable @NonNull Long id) {
     return annualBudgetRepository.findById(id)
+      .filter(b -> b.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
@@ -49,13 +50,16 @@ public class AnnualBudgetController {
     if (annualBudget.getStatus() == null) {
       annualBudget.setStatus("BORRADOR");
     }
+    annualBudget.setOrganizationId(TenantContext.getOrganizationId());
     AnnualBudget savedAnnualBudget = annualBudgetRepository.save(annualBudget);
     return ResponseEntity.ok(savedAnnualBudget);
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateAnnualBudget(@PathVariable @NonNull Long id, @RequestBody AnnualBudget annualBudget) {
+    Long orgId = TenantContext.getOrganizationId();
     return annualBudgetRepository.findById(id)
+      .filter(existingAnnualBudget -> existingAnnualBudget.getOrganizationId().equals(orgId))
       .map(existingAnnualBudget -> {
         existingAnnualBudget.setBudgetYear(annualBudget.getBudgetYear());
         existingAnnualBudget.setBudgetName(annualBudget.getBudgetName());
@@ -79,32 +83,35 @@ public class AnnualBudgetController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteAnnualBudget(@PathVariable @NonNull Long id) {
-    if (annualBudgetRepository.existsById(id)) {
-      budgetItemRepository.deleteByBudgetId(id);
-      budgetInquiryRepository.findByBudgetId(id).forEach(budgetInquiryRepository::delete);
-      budgetProposalRepository.findByBudgetId(id).forEach(p -> {
-        voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
-        budgetProposalRepository.delete(p);
-      });
-      annualBudgetRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return annualBudgetRepository.findById(id)
+      .filter(b -> b.getOrganizationId().equals(orgId))
+      .map(b -> {
+        budgetItemRepository.deleteByBudgetId(id);
+        budgetInquiryRepository.findByBudgetId(id).forEach(budgetInquiryRepository::delete);
+        budgetProposalRepository.findByBudgetId(id).forEach(p -> {
+          voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
+          budgetProposalRepository.delete(p);
+        });
+        annualBudgetRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/year/{budgetYear}")
   public List<AnnualBudget> getAnnualBudgetsByYear(@PathVariable Integer budgetYear) {
-    return annualBudgetRepository.findByBudgetYear(budgetYear);
+    return annualBudgetRepository.findByOrganizationIdAndBudgetYear(TenantContext.getOrganizationId(), budgetYear);
   }
 
   @GetMapping("/status/{status}")
   public List<AnnualBudget> getAnnualBudgetsByStatus(@PathVariable String status) {
-    return annualBudgetRepository.findByStatus(status);
+    return annualBudgetRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{budgetType}")
   public List<AnnualBudget> getAnnualBudgetsByType(@PathVariable String budgetType) {
-    return annualBudgetRepository.findByBudgetType(budgetType);
+    return annualBudgetRepository.findByOrganizationIdAndBudgetType(TenantContext.getOrganizationId(), budgetType);
   }
 
   // ==================== BUDGET ITEMS ====================
@@ -325,7 +332,7 @@ public class AnnualBudgetController {
 
   @GetMapping("/stats/summary")
   public ResponseEntity<?> getStatsSummary() {
-    List<AnnualBudget> all = annualBudgetRepository.findAll();
+    List<AnnualBudget> all = annualBudgetRepository.findByOrganizationId(TenantContext.getOrganizationId());
     long total = all.size();
     long borrador = all.stream().filter(b -> "BORRADOR".equals(b.getStatus())).count();
     long aprobado = all.stream().filter(b -> "APROBADO".equals(b.getStatus())).count();

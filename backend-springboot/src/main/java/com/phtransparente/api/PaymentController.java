@@ -17,12 +17,13 @@ public class PaymentController {
 
   @GetMapping
   public List<Payment> getAllPayments() {
-    return paymentRepository.findAll();
+    return paymentRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Payment> getPaymentById(@PathVariable @NonNull Long id) {
     return paymentRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
@@ -33,13 +34,16 @@ public class PaymentController {
     if (payment.getStatus() == null) {
       payment.setStatus("PENDIENTE");
     }
+    payment.setOrganizationId(TenantContext.getOrganizationId());
     Payment savedPayment = paymentRepository.save(payment);
     return ResponseEntity.ok(savedPayment);
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updatePayment(@PathVariable @NonNull Long id, @RequestBody Payment payment) {
+    Long orgId = TenantContext.getOrganizationId();
     return paymentRepository.findById(id)
+      .filter(existingPayment -> existingPayment.getOrganizationId().equals(orgId))
       .map(existingPayment -> {
         existingPayment.setInvoiceNumber(payment.getInvoiceNumber());
         existingPayment.setConcept(payment.getConcept());
@@ -63,25 +67,28 @@ public class PaymentController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deletePayment(@PathVariable @NonNull Long id) {
-    if (paymentRepository.existsById(id)) {
-      paymentRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return paymentRepository.findById(id)
+      .filter(p -> p.getOrganizationId().equals(orgId))
+      .map(p -> {
+        paymentRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Payment> getPaymentsByStatus(@PathVariable String status) {
-    return paymentRepository.findByStatus(status);
+    return paymentRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/user/{userId}")
   public List<Payment> getPaymentsByUser(@PathVariable String userId) {
-    return paymentRepository.findByUserId(userId);
+    return paymentRepository.findByOrganizationIdAndUserId(TenantContext.getOrganizationId(), userId);
   }
 
   @GetMapping("/method/{method}")
   public List<Payment> getPaymentsByMethod(@PathVariable String method) {
-    return paymentRepository.findByPaymentMethod(method);
+    return paymentRepository.findByOrganizationIdAndPaymentMethod(TenantContext.getOrganizationId(), method);
   }
 }

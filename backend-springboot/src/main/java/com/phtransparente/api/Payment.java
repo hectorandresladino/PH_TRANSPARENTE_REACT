@@ -39,6 +39,9 @@ public class Payment {
   private String description;
   private String userId;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Payment() {}
 
   public Long getId() { return id; }
@@ -76,4 +79,7 @@ public class Payment {
 
   public String getUserId() { return userId; }
   public void setUserId(String userId) { this.userId = userId; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

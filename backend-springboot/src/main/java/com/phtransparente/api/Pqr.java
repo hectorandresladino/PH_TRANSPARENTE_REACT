@@ -50,6 +50,9 @@ public class Pqr {
   @Column(name = "resolved_at")
   private LocalDateTime resolvedAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Pqr() {}
 
   public Long getId() { return id; }
@@ -99,4 +102,7 @@ public class Pqr {
 
   public LocalDateTime getResolvedAt() { return resolvedAt; }
   public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
   User findByUsername(String username);
   boolean existsByUsername(String username);
-  List<User> findByRole(String role);
-  List<User> findByActive(Boolean active);
+  List<User> findByOrganizationId(Long organizationId);
+  List<User> findByOrganizationIdAndRole(Long organizationId, String role);
+  List<User> findByOrganizationIdAndActive(Long organizationId, Boolean active);
 }

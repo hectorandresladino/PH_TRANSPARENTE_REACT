@@ -35,18 +35,20 @@ public class UserController {
 
   @GetMapping
   public List<User> getAllUsers() {
-    return userRepository.findAll();
+    return userRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<User> getUserById(@PathVariable @NonNull Long id) {
     return userRepository.findById(id)
+      .filter(u -> u.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<?> createUser(@RequestBody User user, HttpServletRequest httpRequest) {
+    user.setOrganizationId(TenantContext.getOrganizationId());
     if (userRepository.existsByUsername(user.getUsername())) {
       auditLogService.log("USER_CREATE_FAILED", currentUsername(), currentRole(), "Intento de crear usuario existente: " + user.getUsername(), httpRequest, "FAIL");
       return ResponseEntity.badRequest().body("El usuario ya existe");
@@ -71,7 +73,9 @@ public class UserController {
         return ResponseEntity.badRequest().body("Contraseña débil: " + String.join(", ", validation.errors()));
       }
     }
+    Long orgId = TenantContext.getOrganizationId();
     return userRepository.findById(id)
+      .filter(existingUser -> existingUser.getOrganizationId().equals(orgId))
       .map(existingUser -> {
         existingUser.setUsername(user.getUsername());
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
@@ -98,23 +102,28 @@ public class UserController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteUser(@PathVariable @NonNull Long id, HttpServletRequest httpRequest) {
-    if (userRepository.existsById(id)) {
-      userRepository.deleteById(id);
-      auditLogService.log("USER_DELETED", currentUsername(), currentRole(), "Usuario eliminado: ID " + id, "USER", id, httpRequest, "SUCCESS");
-      return ResponseEntity.ok().build();
-    }
-    auditLogService.log("USER_DELETE_FAILED", currentUsername(), currentRole(), "Usuario no encontrado para eliminar: ID " + id, httpRequest, "FAIL");
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return userRepository.findById(id)
+      .filter(u -> u.getOrganizationId().equals(orgId))
+      .map(u -> {
+        userRepository.deleteById(id);
+        auditLogService.log("USER_DELETED", currentUsername(), currentRole(), "Usuario eliminado: ID " + id, "USER", id, httpRequest, "SUCCESS");
+        return ResponseEntity.ok().build();
+      })
+      .orElseGet(() -> {
+        auditLogService.log("USER_DELETE_FAILED", currentUsername(), currentRole(), "Usuario no encontrado para eliminar: ID " + id, httpRequest, "FAIL");
+        return ResponseEntity.notFound().build();
+      });
   }
 
   @GetMapping("/role/{role}")
   public List<User> getUsersByRole(@PathVariable String role) {
-    return userRepository.findByRole(role);
+    return userRepository.findByOrganizationIdAndRole(TenantContext.getOrganizationId(), role);
   }
 
   @GetMapping("/active/{active}")
   public List<User> getUsersByActive(@PathVariable Boolean active) {
-    return userRepository.findByActive(active);
+    return userRepository.findByOrganizationIdAndActive(TenantContext.getOrganizationId(), active);
   }
 
   @PostMapping("/generate-password")
