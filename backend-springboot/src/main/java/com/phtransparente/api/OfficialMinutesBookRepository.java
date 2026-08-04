@@ -7,8 +7,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OfficialMinutesBookRepository extends JpaRepository<OfficialMinutesBook, Long> {
-  List<OfficialMinutesBook> findByStatus(String status);
-  List<OfficialMinutesBook> findByAssemblyType(String assemblyType);
-  List<OfficialMinutesBook> findByMeetingDateBetween(LocalDate startDate, LocalDate endDate);
-  OfficialMinutesBook findByMinuteNumber(String minuteNumber);
+  List<OfficialMinutesBook> findByOrganizationId(Long organizationId);
+  List<OfficialMinutesBook> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<OfficialMinutesBook> findByOrganizationIdAndAssemblyType(Long organizationId, String assemblyType);
+  List<OfficialMinutesBook> findByOrganizationIdAndMeetingDateBetween(Long organizationId, LocalDate startDate, LocalDate endDate);
+  OfficialMinutesBook findByOrganizationIdAndMinuteNumber(Long organizationId, String minuteNumber);
 }

@@ -17,18 +17,20 @@ public class OfficialMinutesBookController {
 
   @GetMapping
   public List<OfficialMinutesBook> getAllOfficialMinutes() {
-    return officialMinutesBookRepository.findAll();
+    return officialMinutesBookRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<OfficialMinutesBook> getOfficialMinuteById(@PathVariable @NonNull Long id) {
     return officialMinutesBookRepository.findById(id)
+      .filter(m -> m.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<OfficialMinutesBook> createOfficialMinute(@RequestBody OfficialMinutesBook officialMinutesBook) {
+    officialMinutesBook.setOrganizationId(TenantContext.getOrganizationId());
     officialMinutesBook.setCreatedAt(LocalDate.now());
     officialMinutesBook.setUpdatedAt(LocalDate.now());
     if (officialMinutesBook.getStatus() == null) {
@@ -40,7 +42,9 @@ public class OfficialMinutesBookController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateOfficialMinute(@PathVariable @NonNull Long id, @RequestBody OfficialMinutesBook officialMinutesBook) {
+    Long orgId = TenantContext.getOrganizationId();
     return officialMinutesBookRepository.findById(id)
+      .filter(existingOfficialMinutesBook -> existingOfficialMinutesBook.getOrganizationId().equals(orgId))
       .map(existingOfficialMinutesBook -> {
         existingOfficialMinutesBook.setMinuteNumber(officialMinutesBook.getMinuteNumber());
         existingOfficialMinutesBook.setAssemblyType(officialMinutesBook.getAssemblyType());
@@ -79,21 +83,24 @@ public class OfficialMinutesBookController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteOfficialMinute(@PathVariable @NonNull Long id) {
-    if (officialMinutesBookRepository.existsById(id)) {
-      officialMinutesBookRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return officialMinutesBookRepository.findById(id)
+      .filter(m -> m.getOrganizationId().equals(orgId))
+      .map(m -> {
+        officialMinutesBookRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<OfficialMinutesBook> getOfficialMinutesByStatus(@PathVariable String status) {
-    return officialMinutesBookRepository.findByStatus(status);
+    return officialMinutesBookRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{assemblyType}")
   public List<OfficialMinutesBook> getOfficialMinutesByType(@PathVariable String assemblyType) {
-    return officialMinutesBookRepository.findByAssemblyType(assemblyType);
+    return officialMinutesBookRepository.findByOrganizationIdAndAssemblyType(TenantContext.getOrganizationId(), assemblyType);
   }
 
   @GetMapping("/date-range")
@@ -101,6 +108,6 @@ public class OfficialMinutesBookController {
     @RequestParam LocalDate startDate,
     @RequestParam LocalDate endDate
   ) {
-    return officialMinutesBookRepository.findByMeetingDateBetween(startDate, endDate);
+    return officialMinutesBookRepository.findByOrganizationIdAndMeetingDateBetween(TenantContext.getOrganizationId(), startDate, endDate);
   }
 }
