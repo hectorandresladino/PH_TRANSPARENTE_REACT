@@ -15,7 +15,7 @@ public class AuditLogService {
   }
 
   public void log(String action, String username, String role, String description, String entityType, Long entityId, HttpServletRequest request, String result) {
-    AuditLog log = new AuditLog(action, username, role, description, entityType, entityId, getClientIp(request), result);
+    AuditLog log = new AuditLog(action, username, role, description, entityType, entityId, getClientIp(request), result, TenantContext.getOrganizationId());
     auditLogRepository.save(log);
   }
 
@@ -28,15 +28,15 @@ public class AuditLogService {
   }
 
   public List<AuditLog> getRecentLogs() {
-    return auditLogRepository.findTop100ByOrderByTimestampDesc();
+    return auditLogRepository.findTop100ByOrganizationIdOrderByTimestampDesc(TenantContext.getOrganizationId());
   }
 
   public List<AuditLog> getLogsByUsername(String username) {
-    return auditLogRepository.findByUsernameOrderByTimestampDesc(username);
+    return auditLogRepository.findByOrganizationIdAndUsernameOrderByTimestampDesc(TenantContext.getOrganizationId(), username);
   }
 
   public List<AuditLog> getLogsByAction(String action) {
-    return auditLogRepository.findByActionOrderByTimestampDesc(action);
+    return auditLogRepository.findByOrganizationIdAndActionOrderByTimestampDesc(TenantContext.getOrganizationId(), action);
   }
 
   private String getClientIp(HttpServletRequest request) {

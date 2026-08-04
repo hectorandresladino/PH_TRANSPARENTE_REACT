@@ -36,9 +36,12 @@ public class AuditLog {
 
   private String result;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public AuditLog() {}
 
-  public AuditLog(String action, String username, String role, String description, String entityType, Long entityId, String ipAddress, String result) {
+  public AuditLog(String action, String username, String role, String description, String entityType, Long entityId, String ipAddress, String result, Long organizationId) {
     this.timestamp = LocalDateTime.now();
     this.action = action;
     this.username = username;
@@ -48,6 +51,7 @@ public class AuditLog {
     this.entityId = entityId;
     this.ipAddress = ipAddress;
     this.result = result;
+    this.organizationId = organizationId;
   }
 
   public Long getId() { return id; }
@@ -79,4 +83,7 @@ public class AuditLog {
 
   public String getResult() { return result; }
   public void setResult(String result) { this.result = result; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }
