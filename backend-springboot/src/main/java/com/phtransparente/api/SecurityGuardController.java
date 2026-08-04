@@ -17,18 +17,20 @@ public class SecurityGuardController {
 
   @GetMapping
   public List<SecurityGuard> getAllSecurityGuards() {
-    return securityGuardRepository.findAll();
+    return securityGuardRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<SecurityGuard> getSecurityGuardById(@PathVariable @NonNull Long id) {
     return securityGuardRepository.findById(id)
+      .filter(g -> g.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<SecurityGuard> createSecurityGuard(@RequestBody SecurityGuard securityGuard) {
+    securityGuard.setOrganizationId(TenantContext.getOrganizationId());
     securityGuard.setCreatedAt(LocalDate.now());
     if (securityGuard.getStatus() == null) {
       securityGuard.setStatus("ACTIVO");
@@ -42,7 +44,9 @@ public class SecurityGuardController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateSecurityGuard(@PathVariable @NonNull Long id, @RequestBody SecurityGuard securityGuard) {
+    Long orgId = TenantContext.getOrganizationId();
     return securityGuardRepository.findById(id)
+      .filter(existingSecurityGuard -> existingSecurityGuard.getOrganizationId().equals(orgId))
       .map(existingSecurityGuard -> {
         existingSecurityGuard.setName(securityGuard.getName());
         existingSecurityGuard.setDocumentNumber(securityGuard.getDocumentNumber());
@@ -69,30 +73,33 @@ public class SecurityGuardController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteSecurityGuard(@PathVariable @NonNull Long id) {
-    if (securityGuardRepository.existsById(id)) {
-      securityGuardRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return securityGuardRepository.findById(id)
+      .filter(g -> g.getOrganizationId().equals(orgId))
+      .map(g -> {
+        securityGuardRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<SecurityGuard> getSecurityGuardsByStatus(@PathVariable String status) {
-    return securityGuardRepository.findByStatus(status);
+    return securityGuardRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/shift/{shift}")
   public List<SecurityGuard> getSecurityGuardsByShift(@PathVariable String shift) {
-    return securityGuardRepository.findByShift(shift);
+    return securityGuardRepository.findByOrganizationIdAndShift(TenantContext.getOrganizationId(), shift);
   }
 
   @GetMapping("/zone/{zone}")
   public List<SecurityGuard> getSecurityGuardsByZone(@PathVariable String zone) {
-    return securityGuardRepository.findByAssignedZone(zone);
+    return securityGuardRepository.findByOrganizationIdAndAssignedZone(TenantContext.getOrganizationId(), zone);
   }
 
   @GetMapping("/point/{point}")
   public List<SecurityGuard> getSecurityGuardsByPoint(@PathVariable String point) {
-    return securityGuardRepository.findByAssignedPoint(point);
+    return securityGuardRepository.findByOrganizationIdAndAssignedPoint(TenantContext.getOrganizationId(), point);
   }
 }
