@@ -61,6 +61,9 @@ public class Report {
   @Column(name = "updated_at")
   private LocalDate updatedAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Report() {}
 
   public Long getId() { return id; }
@@ -116,4 +119,7 @@ public class Report {
 
   public LocalDate getUpdatedAt() { return updatedAt; }
   public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

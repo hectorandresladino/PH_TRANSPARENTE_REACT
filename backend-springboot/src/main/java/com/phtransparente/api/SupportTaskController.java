@@ -18,63 +18,65 @@ public class SupportTaskController {
 
   @GetMapping
   public List<SupportTask> getAllTasks() {
-    return supportTaskRepository.findAll();
+    return supportTaskRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<SupportTask> getTaskById(@PathVariable @NonNull Long id) {
     return supportTaskRepository.findById(id)
+      .filter(t -> t.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<SupportTask> getTasksByStatus(@PathVariable String status) {
-    return supportTaskRepository.findByStatus(status);
+    return supportTaskRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/category/{category}")
   public List<SupportTask> getTasksByCategory(@PathVariable String category) {
-    return supportTaskRepository.findByCategory(category);
+    return supportTaskRepository.findByOrganizationIdAndCategory(TenantContext.getOrganizationId(), category);
   }
 
   @GetMapping("/priority/{priority}")
   public List<SupportTask> getTasksByPriority(@PathVariable String priority) {
-    return supportTaskRepository.findByPriority(priority);
+    return supportTaskRepository.findByOrganizationIdAndPriority(TenantContext.getOrganizationId(), priority);
   }
 
   @GetMapping("/assigned/{assignedTo}")
   public List<SupportTask> getTasksByAssignedTo(@PathVariable String assignedTo) {
-    return supportTaskRepository.findByAssignedTo(assignedTo);
+    return supportTaskRepository.findByOrganizationIdAndAssignedTo(TenantContext.getOrganizationId(), assignedTo);
   }
 
   @GetMapping("/created-by/{createdBy}")
   public List<SupportTask> getTasksByCreatedBy(@PathVariable String createdBy) {
-    return supportTaskRepository.findByCreatedBy(createdBy);
+    return supportTaskRepository.findByOrganizationIdAndCreatedBy(TenantContext.getOrganizationId(), createdBy);
   }
 
   @GetMapping("/property-unit/{propertyUnit}")
   public List<SupportTask> getTasksByPropertyUnit(@PathVariable String propertyUnit) {
-    return supportTaskRepository.findByPropertyUnit(propertyUnit);
+    return supportTaskRepository.findByOrganizationIdAndPropertyUnit(TenantContext.getOrganizationId(), propertyUnit);
   }
 
   @GetMapping("/pending")
   public List<SupportTask> getPendingTasks() {
-    return supportTaskRepository.findByStatus("PENDIENTE");
+    return supportTaskRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "PENDIENTE");
   }
 
   @GetMapping("/in-progress")
   public List<SupportTask> getInProgressTasks() {
-    return supportTaskRepository.findByStatus("EN_PROGRESO");
+    return supportTaskRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "EN_PROGRESO");
   }
 
   @GetMapping("/completed")
   public List<SupportTask> getCompletedTasks() {
-    return supportTaskRepository.findByStatus("COMPLETADA");
+    return supportTaskRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "COMPLETADA");
   }
 
   @PostMapping
   public ResponseEntity<SupportTask> createTask(@RequestBody SupportTask task) {
+    task.setOrganizationId(TenantContext.getOrganizationId());
     task.setCreatedAt(LocalDateTime.now());
     if (task.getStatus() == null) {
       task.setStatus("PENDIENTE");
@@ -88,7 +90,9 @@ public class SupportTaskController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateTask(@PathVariable @NonNull Long id, @RequestBody SupportTask task) {
+    Long orgId = TenantContext.getOrganizationId();
     return supportTaskRepository.findById(id)
+      .filter(existingTask -> existingTask.getOrganizationId().equals(orgId))
       .map(existingTask -> {
         existingTask.setTitle(task.getTitle());
         existingTask.setDescription(task.getDescription());
@@ -113,10 +117,13 @@ public class SupportTaskController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteTask(@PathVariable @NonNull Long id) {
-    if (supportTaskRepository.existsById(id)) {
-      supportTaskRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return supportTaskRepository.findById(id)
+      .filter(t -> t.getOrganizationId().equals(orgId))
+      .map(t -> {
+        supportTaskRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 }

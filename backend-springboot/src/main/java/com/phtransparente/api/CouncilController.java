@@ -17,18 +17,20 @@ public class CouncilController {
 
   @GetMapping
   public List<Council> getAllCouncils() {
-    return councilRepository.findAll();
+    return councilRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Council> getCouncilById(@PathVariable @NonNull Long id) {
     return councilRepository.findById(id)
+      .filter(c -> c.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Council> createCouncil(@RequestBody Council council) {
+    council.setOrganizationId(TenantContext.getOrganizationId());
     council.setCreatedAt(LocalDate.now());
     if (council.getStatus() == null) {
       council.setStatus("ACTIVO");
@@ -39,7 +41,9 @@ public class CouncilController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateCouncil(@PathVariable @NonNull Long id, @RequestBody Council council) {
+    Long orgId = TenantContext.getOrganizationId();
     return councilRepository.findById(id)
+      .filter(existingCouncil -> existingCouncil.getOrganizationId().equals(orgId))
       .map(existingCouncil -> {
         existingCouncil.setName(council.getName());
         existingCouncil.setDescription(council.getDescription());
@@ -60,25 +64,28 @@ public class CouncilController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteCouncil(@PathVariable @NonNull Long id) {
-    if (councilRepository.existsById(id)) {
-      councilRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return councilRepository.findById(id)
+      .filter(c -> c.getOrganizationId().equals(orgId))
+      .map(c -> {
+        councilRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Council> getCouncilsByStatus(@PathVariable String status) {
-    return councilRepository.findByStatus(status);
+    return councilRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/role/{role}")
   public List<Council> getCouncilsByRole(@PathVariable String role) {
-    return councilRepository.findByRole(role);
+    return councilRepository.findByOrganizationIdAndRole(TenantContext.getOrganizationId(), role);
   }
 
   @GetMapping("/member/{memberId}")
   public List<Council> getCouncilsByMember(@PathVariable String memberId) {
-    return councilRepository.findByMemberId(memberId);
+    return councilRepository.findByOrganizationIdAndMemberId(TenantContext.getOrganizationId(), memberId);
   }
 }

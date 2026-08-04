@@ -64,6 +64,9 @@ public class Alert {
   @Column(name = "resolution_notes")
   private String resolutionNotes;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Alert() {}
 
   public Long getId() { return id; }
@@ -125,4 +128,7 @@ public class Alert {
 
   public String getResolutionNotes() { return resolutionNotes; }
   public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

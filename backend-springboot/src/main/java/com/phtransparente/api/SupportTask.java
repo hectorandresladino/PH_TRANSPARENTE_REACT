@@ -47,6 +47,9 @@ public class SupportTask {
   @Column
   private String propertyUnit; // Unidad de propiedad relacionada
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   // Getters and Setters
   public Long getId() { return id; }
   public void setId(Long id) { this.id = id; }
@@ -86,4 +89,7 @@ public class SupportTask {
 
   public String getPropertyUnit() { return propertyUnit; }
   public void setPropertyUnit(String propertyUnit) { this.propertyUnit = propertyUnit; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

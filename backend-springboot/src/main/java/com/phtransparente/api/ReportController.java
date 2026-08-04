@@ -17,43 +17,45 @@ public class ReportController {
 
   @GetMapping
   public List<Report> getAllReports() {
-    return reportRepository.findAll();
+    return reportRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/module/{moduleName}")
   public List<Report> getReportsByModule(@PathVariable String moduleName) {
-    return reportRepository.findByModuleName(moduleName);
+    return reportRepository.findByOrganizationIdAndModuleName(TenantContext.getOrganizationId(), moduleName);
   }
 
   @GetMapping("/type/{reportType}")
   public List<Report> getReportsByType(@PathVariable String reportType) {
-    return reportRepository.findByReportType(reportType);
+    return reportRepository.findByOrganizationIdAndReportType(TenantContext.getOrganizationId(), reportType);
   }
 
   @GetMapping("/user/{userId}")
   public List<Report> getReportsByUser(@PathVariable Long userId) {
-    return reportRepository.findByGeneratedBy(userId);
+    return reportRepository.findByOrganizationIdAndGeneratedBy(TenantContext.getOrganizationId(), userId);
   }
 
   @GetMapping("/status/{status}")
   public List<Report> getReportsByStatus(@PathVariable String status) {
-    return reportRepository.findByStatus(status);
+    return reportRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/date-range")
   public List<Report> getReportsByDateRange(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-    return reportRepository.findByGenerationDateBetween(startDate, endDate);
+    return reportRepository.findByOrganizationIdAndGenerationDateBetween(TenantContext.getOrganizationId(), startDate, endDate);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Report> getReportById(@PathVariable @NonNull Long id) {
     return reportRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Report> createReport(@RequestBody Report report) {
+    report.setOrganizationId(TenantContext.getOrganizationId());
     report.setCreatedAt(LocalDate.now());
     report.setUpdatedAt(LocalDate.now());
     report.setGenerationDate(LocalDate.now());
@@ -69,7 +71,9 @@ public class ReportController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateReport(@PathVariable @NonNull Long id, @RequestBody Report report) {
+    Long orgId = TenantContext.getOrganizationId();
     return reportRepository.findById(id)
+      .filter(existingReport -> existingReport.getOrganizationId().equals(orgId))
       .map(existingReport -> {
         existingReport.setReportName(report.getReportName());
         existingReport.setReportType(report.getReportType());
@@ -94,10 +98,13 @@ public class ReportController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteReport(@PathVariable @NonNull Long id) {
-    if (reportRepository.existsById(id)) {
-      reportRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return reportRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(orgId))
+      .map(r -> {
+        reportRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 }

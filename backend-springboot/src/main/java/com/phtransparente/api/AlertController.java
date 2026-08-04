@@ -17,28 +17,30 @@ public class AlertController {
 
   @GetMapping
   public List<Alert> getAllAlerts() {
-    return alertRepository.findAll();
+    return alertRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/public")
   public List<Alert> getPublicAlerts() {
-    return alertRepository.findByIsPublic(true);
+    return alertRepository.findByOrganizationIdAndIsPublic(TenantContext.getOrganizationId(), true);
   }
 
   @GetMapping("/audience/{audience}")
   public List<Alert> getAlertsByAudience(@PathVariable String audience) {
-    return alertRepository.findByTargetAudience(audience);
+    return alertRepository.findByOrganizationIdAndTargetAudience(TenantContext.getOrganizationId(), audience);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Alert> getAlertById(@PathVariable @NonNull Long id) {
     return alertRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
+    alert.setOrganizationId(TenantContext.getOrganizationId());
     alert.setCreatedAt(LocalDate.now());
     alert.setUpdatedAt(LocalDate.now());
     if (alert.getStatus() == null) {
@@ -56,7 +58,9 @@ public class AlertController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateAlert(@PathVariable @NonNull Long id, @RequestBody Alert alert) {
+    Long orgId = TenantContext.getOrganizationId();
     return alertRepository.findById(id)
+      .filter(existingAlert -> existingAlert.getOrganizationId().equals(orgId))
       .map(existingAlert -> {
         existingAlert.setAlertType(alert.getAlertType());
         existingAlert.setSeverity(alert.getSeverity());
@@ -84,31 +88,36 @@ public class AlertController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteAlert(@PathVariable @NonNull Long id) {
-    if (alertRepository.existsById(id)) {
-      alertRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return alertRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(orgId))
+      .map(a -> {
+        alertRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Alert> getAlertsByStatus(@PathVariable String status) {
-    return alertRepository.findByStatus(status);
+    return alertRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/severity/{severity}")
   public List<Alert> getAlertsBySeverity(@PathVariable String severity) {
-    return alertRepository.findBySeverity(severity);
+    return alertRepository.findByOrganizationIdAndSeverity(TenantContext.getOrganizationId(), severity);
   }
 
   @GetMapping("/type/{alertType}")
   public List<Alert> getAlertsByType(@PathVariable String alertType) {
-    return alertRepository.findByAlertType(alertType);
+    return alertRepository.findByOrganizationIdAndAlertType(TenantContext.getOrganizationId(), alertType);
   }
 
   @PutMapping("/{id}/resolve")
   public ResponseEntity<?> resolveAlert(@PathVariable @NonNull Long id, @RequestBody Alert resolution) {
+    Long orgId = TenantContext.getOrganizationId();
     return alertRepository.findById(id)
+      .filter(existingAlert -> existingAlert.getOrganizationId().equals(orgId))
       .map(existingAlert -> {
         existingAlert.setStatus("RESUELTO");
         existingAlert.setResolvedAt(LocalDate.now());
