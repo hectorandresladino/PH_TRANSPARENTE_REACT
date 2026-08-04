@@ -17,63 +17,65 @@ public class PersonnelRatingController {
 
   @GetMapping
   public List<PersonnelRating> getAllRatings() {
-    return personnelRatingRepository.findAll();
+    return personnelRatingRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/person/{personId}")
   public List<PersonnelRating> getRatingsByPerson(@PathVariable Long personId) {
-    return personnelRatingRepository.findByRatedPersonId(personId);
+    return personnelRatingRepository.findByOrganizationIdAndRatedPersonId(TenantContext.getOrganizationId(), personId);
   }
 
   @GetMapping("/role/{role}")
   public List<PersonnelRating> getRatingsByRole(@PathVariable String role) {
-    return personnelRatingRepository.findByRatedPersonRole(role);
+    return personnelRatingRepository.findByOrganizationIdAndRatedPersonRole(TenantContext.getOrganizationId(), role);
   }
 
   @GetMapping("/type/{type}")
   public List<PersonnelRating> getRatingsByType(@PathVariable String type) {
-    return personnelRatingRepository.findByRatedPersonType(type);
+    return personnelRatingRepository.findByOrganizationIdAndRatedPersonType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/rater/{raterId}")
   public List<PersonnelRating> getRatingsByRater(@PathVariable Long raterId) {
-    return personnelRatingRepository.findByRaterId(raterId);
+    return personnelRatingRepository.findByOrganizationIdAndRaterId(TenantContext.getOrganizationId(), raterId);
   }
 
   @GetMapping("/property-unit/{unitId}")
   public List<PersonnelRating> getRatingsByPropertyUnit(@PathVariable Long unitId) {
-    return personnelRatingRepository.findByPropertyUnitId(unitId);
+    return personnelRatingRepository.findByOrganizationIdAndPropertyUnitId(TenantContext.getOrganizationId(), unitId);
   }
 
   @GetMapping("/period/{period}")
   public List<PersonnelRating> getRatingsByPeriod(@PathVariable String period) {
-    return personnelRatingRepository.findByRatingPeriod(period);
+    return personnelRatingRepository.findByOrganizationIdAndRatingPeriod(TenantContext.getOrganizationId(), period);
   }
 
   @GetMapping("/category/{category}")
   public List<PersonnelRating> getRatingsByCategory(@PathVariable String category) {
-    return personnelRatingRepository.findByRatingCategory(category);
+    return personnelRatingRepository.findByOrganizationIdAndRatingCategory(TenantContext.getOrganizationId(), category);
   }
 
   @GetMapping("/status/{status}")
   public List<PersonnelRating> getRatingsByStatus(@PathVariable String status) {
-    return personnelRatingRepository.findByStatus(status);
+    return personnelRatingRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/date-range")
   public List<PersonnelRating> getRatingsByDateRange(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-    return personnelRatingRepository.findByRatingDateBetween(startDate, endDate);
+    return personnelRatingRepository.findByOrganizationIdAndRatingDateBetween(TenantContext.getOrganizationId(), startDate, endDate);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<PersonnelRating> getRatingById(@PathVariable @NonNull Long id) {
     return personnelRatingRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<PersonnelRating> createRating(@RequestBody PersonnelRating rating) {
+    rating.setOrganizationId(TenantContext.getOrganizationId());
     rating.setCreatedAt(LocalDate.now());
     rating.setUpdatedAt(LocalDate.now());
     rating.setRatingDate(LocalDate.now());
@@ -92,7 +94,9 @@ public class PersonnelRatingController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateRating(@PathVariable @NonNull Long id, @RequestBody PersonnelRating rating) {
+    Long orgId = TenantContext.getOrganizationId();
     return personnelRatingRepository.findById(id)
+      .filter(existingRating -> existingRating.getOrganizationId().equals(orgId))
       .map(existingRating -> {
         existingRating.setRatedPersonName(rating.getRatedPersonName());
         existingRating.setRatedPersonRole(rating.getRatedPersonRole());
@@ -121,10 +125,13 @@ public class PersonnelRatingController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteRating(@PathVariable @NonNull Long id) {
-    if (personnelRatingRepository.existsById(id)) {
-      personnelRatingRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return personnelRatingRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(orgId))
+      .map(r -> {
+        personnelRatingRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 }

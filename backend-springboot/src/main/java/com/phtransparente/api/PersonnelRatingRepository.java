@@ -7,14 +7,15 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PersonnelRatingRepository extends JpaRepository<PersonnelRating, Long> {
-  List<PersonnelRating> findByRatedPersonId(Long ratedPersonId);
-  List<PersonnelRating> findByRatedPersonRole(String ratedPersonRole);
-  List<PersonnelRating> findByRatedPersonType(String ratedPersonType);
-  List<PersonnelRating> findByRaterId(Long raterId);
-  List<PersonnelRating> findByPropertyUnitId(Long propertyUnitId);
-  List<PersonnelRating> findByRatingPeriod(String ratingPeriod);
-  List<PersonnelRating> findByRatingCategory(String ratingCategory);
-  List<PersonnelRating> findByStatus(String status);
-  List<PersonnelRating> findByRatingDateBetween(LocalDate startDate, LocalDate endDate);
-  List<PersonnelRating> findByRatedPersonRoleAndRatingPeriod(String ratedPersonRole, String ratingPeriod);
+  List<PersonnelRating> findByOrganizationId(Long organizationId);
+  List<PersonnelRating> findByOrganizationIdAndRatedPersonId(Long organizationId, Long ratedPersonId);
+  List<PersonnelRating> findByOrganizationIdAndRatedPersonRole(Long organizationId, String ratedPersonRole);
+  List<PersonnelRating> findByOrganizationIdAndRatedPersonType(Long organizationId, String ratedPersonType);
+  List<PersonnelRating> findByOrganizationIdAndRaterId(Long organizationId, Long raterId);
+  List<PersonnelRating> findByOrganizationIdAndPropertyUnitId(Long organizationId, Long propertyUnitId);
+  List<PersonnelRating> findByOrganizationIdAndRatingPeriod(Long organizationId, String ratingPeriod);
+  List<PersonnelRating> findByOrganizationIdAndRatingCategory(Long organizationId, String ratingCategory);
+  List<PersonnelRating> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<PersonnelRating> findByOrganizationIdAndRatingDateBetween(Long organizationId, LocalDate startDate, LocalDate endDate);
+  List<PersonnelRating> findByOrganizationIdAndRatedPersonRoleAndRatingPeriod(Long organizationId, String ratedPersonRole, String ratingPeriod);
 }
