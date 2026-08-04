@@ -17,18 +17,20 @@ public class AccessControlController {
 
   @GetMapping
   public List<AccessControl> getAllAccessControls() {
-    return accessControlRepository.findAll();
+    return accessControlRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<AccessControl> getAccessControlById(@PathVariable @NonNull Long id) {
     return accessControlRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<AccessControl> createAccessControl(@RequestBody AccessControl accessControl) {
+    accessControl.setOrganizationId(TenantContext.getOrganizationId());
     accessControl.setCreatedAt(LocalDateTime.now());
     if (accessControl.getStatus() == null) {
       accessControl.setStatus("INGRESADO");
@@ -42,7 +44,9 @@ public class AccessControlController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateAccessControl(@PathVariable @NonNull Long id, @RequestBody AccessControl accessControl) {
+    Long orgId = TenantContext.getOrganizationId();
     return accessControlRepository.findById(id)
+      .filter(existingAccessControl -> existingAccessControl.getOrganizationId().equals(orgId))
       .map(existingAccessControl -> {
         existingAccessControl.setAccessType(accessControl.getAccessType());
         existingAccessControl.setPersonName(accessControl.getPersonName());
@@ -74,40 +78,43 @@ public class AccessControlController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteAccessControl(@PathVariable @NonNull Long id) {
-    if (accessControlRepository.existsById(id)) {
-      accessControlRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return accessControlRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(orgId))
+      .map(a -> {
+        accessControlRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<AccessControl> getAccessControlsByStatus(@PathVariable String status) {
-    return accessControlRepository.findByStatus(status);
+    return accessControlRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<AccessControl> getAccessControlsByType(@PathVariable String type) {
-    return accessControlRepository.findByAccessType(type);
+    return accessControlRepository.findByOrganizationIdAndAccessType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/gate/{gate}")
   public List<AccessControl> getAccessControlsByGate(@PathVariable String gate) {
-    return accessControlRepository.findByEntryGate(gate);
+    return accessControlRepository.findByOrganizationIdAndEntryGate(TenantContext.getOrganizationId(), gate);
   }
 
   @GetMapping("/document/{documentNumber}")
   public List<AccessControl> getAccessControlsByDocument(@PathVariable String documentNumber) {
-    return accessControlRepository.findByDocumentNumber(documentNumber);
+    return accessControlRepository.findByOrganizationIdAndDocumentNumber(TenantContext.getOrganizationId(), documentNumber);
   }
 
   @GetMapping("/vehicle/{plate}")
   public List<AccessControl> getAccessControlsByVehicle(@PathVariable String plate) {
-    return accessControlRepository.findByVehiclePlate(plate);
+    return accessControlRepository.findByOrganizationIdAndVehiclePlate(TenantContext.getOrganizationId(), plate);
   }
 
   @GetMapping("/unit/{unit}")
   public List<AccessControl> getAccessControlsByUnit(@PathVariable String unit) {
-    return accessControlRepository.findByHostUnit(unit);
+    return accessControlRepository.findByOrganizationIdAndHostUnit(TenantContext.getOrganizationId(), unit);
   }
 }

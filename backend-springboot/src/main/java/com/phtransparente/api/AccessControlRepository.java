@@ -7,11 +7,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AccessControlRepository extends JpaRepository<AccessControl, Long> {
-  List<AccessControl> findByStatus(String status);
-  List<AccessControl> findByAccessType(String accessType);
-  List<AccessControl> findByEntryGate(String entryGate);
-  List<AccessControl> findByEntryTimeBetween(LocalDateTime start, LocalDateTime end);
-  List<AccessControl> findByDocumentNumber(String documentNumber);
-  List<AccessControl> findByVehiclePlate(String vehiclePlate);
-  List<AccessControl> findByHostUnit(String hostUnit);
+  List<AccessControl> findByOrganizationId(Long organizationId);
+  List<AccessControl> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<AccessControl> findByOrganizationIdAndAccessType(Long organizationId, String accessType);
+  List<AccessControl> findByOrganizationIdAndEntryGate(Long organizationId, String entryGate);
+  List<AccessControl> findByOrganizationIdAndEntryTimeBetween(Long organizationId, LocalDateTime start, LocalDateTime end);
+  List<AccessControl> findByOrganizationIdAndDocumentNumber(Long organizationId, String documentNumber);
+  List<AccessControl> findByOrganizationIdAndVehiclePlate(Long organizationId, String vehiclePlate);
+  List<AccessControl> findByOrganizationIdAndHostUnit(Long organizationId, String hostUnit);
 }
