@@ -88,7 +88,7 @@ public class AnnualBudgetController {
       .filter(b -> b.getOrganizationId().equals(orgId))
       .map(b -> {
         budgetItemRepository.deleteByBudgetId(id);
-        budgetInquiryRepository.findByBudgetId(id).forEach(budgetInquiryRepository::delete);
+        budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(budgetInquiryRepository::delete);
         budgetProposalRepository.findByBudgetId(id).forEach(p -> {
           voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
           budgetProposalRepository.delete(p);
@@ -157,17 +157,20 @@ public class AnnualBudgetController {
 
   @GetMapping("/{id}/inquiries")
   public ResponseEntity<List<BudgetInquiry>> getInquiries(@PathVariable @NonNull Long id) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(budgetInquiryRepository.findByBudgetId(id));
+    return ResponseEntity.ok(budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/inquiries")
   public ResponseEntity<BudgetInquiry> createInquiry(@PathVariable @NonNull Long id, @RequestBody InquiryRequest request) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
     String username = currentUsername();
     User user = userRepository.findByUsername(username);
     BudgetInquiry inquiry = new BudgetInquiry();
     inquiry.setBudgetId(id);
+    inquiry.setOrganizationId(orgId);
     inquiry.setQuestion(request.question());
     inquiry.setAskedBy(username);
     inquiry.setAskedByRole(user != null ? user.getRole() : "UNKNOWN");
@@ -178,7 +181,9 @@ public class AnnualBudgetController {
 
   @PutMapping("/{id}/inquiries/{inquiryId}/answer")
   public ResponseEntity<?> answerInquiry(@PathVariable @NonNull Long id, @PathVariable @NonNull Long inquiryId, @RequestBody AnswerRequest request) {
+    Long orgId = TenantContext.getOrganizationId();
     return budgetInquiryRepository.findById(inquiryId)
+      .filter(inquiry -> inquiry.getOrganizationId().equals(orgId))
       .map(inquiry -> {
         inquiry.setAnswer(request.answer());
         inquiry.setAnsweredBy(currentUsername());
@@ -191,7 +196,7 @@ public class AnnualBudgetController {
 
   @GetMapping("/inquiries/pending")
   public List<BudgetInquiry> getPendingInquiries() {
-    return budgetInquiryRepository.findByStatus("PENDIENTE");
+    return budgetInquiryRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "PENDIENTE");
   }
 
   // ==================== BUDGET PROPOSALS ====================
@@ -339,9 +344,9 @@ public class AnnualBudgetController {
     long ejecucion = all.stream().filter(b -> "EJECUCION".equals(b.getStatus())).count();
     long cerrado = all.stream().filter(b -> "CERRADO".equals(b.getStatus())).count();
 
-    long totalInquiries = budgetInquiryRepository.count();
-    long pendingInquiries = budgetInquiryRepository.findByStatus("PENDIENTE").size();
-    long answeredInquiries = budgetInquiryRepository.findByStatus("RESPONDIDA").size();
+    long totalInquiries = budgetInquiryRepository.findByOrganizationId(TenantContext.getOrganizationId()).size();
+    long pendingInquiries = budgetInquiryRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "PENDIENTE").size();
+    long answeredInquiries = budgetInquiryRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), "RESPONDIDA").size();
 
     long totalProposals = budgetProposalRepository.count();
     long openProposals = budgetProposalRepository.findByStatus("ABIERTA").size();

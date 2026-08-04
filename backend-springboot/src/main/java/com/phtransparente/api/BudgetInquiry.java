@@ -36,6 +36,9 @@ public class BudgetInquiry {
 
   private String status;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public BudgetInquiry() {}
 
   public Long getId() { return id; }
@@ -67,4 +70,7 @@ public class BudgetInquiry {
 
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }
