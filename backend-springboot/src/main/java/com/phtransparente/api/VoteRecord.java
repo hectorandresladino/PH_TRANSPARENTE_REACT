@@ -25,6 +25,9 @@ public class VoteRecord {
   @Column(name = "voted_at")
   private LocalDateTime votedAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public VoteRecord() {}
 
   public Long getId() { return id; }
@@ -44,4 +47,7 @@ public class VoteRecord {
 
   public LocalDateTime getVotedAt() { return votedAt; }
   public void setVotedAt(LocalDateTime votedAt) { this.votedAt = votedAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

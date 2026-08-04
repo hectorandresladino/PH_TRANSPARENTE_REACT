@@ -90,7 +90,7 @@ public class AnnualBudgetController {
         budgetItemRepository.deleteByOrganizationIdAndBudgetId(orgId, id);
         budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(budgetInquiryRepository::delete);
         budgetProposalRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(p -> {
-          voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
+          voteRecordRepository.findByOrganizationIdAndVoteId(orgId, p.getId()).forEach(voteRecordRepository::delete);
           budgetProposalRepository.delete(p);
         });
         annualBudgetRepository.deleteById(id);
@@ -250,7 +250,7 @@ public class AnnualBudgetController {
     User user = userRepository.findByUsername(username);
     if (user == null) return ResponseEntity.status(401).body("Usuario no encontrado");
 
-    if (voteRecordRepository.existsByVoteIdAndUserId(proposalId, user.getId())) {
+    if (voteRecordRepository.existsByOrganizationIdAndVoteIdAndUserId(orgId, proposalId, user.getId())) {
       return ResponseEntity.badRequest().body("Ya has votado en esta propuesta");
     }
 
@@ -265,11 +265,12 @@ public class AnnualBudgetController {
     record.setUsername(username);
     record.setChoice(choice);
     record.setVotedAt(LocalDateTime.now());
+    record.setOrganizationId(orgId);
     voteRecordRepository.save(record);
 
-    long favor = voteRecordRepository.countByVoteIdAndChoice(proposalId, "FAVOR");
-    long contra = voteRecordRepository.countByVoteIdAndChoice(proposalId, "CONTRA");
-    long abstencion = voteRecordRepository.countByVoteIdAndChoice(proposalId, "ABSTENCION");
+    long favor = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "FAVOR");
+    long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "CONTRA");
+    long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "ABSTENCION");
     proposal.setVotesFor((int) favor);
     proposal.setVotesAgainst((int) contra);
     proposal.setVotesAbstain((int) abstencion);
@@ -299,10 +300,10 @@ public class AnnualBudgetController {
     if (propOpt.isEmpty()) return ResponseEntity.notFound().build();
     BudgetProposal proposal = propOpt.get();
 
-    List<VoteRecord> records = voteRecordRepository.findByVoteIdOrderByVotedAtDesc(proposalId);
-    long favor = voteRecordRepository.countByVoteIdAndChoice(proposalId, "FAVOR");
-    long contra = voteRecordRepository.countByVoteIdAndChoice(proposalId, "CONTRA");
-    long abstencion = voteRecordRepository.countByVoteIdAndChoice(proposalId, "ABSTENCION");
+    List<VoteRecord> records = voteRecordRepository.findByOrganizationIdAndVoteIdOrderByVotedAtDesc(orgId, proposalId);
+    long favor = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "FAVOR");
+    long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "CONTRA");
+    long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "ABSTENCION");
 
     List<User> allUsers = userRepository.findAll();
     Set<Long> votedUserIds = new HashSet<>();

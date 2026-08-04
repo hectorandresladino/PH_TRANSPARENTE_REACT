@@ -82,7 +82,7 @@ public class VoteController {
     Long orgId = TenantContext.getOrganizationId();
     Optional<Vote> voteOpt = voteRepository.findById(id);
     if (voteOpt.isPresent() && voteOpt.get().getOrganizationId().equals(orgId)) {
-      voteRecordRepository.findByVoteId(id).forEach(voteRecordRepository::delete);
+      voteRecordRepository.findByOrganizationIdAndVoteId(orgId, id).forEach(voteRecordRepository::delete);
       voteRepository.deleteById(id);
       return ResponseEntity.ok().build();
     }
@@ -128,7 +128,7 @@ public class VoteController {
       return ResponseEntity.status(401).body("Usuario no encontrado");
     }
 
-    if (voteRecordRepository.existsByVoteIdAndUserId(id, user.getId())) {
+    if (voteRecordRepository.existsByOrganizationIdAndVoteIdAndUserId(orgId, id, user.getId())) {
       return ResponseEntity.badRequest().body("Ya has votado en esta propuesta");
     }
 
@@ -143,6 +143,7 @@ public class VoteController {
     record.setUsername(username);
     record.setChoice(choice);
     record.setVotedAt(LocalDateTime.now());
+    record.setOrganizationId(orgId);
     voteRecordRepository.save(record);
 
     recalculateVoteCounts(vote);
@@ -160,10 +161,10 @@ public class VoteController {
     }
     Vote vote = voteOpt.get();
 
-    List<VoteRecord> records = voteRecordRepository.findByVoteIdOrderByVotedAtDesc(id);
-    long favor = voteRecordRepository.countByVoteIdAndChoice(id, "FAVOR");
-    long contra = voteRecordRepository.countByVoteIdAndChoice(id, "CONTRA");
-    long abstencion = voteRecordRepository.countByVoteIdAndChoice(id, "ABSTENCION");
+    List<VoteRecord> records = voteRecordRepository.findByOrganizationIdAndVoteIdOrderByVotedAtDesc(orgId, id);
+    long favor = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, id, "FAVOR");
+    long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, id, "CONTRA");
+    long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, id, "ABSTENCION");
 
     List<User> allUsers = userRepository.findAll();
     Set<Long> votedUserIds = new HashSet<>();
@@ -250,7 +251,7 @@ public class VoteController {
     if (user == null) {
       return ResponseEntity.status(401).body("Usuario no encontrado");
     }
-    Optional<VoteRecord> record = voteRecordRepository.findByVoteIdAndUserId(id, user.getId());
+    Optional<VoteRecord> record = voteRecordRepository.findByOrganizationIdAndVoteIdAndUserId(orgId, id, user.getId());
     if (record.isPresent()) {
       return ResponseEntity.ok(Map.of("choice", record.get().getChoice(), "votedAt", record.get().getVotedAt()));
     }
@@ -258,9 +259,9 @@ public class VoteController {
   }
 
   private void recalculateVoteCounts(Vote vote) {
-    long favor = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "FAVOR");
-    long contra = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "CONTRA");
-    long abstencion = voteRecordRepository.countByVoteIdAndChoice(vote.getId(), "ABSTENCION");
+    long favor = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(vote.getOrganizationId(), vote.getId(), "FAVOR");
+    long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(vote.getOrganizationId(), vote.getId(), "CONTRA");
+    long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(vote.getOrganizationId(), vote.getId(), "ABSTENCION");
     vote.setVotesFor((int) favor);
     vote.setVotesAgainst((int) contra);
     vote.setVotesAbstain((int) abstencion);
