@@ -17,38 +17,40 @@ public class TransparencyMetricsController {
 
   @GetMapping
   public List<TransparencyMetrics> getAllTransparencyMetrics() {
-    return transparencyMetricsRepository.findAll();
+    return transparencyMetricsRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/category/{category}")
   public List<TransparencyMetrics> getMetricsByCategory(@PathVariable String category) {
-    return transparencyMetricsRepository.findByMetricCategory(category);
+    return transparencyMetricsRepository.findByOrganizationIdAndMetricCategory(TenantContext.getOrganizationId(), category);
   }
 
   @GetMapping("/period/{period}")
   public List<TransparencyMetrics> getMetricsByPeriod(@PathVariable String period) {
-    return transparencyMetricsRepository.findByPeriod(period);
+    return transparencyMetricsRepository.findByOrganizationIdAndPeriod(TenantContext.getOrganizationId(), period);
   }
 
   @GetMapping("/compliance/{isCompliant}")
   public List<TransparencyMetrics> getMetricsByCompliance(@PathVariable Boolean isCompliant) {
-    return transparencyMetricsRepository.findByIsCompliant(isCompliant);
+    return transparencyMetricsRepository.findByOrganizationIdAndIsCompliant(TenantContext.getOrganizationId(), isCompliant);
   }
 
   @GetMapping("/article/{article}")
   public List<TransparencyMetrics> getMetricsByArticle(@PathVariable String article) {
-    return transparencyMetricsRepository.findByRelatedArticle(article);
+    return transparencyMetricsRepository.findByOrganizationIdAndRelatedArticle(TenantContext.getOrganizationId(), article);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<TransparencyMetrics> getTransparencyMetricById(@PathVariable @NonNull Long id) {
     return transparencyMetricsRepository.findById(id)
+      .filter(m -> m.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<TransparencyMetrics> createTransparencyMetric(@RequestBody TransparencyMetrics transparencyMetric) {
+    transparencyMetric.setOrganizationId(TenantContext.getOrganizationId());
     transparencyMetric.setCreatedAt(LocalDate.now());
     transparencyMetric.setUpdatedAt(LocalDate.now());
     if (transparencyMetric.getMetricDate() == null) {
@@ -60,7 +62,9 @@ public class TransparencyMetricsController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateTransparencyMetric(@PathVariable @NonNull Long id, @RequestBody TransparencyMetrics transparencyMetric) {
+    Long orgId = TenantContext.getOrganizationId();
     return transparencyMetricsRepository.findById(id)
+      .filter(existingTransparencyMetric -> existingTransparencyMetric.getOrganizationId().equals(orgId))
       .map(existingTransparencyMetric -> {
         existingTransparencyMetric.setMetricName(transparencyMetric.getMetricName());
         existingTransparencyMetric.setMetricCategory(transparencyMetric.getMetricCategory());
@@ -85,10 +89,13 @@ public class TransparencyMetricsController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteTransparencyMetric(@PathVariable @NonNull Long id) {
-    if (transparencyMetricsRepository.existsById(id)) {
-      transparencyMetricsRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return transparencyMetricsRepository.findById(id)
+      .filter(m -> m.getOrganizationId().equals(orgId))
+      .map(m -> {
+        transparencyMetricsRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 }

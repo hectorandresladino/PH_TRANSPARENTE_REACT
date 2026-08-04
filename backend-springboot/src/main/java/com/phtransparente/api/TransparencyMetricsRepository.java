@@ -6,9 +6,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TransparencyMetricsRepository extends JpaRepository<TransparencyMetrics, Long> {
-  List<TransparencyMetrics> findByMetricCategory(String metricCategory);
-  List<TransparencyMetrics> findByPeriod(String period);
-  List<TransparencyMetrics> findByIsCompliant(Boolean isCompliant);
-  List<TransparencyMetrics> findByRelatedArticle(String relatedArticle);
-  List<TransparencyMetrics> findByStatus(String status);
+  List<TransparencyMetrics> findByOrganizationId(Long organizationId);
+  List<TransparencyMetrics> findByOrganizationIdAndMetricCategory(Long organizationId, String metricCategory);
+  List<TransparencyMetrics> findByOrganizationIdAndPeriod(Long organizationId, String period);
+  List<TransparencyMetrics> findByOrganizationIdAndIsCompliant(Long organizationId, Boolean isCompliant);
+  List<TransparencyMetrics> findByOrganizationIdAndRelatedArticle(Long organizationId, String relatedArticle);
+  List<TransparencyMetrics> findByOrganizationIdAndStatus(Long organizationId, String status);
 }
