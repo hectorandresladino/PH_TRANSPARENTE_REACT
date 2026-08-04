@@ -6,7 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HorizontalPropertyRegulationRepository extends JpaRepository<HorizontalPropertyRegulation, Long> {
-  List<HorizontalPropertyRegulation> findByStatus(String status);
-  List<HorizontalPropertyRegulation> findByRegulationVersion(String regulationVersion);
-  HorizontalPropertyRegulation findByRegulationNumber(String regulationNumber);
+  List<HorizontalPropertyRegulation> findByOrganizationId(Long organizationId);
+  List<HorizontalPropertyRegulation> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<HorizontalPropertyRegulation> findByOrganizationIdAndRegulationVersion(Long organizationId, String regulationVersion);
+  HorizontalPropertyRegulation findByOrganizationIdAndRegulationNumber(Long organizationId, String regulationNumber);
 }

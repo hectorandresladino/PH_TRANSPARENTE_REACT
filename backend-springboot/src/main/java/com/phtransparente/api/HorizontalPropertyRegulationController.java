@@ -17,18 +17,20 @@ public class HorizontalPropertyRegulationController {
 
   @GetMapping
   public List<HorizontalPropertyRegulation> getAllHorizontalPropertyRegulations() {
-    return horizontalPropertyRegulationRepository.findAll();
+    return horizontalPropertyRegulationRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<HorizontalPropertyRegulation> getHorizontalPropertyRegulationById(@PathVariable @NonNull Long id) {
     return horizontalPropertyRegulationRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<HorizontalPropertyRegulation> createHorizontalPropertyRegulation(@RequestBody HorizontalPropertyRegulation horizontalPropertyRegulation) {
+    horizontalPropertyRegulation.setOrganizationId(TenantContext.getOrganizationId());
     horizontalPropertyRegulation.setCreatedAt(LocalDate.now());
     horizontalPropertyRegulation.setUpdatedAt(LocalDate.now());
     if (horizontalPropertyRegulation.getStatus() == null) {
@@ -40,7 +42,9 @@ public class HorizontalPropertyRegulationController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateHorizontalPropertyRegulation(@PathVariable @NonNull Long id, @RequestBody HorizontalPropertyRegulation horizontalPropertyRegulation) {
+    Long orgId = TenantContext.getOrganizationId();
     return horizontalPropertyRegulationRepository.findById(id)
+      .filter(existingHorizontalPropertyRegulation -> existingHorizontalPropertyRegulation.getOrganizationId().equals(orgId))
       .map(existingHorizontalPropertyRegulation -> {
         existingHorizontalPropertyRegulation.setRegulationNumber(horizontalPropertyRegulation.getRegulationNumber());
         existingHorizontalPropertyRegulation.setRegulationName(horizontalPropertyRegulation.getRegulationName());
@@ -82,20 +86,23 @@ public class HorizontalPropertyRegulationController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteHorizontalPropertyRegulation(@PathVariable @NonNull Long id) {
-    if (horizontalPropertyRegulationRepository.existsById(id)) {
-      horizontalPropertyRegulationRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return horizontalPropertyRegulationRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(orgId))
+      .map(r -> {
+        horizontalPropertyRegulationRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<HorizontalPropertyRegulation> getHorizontalPropertyRegulationsByStatus(@PathVariable String status) {
-    return horizontalPropertyRegulationRepository.findByStatus(status);
+    return horizontalPropertyRegulationRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/version/{regulationVersion}")
   public List<HorizontalPropertyRegulation> getHorizontalPropertyRegulationsByVersion(@PathVariable String regulationVersion) {
-    return horizontalPropertyRegulationRepository.findByRegulationVersion(regulationVersion);
+    return horizontalPropertyRegulationRepository.findByOrganizationIdAndRegulationVersion(TenantContext.getOrganizationId(), regulationVersion);
   }
 }
