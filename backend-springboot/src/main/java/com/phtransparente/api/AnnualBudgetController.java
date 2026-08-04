@@ -87,7 +87,7 @@ public class AnnualBudgetController {
     return annualBudgetRepository.findById(id)
       .filter(b -> b.getOrganizationId().equals(orgId))
       .map(b -> {
-        budgetItemRepository.deleteByBudgetId(id);
+        budgetItemRepository.deleteByOrganizationIdAndBudgetId(orgId, id);
         budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id).forEach(budgetInquiryRepository::delete);
         budgetProposalRepository.findByBudgetId(id).forEach(p -> {
           voteRecordRepository.findByVoteId(p.getId()).forEach(voteRecordRepository::delete);
@@ -118,20 +118,25 @@ public class AnnualBudgetController {
 
   @GetMapping("/{id}/items")
   public ResponseEntity<List<BudgetItem>> getBudgetItems(@PathVariable @NonNull Long id) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(budgetItemRepository.findByBudgetId(id));
+    return ResponseEntity.ok(budgetItemRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/items")
   public ResponseEntity<BudgetItem> addBudgetItem(@PathVariable @NonNull Long id, @RequestBody BudgetItem item) {
+    Long orgId = TenantContext.getOrganizationId();
     if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
     item.setBudgetId(id);
+    item.setOrganizationId(orgId);
     return ResponseEntity.ok(budgetItemRepository.save(item));
   }
 
   @PutMapping("/{id}/items/{itemId}")
   public ResponseEntity<?> updateBudgetItem(@PathVariable @NonNull Long id, @PathVariable @NonNull Long itemId, @RequestBody BudgetItem item) {
+    Long orgId = TenantContext.getOrganizationId();
     return budgetItemRepository.findById(itemId)
+      .filter(existing -> existing.getOrganizationId().equals(orgId))
       .map(existing -> {
         existing.setCategory(item.getCategory());
         existing.setSubCategory(item.getSubCategory());
@@ -146,11 +151,14 @@ public class AnnualBudgetController {
 
   @DeleteMapping("/{id}/items/{itemId}")
   public ResponseEntity<?> deleteBudgetItem(@PathVariable @NonNull Long id, @PathVariable @NonNull Long itemId) {
-    if (budgetItemRepository.existsById(itemId)) {
-      budgetItemRepository.deleteById(itemId);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return budgetItemRepository.findById(itemId)
+      .filter(item -> item.getOrganizationId().equals(orgId))
+      .map(item -> {
+        budgetItemRepository.deleteById(itemId);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   // ==================== BUDGET INQUIRIES ====================

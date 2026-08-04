@@ -29,6 +29,9 @@ public class BudgetItem {
 
   private String description;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public BudgetItem() {}
 
   public Long getId() { return id; }
@@ -54,4 +57,7 @@ public class BudgetItem {
 
   public String getDescription() { return description; }
   public void setDescription(String description) { this.description = description; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }
