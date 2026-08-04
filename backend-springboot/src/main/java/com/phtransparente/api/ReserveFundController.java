@@ -17,18 +17,20 @@ public class ReserveFundController {
 
   @GetMapping
   public List<ReserveFund> getAllReserveFunds() {
-    return reserveFundRepository.findAll();
+    return reserveFundRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ReserveFund> getReserveFundById(@PathVariable @NonNull Long id) {
     return reserveFundRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<ReserveFund> createReserveFund(@RequestBody ReserveFund reserveFund) {
+    reserveFund.setOrganizationId(TenantContext.getOrganizationId());
     reserveFund.setCreatedAt(LocalDate.now());
     reserveFund.setUpdatedAt(LocalDate.now());
     if (reserveFund.getStatus() == null) {
@@ -43,7 +45,9 @@ public class ReserveFundController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateReserveFund(@PathVariable @NonNull Long id, @RequestBody ReserveFund reserveFund) {
+    Long orgId = TenantContext.getOrganizationId();
     return reserveFundRepository.findById(id)
+      .filter(existingReserveFund -> existingReserveFund.getOrganizationId().equals(orgId))
       .map(existingReserveFund -> {
         existingReserveFund.setFundName(reserveFund.getFundName());
         existingReserveFund.setDescription(reserveFund.getDescription());
@@ -77,20 +81,23 @@ public class ReserveFundController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteReserveFund(@PathVariable @NonNull Long id) {
-    if (reserveFundRepository.existsById(id)) {
-      reserveFundRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return reserveFundRepository.findById(id)
+      .filter(r -> r.getOrganizationId().equals(orgId))
+      .map(r -> {
+        reserveFundRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<ReserveFund> getReserveFundsByStatus(@PathVariable String status) {
-    return reserveFundRepository.findByStatus(status);
+    return reserveFundRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{fundType}")
   public List<ReserveFund> getReserveFundsByType(@PathVariable String fundType) {
-    return reserveFundRepository.findByFundType(fundType);
+    return reserveFundRepository.findByOrganizationIdAndFundType(TenantContext.getOrganizationId(), fundType);
   }
 }

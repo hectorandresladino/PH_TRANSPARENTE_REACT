@@ -17,18 +17,20 @@ public class ContractController {
 
   @GetMapping
   public List<Contract> getAllContracts() {
-    return contractRepository.findAll();
+    return contractRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Contract> getContractById(@PathVariable @NonNull Long id) {
     return contractRepository.findById(id)
+      .filter(c -> c.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Contract> createContract(@RequestBody Contract contract) {
+    contract.setOrganizationId(TenantContext.getOrganizationId());
     contract.setCreatedAt(LocalDate.now());
     if (contract.getStatus() == null) {
       contract.setStatus("ACTIVO");
@@ -42,7 +44,9 @@ public class ContractController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateContract(@PathVariable @NonNull Long id, @RequestBody Contract contract) {
+    Long orgId = TenantContext.getOrganizationId();
     return contractRepository.findById(id)
+      .filter(existingContract -> existingContract.getOrganizationId().equals(orgId))
       .map(existingContract -> {
         existingContract.setContractNumber(contract.getContractNumber());
         existingContract.setType(contract.getType());
@@ -64,25 +68,28 @@ public class ContractController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteContract(@PathVariable @NonNull Long id) {
-    if (contractRepository.existsById(id)) {
-      contractRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return contractRepository.findById(id)
+      .filter(c -> c.getOrganizationId().equals(orgId))
+      .map(c -> {
+        contractRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Contract> getContractsByStatus(@PathVariable String status) {
-    return contractRepository.findByStatus(status);
+    return contractRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<Contract> getContractsByType(@PathVariable String type) {
-    return contractRepository.findByType(type);
+    return contractRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/provider/{providerName}")
   public List<Contract> getContractsByProvider(@PathVariable String providerName) {
-    return contractRepository.findByProviderName(providerName);
+    return contractRepository.findByOrganizationIdAndProviderName(TenantContext.getOrganizationId(), providerName);
   }
 }

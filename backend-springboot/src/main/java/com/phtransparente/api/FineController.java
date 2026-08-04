@@ -17,18 +17,20 @@ public class FineController {
 
   @GetMapping
   public List<Fine> getAllFines() {
-    return fineRepository.findAll();
+    return fineRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Fine> getFineById(@PathVariable @NonNull Long id) {
     return fineRepository.findById(id)
+      .filter(f -> f.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Fine> createFine(@RequestBody Fine fine) {
+    fine.setOrganizationId(TenantContext.getOrganizationId());
     fine.setCreatedAt(LocalDate.now());
     if (fine.getStatus() == null) {
       fine.setStatus("PENDIENTE");
@@ -42,7 +44,9 @@ public class FineController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateFine(@PathVariable @NonNull Long id, @RequestBody Fine fine) {
+    Long orgId = TenantContext.getOrganizationId();
     return fineRepository.findById(id)
+      .filter(existingFine -> existingFine.getOrganizationId().equals(orgId))
       .map(existingFine -> {
         existingFine.setFineNumber(fine.getFineNumber());
         existingFine.setType(fine.getType());
@@ -67,30 +71,33 @@ public class FineController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteFine(@PathVariable @NonNull Long id) {
-    if (fineRepository.existsById(id)) {
-      fineRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return fineRepository.findById(id)
+      .filter(f -> f.getOrganizationId().equals(orgId))
+      .map(f -> {
+        fineRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Fine> getFinesByStatus(@PathVariable String status) {
-    return fineRepository.findByStatus(status);
+    return fineRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/user/{userId}")
   public List<Fine> getFinesByUser(@PathVariable String userId) {
-    return fineRepository.findByUserId(userId);
+    return fineRepository.findByOrganizationIdAndUserId(TenantContext.getOrganizationId(), userId);
   }
 
   @GetMapping("/unit/{unit}")
   public List<Fine> getFinesByUnit(@PathVariable String unit) {
-    return fineRepository.findByUnit(unit);
+    return fineRepository.findByOrganizationIdAndUnit(TenantContext.getOrganizationId(), unit);
   }
 
   @GetMapping("/type/{type}")
   public List<Fine> getFinesByType(@PathVariable String type) {
-    return fineRepository.findByType(type);
+    return fineRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 }

@@ -82,6 +82,9 @@ public class ReserveFund {
   @Column(name = "updated_by")
   private String updatedBy;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public ReserveFund() {}
 
   public Long getId() { return id; }
@@ -161,4 +164,7 @@ public class ReserveFund {
 
   public String getUpdatedBy() { return updatedBy; }
   public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

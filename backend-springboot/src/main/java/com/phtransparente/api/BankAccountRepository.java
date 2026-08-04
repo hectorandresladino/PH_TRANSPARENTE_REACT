@@ -6,10 +6,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BankAccountRepository extends JpaRepository<BankAccount, Long> {
-  List<BankAccount> findByStatus(String status);
-  List<BankAccount> findByAccountType(String accountType);
-  List<BankAccount> findByBankName(String bankName);
-  List<BankAccount> findByIsOperational(Boolean isOperational);
-  List<BankAccount> findByIsReserveFund(Boolean isReserveFund);
-  BankAccount findByAccountNumber(String accountNumber);
+  List<BankAccount> findByOrganizationId(Long organizationId);
+  List<BankAccount> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<BankAccount> findByOrganizationIdAndAccountType(Long organizationId, String accountType);
+  List<BankAccount> findByOrganizationIdAndBankName(Long organizationId, String bankName);
+  List<BankAccount> findByOrganizationIdAndIsOperational(Long organizationId, Boolean isOperational);
+  List<BankAccount> findByOrganizationIdAndIsReserveFund(Long organizationId, Boolean isReserveFund);
+  BankAccount findByOrganizationIdAndAccountNumber(Long organizationId, String accountNumber);
 }

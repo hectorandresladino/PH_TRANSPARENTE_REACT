@@ -17,18 +17,20 @@ public class AssemblyController {
 
   @GetMapping
   public List<Assembly> getAllAssemblies() {
-    return assemblyRepository.findAll();
+    return assemblyRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Assembly> getAssemblyById(@PathVariable @NonNull Long id) {
     return assemblyRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Assembly> createAssembly(@RequestBody Assembly assembly) {
+    assembly.setOrganizationId(TenantContext.getOrganizationId());
     assembly.setCreatedAt(LocalDateTime.now());
     if (assembly.getStatus() == null) {
       assembly.setStatus("PROGRAMADA");
@@ -39,7 +41,9 @@ public class AssemblyController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateAssembly(@PathVariable @NonNull Long id, @RequestBody Assembly assembly) {
+    Long orgId = TenantContext.getOrganizationId();
     return assemblyRepository.findById(id)
+      .filter(existingAssembly -> existingAssembly.getOrganizationId().equals(orgId))
       .map(existingAssembly -> {
         existingAssembly.setTitle(assembly.getTitle());
         existingAssembly.setDescription(assembly.getDescription());
@@ -61,25 +65,28 @@ public class AssemblyController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteAssembly(@PathVariable @NonNull Long id) {
-    if (assemblyRepository.existsById(id)) {
-      assemblyRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return assemblyRepository.findById(id)
+      .filter(a -> a.getOrganizationId().equals(orgId))
+      .map(a -> {
+        assemblyRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Assembly> getAssembliesByStatus(@PathVariable String status) {
-    return assemblyRepository.findByStatus(status);
+    return assemblyRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<Assembly> getAssembliesByType(@PathVariable String type) {
-    return assemblyRepository.findByType(type);
+    return assemblyRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/creator/{createdBy}")
   public List<Assembly> getAssembliesByCreator(@PathVariable String createdBy) {
-    return assemblyRepository.findByCreatedBy(createdBy);
+    return assemblyRepository.findByOrganizationIdAndCreatedBy(TenantContext.getOrganizationId(), createdBy);
   }
 }

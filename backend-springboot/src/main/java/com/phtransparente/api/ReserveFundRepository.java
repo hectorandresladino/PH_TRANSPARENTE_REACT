@@ -6,7 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReserveFundRepository extends JpaRepository<ReserveFund, Long> {
-  List<ReserveFund> findByStatus(String status);
-  List<ReserveFund> findByFundType(String fundType);
-  ReserveFund findByFundName(String fundName);
+  List<ReserveFund> findByOrganizationId(Long organizationId);
+  List<ReserveFund> findByOrganizationIdAndStatus(Long organizationId, String status);
+  List<ReserveFund> findByOrganizationIdAndFundType(Long organizationId, String fundType);
+  ReserveFund findByOrganizationIdAndFundName(Long organizationId, String fundName);
 }

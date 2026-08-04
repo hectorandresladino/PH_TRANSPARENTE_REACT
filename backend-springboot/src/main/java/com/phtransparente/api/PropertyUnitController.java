@@ -17,18 +17,20 @@ public class PropertyUnitController {
 
   @GetMapping
   public List<PropertyUnit> getAllPropertyUnits() {
-    return propertyUnitRepository.findAll();
+    return propertyUnitRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<PropertyUnit> getPropertyUnitById(@PathVariable @NonNull Long id) {
     return propertyUnitRepository.findById(id)
+      .filter(u -> u.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<PropertyUnit> createPropertyUnit(@RequestBody PropertyUnit propertyUnit) {
+    propertyUnit.setOrganizationId(TenantContext.getOrganizationId());
     propertyUnit.setCreatedAt(LocalDate.now());
     propertyUnit.setUpdatedAt(LocalDate.now());
     if (propertyUnit.getStatus() == null) {
@@ -40,7 +42,9 @@ public class PropertyUnitController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updatePropertyUnit(@PathVariable @NonNull Long id, @RequestBody PropertyUnit propertyUnit) {
+    Long orgId = TenantContext.getOrganizationId();
     return propertyUnitRepository.findById(id)
+      .filter(existingPropertyUnit -> existingPropertyUnit.getOrganizationId().equals(orgId))
       .map(existingPropertyUnit -> {
         existingPropertyUnit.setUnitNumber(propertyUnit.getUnitNumber());
         existingPropertyUnit.setUnitType(propertyUnit.getUnitType());
@@ -80,40 +84,43 @@ public class PropertyUnitController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deletePropertyUnit(@PathVariable @NonNull Long id) {
-    if (propertyUnitRepository.existsById(id)) {
-      propertyUnitRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return propertyUnitRepository.findById(id)
+      .filter(u -> u.getOrganizationId().equals(orgId))
+      .map(u -> {
+        propertyUnitRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<PropertyUnit> getPropertyUnitsByStatus(@PathVariable String status) {
-    return propertyUnitRepository.findByStatus(status);
+    return propertyUnitRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{unitType}")
   public List<PropertyUnit> getPropertyUnitsByType(@PathVariable String unitType) {
-    return propertyUnitRepository.findByUnitType(unitType);
+    return propertyUnitRepository.findByOrganizationIdAndUnitType(TenantContext.getOrganizationId(), unitType);
   }
 
   @GetMapping("/block/{block}")
   public List<PropertyUnit> getPropertyUnitsByBlock(@PathVariable String block) {
-    return propertyUnitRepository.findByBlock(block);
+    return propertyUnitRepository.findByOrganizationIdAndBlock(TenantContext.getOrganizationId(), block);
   }
 
   @GetMapping("/floor/{floorNumber}")
   public List<PropertyUnit> getPropertyUnitsByFloor(@PathVariable Integer floorNumber) {
-    return propertyUnitRepository.findByFloorNumber(floorNumber);
+    return propertyUnitRepository.findByOrganizationIdAndFloorNumber(TenantContext.getOrganizationId(), floorNumber);
   }
 
   @GetMapping("/owner/{ownerId}")
   public List<PropertyUnit> getPropertyUnitsByOwner(@PathVariable Long ownerId) {
-    return propertyUnitRepository.findByCurrentOwnerId(ownerId);
+    return propertyUnitRepository.findByOrganizationIdAndCurrentOwnerId(TenantContext.getOrganizationId(), ownerId);
   }
 
   @GetMapping("/building/{building}")
   public List<PropertyUnit> getPropertyUnitsByBuilding(@PathVariable String building) {
-    return propertyUnitRepository.findByBuilding(building);
+    return propertyUnitRepository.findByOrganizationIdAndBuilding(TenantContext.getOrganizationId(), building);
   }
 }

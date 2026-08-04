@@ -17,18 +17,20 @@ public class BankAccountController {
 
   @GetMapping
   public List<BankAccount> getAllBankAccounts() {
-    return bankAccountRepository.findAll();
+    return bankAccountRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<BankAccount> getBankAccountById(@PathVariable @NonNull Long id) {
     return bankAccountRepository.findById(id)
+      .filter(b -> b.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<BankAccount> createBankAccount(@RequestBody BankAccount bankAccount) {
+    bankAccount.setOrganizationId(TenantContext.getOrganizationId());
     bankAccount.setCreatedAt(LocalDate.now());
     bankAccount.setUpdatedAt(LocalDate.now());
     if (bankAccount.getStatus() == null) {
@@ -40,7 +42,9 @@ public class BankAccountController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateBankAccount(@PathVariable @NonNull Long id, @RequestBody BankAccount bankAccount) {
+    Long orgId = TenantContext.getOrganizationId();
     return bankAccountRepository.findById(id)
+      .filter(existingBankAccount -> existingBankAccount.getOrganizationId().equals(orgId))
       .map(existingBankAccount -> {
         existingBankAccount.setAccountNumber(bankAccount.getAccountNumber());
         existingBankAccount.setBankName(bankAccount.getBankName());
@@ -78,35 +82,38 @@ public class BankAccountController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteBankAccount(@PathVariable @NonNull Long id) {
-    if (bankAccountRepository.existsById(id)) {
-      bankAccountRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return bankAccountRepository.findById(id)
+      .filter(b -> b.getOrganizationId().equals(orgId))
+      .map(b -> {
+        bankAccountRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<BankAccount> getBankAccountsByStatus(@PathVariable String status) {
-    return bankAccountRepository.findByStatus(status);
+    return bankAccountRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{accountType}")
   public List<BankAccount> getBankAccountsByType(@PathVariable String accountType) {
-    return bankAccountRepository.findByAccountType(accountType);
+    return bankAccountRepository.findByOrganizationIdAndAccountType(TenantContext.getOrganizationId(), accountType);
   }
 
   @GetMapping("/bank/{bankName}")
   public List<BankAccount> getBankAccountsByBank(@PathVariable String bankName) {
-    return bankAccountRepository.findByBankName(bankName);
+    return bankAccountRepository.findByOrganizationIdAndBankName(TenantContext.getOrganizationId(), bankName);
   }
 
   @GetMapping("/operational")
   public List<BankAccount> getOperationalAccounts() {
-    return bankAccountRepository.findByIsOperational(true);
+    return bankAccountRepository.findByOrganizationIdAndIsOperational(TenantContext.getOrganizationId(), true);
   }
 
   @GetMapping("/reserve-fund")
   public List<BankAccount> getReserveFundAccounts() {
-    return bankAccountRepository.findByIsReserveFund(true);
+    return bankAccountRepository.findByOrganizationIdAndIsReserveFund(TenantContext.getOrganizationId(), true);
   }
 }

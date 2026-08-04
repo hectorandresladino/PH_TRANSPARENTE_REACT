@@ -43,6 +43,9 @@ public class Fine {
   @Column(name = "created_at")
   private LocalDate createdAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Fine() {}
 
   public Long getId() { return id; }
@@ -83,4 +86,7 @@ public class Fine {
 
   public LocalDate getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

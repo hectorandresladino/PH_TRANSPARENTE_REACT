@@ -17,18 +17,20 @@ public class DocumentController {
 
   @GetMapping
   public List<Document> getAllDocuments() {
-    return documentRepository.findAll();
+    return documentRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Document> getDocumentById(@PathVariable @NonNull Long id) {
     return documentRepository.findById(id)
+      .filter(d -> d.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Document> createDocument(@RequestBody Document document) {
+    document.setOrganizationId(TenantContext.getOrganizationId());
     document.setCreatedAt(LocalDate.now());
     document.setUploadDate(LocalDate.now());
     if (document.getStatus() == null) {
@@ -40,7 +42,9 @@ public class DocumentController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateDocument(@PathVariable @NonNull Long id, @RequestBody Document document) {
+    Long orgId = TenantContext.getOrganizationId();
     return documentRepository.findById(id)
+      .filter(existingDocument -> existingDocument.getOrganizationId().equals(orgId))
       .map(existingDocument -> {
         existingDocument.setTitle(document.getTitle());
         existingDocument.setDescription(document.getDescription());
@@ -63,30 +67,33 @@ public class DocumentController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteDocument(@PathVariable @NonNull Long id) {
-    if (documentRepository.existsById(id)) {
-      documentRepository.deleteById(id);
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.notFound().build();
+    Long orgId = TenantContext.getOrganizationId();
+    return documentRepository.findById(id)
+      .filter(d -> d.getOrganizationId().equals(orgId))
+      .map(d -> {
+        documentRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+      })
+      .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/status/{status}")
   public List<Document> getDocumentsByStatus(@PathVariable String status) {
-    return documentRepository.findByStatus(status);
+    return documentRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<Document> getDocumentsByType(@PathVariable String type) {
-    return documentRepository.findByType(type);
+    return documentRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/category/{category}")
   public List<Document> getDocumentsByCategory(@PathVariable String category) {
-    return documentRepository.findByCategory(category);
+    return documentRepository.findByOrganizationIdAndCategory(TenantContext.getOrganizationId(), category);
   }
 
   @GetMapping("/uploader/{uploadedBy}")
   public List<Document> getDocumentsByUploader(@PathVariable String uploadedBy) {
-    return documentRepository.findByUploadedBy(uploadedBy);
+    return documentRepository.findByOrganizationIdAndUploadedBy(TenantContext.getOrganizationId(), uploadedBy);
   }
 }

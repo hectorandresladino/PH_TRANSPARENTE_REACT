@@ -45,6 +45,9 @@ public class Document {
   @Column(name = "created_at")
   private LocalDate createdAt;
 
+  @Column(name = "organization_id", nullable = false)
+  private Long organizationId;
+
   public Document() {}
 
   public Long getId() { return id; }
@@ -91,4 +94,7 @@ public class Document {
 
   public LocalDate getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+  public Long getOrganizationId() { return organizationId; }
+  public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }
