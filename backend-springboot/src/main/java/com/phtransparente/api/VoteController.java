@@ -23,18 +23,20 @@ public class VoteController {
 
   @GetMapping
   public List<Vote> getAllVotes() {
-    return voteRepository.findAll();
+    return voteRepository.findByOrganizationId(TenantContext.getOrganizationId());
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<Vote> getVoteById(@PathVariable @NonNull Long id) {
     return voteRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(TenantContext.getOrganizationId()))
       .map(ResponseEntity::ok)
       .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
   public ResponseEntity<Vote> createVote(@RequestBody Vote vote) {
+    vote.setOrganizationId(TenantContext.getOrganizationId());
     vote.setCreatedAt(LocalDateTime.now());
     if (vote.getStatus() == null) {
       vote.setStatus("ABIERTA");
@@ -54,7 +56,9 @@ public class VoteController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateVote(@PathVariable @NonNull Long id, @RequestBody Vote vote) {
+    Long orgId = TenantContext.getOrganizationId();
     return voteRepository.findById(id)
+      .filter(existingVote -> existingVote.getOrganizationId().equals(orgId))
       .map(existingVote -> {
         existingVote.setTitle(vote.getTitle());
         existingVote.setDescription(vote.getDescription());
@@ -75,7 +79,9 @@ public class VoteController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> deleteVote(@PathVariable @NonNull Long id) {
-    if (voteRepository.existsById(id)) {
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<Vote> voteOpt = voteRepository.findById(id);
+    if (voteOpt.isPresent() && voteOpt.get().getOrganizationId().equals(orgId)) {
       voteRecordRepository.findByVoteId(id).forEach(voteRecordRepository::delete);
       voteRepository.deleteById(id);
       return ResponseEntity.ok().build();
@@ -85,27 +91,29 @@ public class VoteController {
 
   @GetMapping("/status/{status}")
   public List<Vote> getVotesByStatus(@PathVariable String status) {
-    return voteRepository.findByStatus(status);
+    return voteRepository.findByOrganizationIdAndStatus(TenantContext.getOrganizationId(), status);
   }
 
   @GetMapping("/type/{type}")
   public List<Vote> getVotesByType(@PathVariable String type) {
-    return voteRepository.findByType(type);
+    return voteRepository.findByOrganizationIdAndType(TenantContext.getOrganizationId(), type);
   }
 
   @GetMapping("/assembly/{assemblyId}")
   public List<Vote> getVotesByAssembly(@PathVariable @NonNull Long assemblyId) {
-    return voteRepository.findByAssemblyId(assemblyId);
+    return voteRepository.findByOrganizationIdAndAssemblyId(TenantContext.getOrganizationId(), assemblyId);
   }
 
   @GetMapping("/creator/{createdBy}")
   public List<Vote> getVotesByCreator(@PathVariable String createdBy) {
-    return voteRepository.findByCreatedBy(createdBy);
+    return voteRepository.findByOrganizationIdAndCreatedBy(TenantContext.getOrganizationId(), createdBy);
   }
 
   @PostMapping("/{id}/cast")
   public ResponseEntity<?> castVote(@PathVariable @NonNull Long id, @RequestBody CastVoteRequest request) {
-    Optional<Vote> voteOpt = voteRepository.findById(id);
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<Vote> voteOpt = voteRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(orgId));
     if (voteOpt.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
@@ -144,7 +152,9 @@ public class VoteController {
 
   @GetMapping("/{id}/stats")
   public ResponseEntity<?> getVoteStats(@PathVariable @NonNull Long id) {
-    Optional<Vote> voteOpt = voteRepository.findById(id);
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<Vote> voteOpt = voteRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(orgId));
     if (voteOpt.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
@@ -214,7 +224,9 @@ public class VoteController {
 
   @PostMapping("/{id}/close")
   public ResponseEntity<?> closeVote(@PathVariable @NonNull Long id) {
-    Optional<Vote> voteOpt = voteRepository.findById(id);
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<Vote> voteOpt = voteRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(orgId));
     if (voteOpt.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
@@ -227,6 +239,12 @@ public class VoteController {
 
   @GetMapping("/{id}/my-vote")
   public ResponseEntity<?> getMyVote(@PathVariable @NonNull Long id) {
+    Long orgId = TenantContext.getOrganizationId();
+    Optional<Vote> voteOpt = voteRepository.findById(id)
+      .filter(v -> v.getOrganizationId().equals(orgId));
+    if (voteOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
     String username = currentUsername();
     User user = userRepository.findByUsername(username);
     if (user == null) {
