@@ -21,11 +21,6 @@ public class EmailService {
   public void sendEmail(String to, String subject, String body) {
     if (mailSender == null) {
       logger.warn("JavaMailSender no configurado. No se puede enviar correo.");
-      logger.info("========================================");
-      logger.info("Destinatario: {}", to);
-      logger.info("Asunto: {}", subject);
-      logger.info("Mensaje: {}", body);
-      logger.info("========================================");
       return;
     }
     try {
@@ -39,11 +34,6 @@ public class EmailService {
       logger.info("Correo enviado exitosamente a: {}", to);
     } catch (Exception e) {
       logger.error("Error al enviar correo a {}: {}", to, e.getMessage());
-      logger.info("========================================");
-      logger.info("Destinatario: {}", to);
-      logger.info("Asunto: {}", subject);
-      logger.info("Mensaje: {}", body);
-      logger.info("========================================");
     }
   }
 

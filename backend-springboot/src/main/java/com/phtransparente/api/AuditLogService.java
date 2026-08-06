@@ -15,7 +15,16 @@ public class AuditLogService {
   }
 
   public void log(String action, String username, String role, String description, String entityType, Long entityId, HttpServletRequest request, String result) {
-    AuditLog log = new AuditLog(action, username, role, description, entityType, entityId, getClientIp(request), result, TenantContext.getOrganizationId());
+    Long organizationId = TenantContext.getOrganizationId();
+    logForOrganization(action, username, role, description, entityType, entityId, request, result,
+      organizationId == null ? 0L : organizationId);
+  }
+
+  public void logForOrganization(String action, String username, String role, String description,
+                                 String entityType, Long entityId, HttpServletRequest request,
+                                 String result, Long organizationId) {
+    AuditLog log = new AuditLog(action, username, role, description, entityType, entityId,
+      getClientIp(request), result, organizationId == null ? 0L : organizationId);
     auditLogRepository.save(log);
   }
 

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PropertyUnitRepository extends JpaRepository<PropertyUnit, Long> {
+  long countByOrganizationId(Long organizationId);
   List<PropertyUnit> findByOrganizationId(Long organizationId);
   List<PropertyUnit> findByOrganizationIdAndStatus(Long organizationId, String status);
   List<PropertyUnit> findByOrganizationIdAndUnitType(Long organizationId, String unitType);

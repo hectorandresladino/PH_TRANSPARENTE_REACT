@@ -24,7 +24,7 @@ public class Plan {
   @Column(nullable = false)
   private String billingPeriod = "MONTHLY"; // MONTHLY, YEARLY
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 2000)
   private String modules; // comma-separated module names
 
   @Column(nullable = false)

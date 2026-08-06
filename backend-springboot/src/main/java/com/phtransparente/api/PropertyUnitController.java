@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/property-units")
 public class PropertyUnitController {
   private final PropertyUnitRepository propertyUnitRepository;
+  private final SaasAccessService saasAccessService;
 
-  public PropertyUnitController(PropertyUnitRepository propertyUnitRepository) {
+  public PropertyUnitController(PropertyUnitRepository propertyUnitRepository, SaasAccessService saasAccessService) {
     this.propertyUnitRepository = propertyUnitRepository;
+    this.saasAccessService = saasAccessService;
   }
 
   @GetMapping
@@ -29,8 +31,12 @@ public class PropertyUnitController {
   }
 
   @PostMapping
-  public ResponseEntity<PropertyUnit> createPropertyUnit(@RequestBody PropertyUnit propertyUnit) {
-    propertyUnit.setOrganizationId(TenantContext.getOrganizationId());
+  public ResponseEntity<?> createPropertyUnit(@RequestBody PropertyUnit propertyUnit) {
+    Long organizationId = TenantContext.getOrganizationId();
+    if (saasAccessService.hasReachedUnitLimit(organizationId)) {
+      return ResponseEntity.status(409).body("La organización alcanzó el límite de unidades de su plan");
+    }
+    propertyUnit.setOrganizationId(organizationId);
     propertyUnit.setCreatedAt(LocalDate.now());
     propertyUnit.setUpdatedAt(LocalDate.now());
     if (propertyUnit.getStatus() == null) {

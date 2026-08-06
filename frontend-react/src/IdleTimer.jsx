@@ -8,17 +8,16 @@ import { AlertTriangle, Clock } from 'lucide-react';
 export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
   const [warning, setWarning] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const warningMs = Math.max(30 * 1000, timeoutMs - 60 * 1000); // Advertencia 30s antes o 1 min antes
-  const warningDuration = timeoutMs - warningMs;
+  const warningDuration = Math.min(60 * 1000, Math.max(1000, timeoutMs));
+  const warningMs = Math.max(0, timeoutMs - warningDuration);
   const timerRef = useRef(null);
-  const warningTimerRef = useRef(null);
   const countdownRef = useRef(null);
+  const lastActivityRef = useRef(0);
 
   const resetTimerRef = useRef(null);
 
   const resetTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
     setWarning(false);
 
@@ -45,6 +44,9 @@ export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
 
     const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastActivityRef.current < 1000) return;
+      lastActivityRef.current = now;
       resetTimerRef.current();
     };
 
@@ -54,7 +56,6 @@ export default function IdleTimer({ onLogout, timeoutMs = 5 * 60 * 1000 }) {
     return () => {
       events.forEach(event => window.removeEventListener(event, handleActivity));
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, [timeoutMs, onLogout]);

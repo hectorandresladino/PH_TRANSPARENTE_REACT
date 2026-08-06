@@ -2,6 +2,7 @@ package com.phtransparente.api;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,24 +21,27 @@ public class AuthController {
   private final RoleRepository roleRepository;
   private final OrganizationRepository organizationRepository;
   private final VerificationService verificationService;
-  private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
   private final LoginRateLimiter loginRateLimiter;
   private final JwtUtil jwtUtil;
   private final AuditLogService auditLogService;
   private final PasswordPolicy passwordPolicy;
+  private final SaasAccessService saasAccessService;
+  private final boolean selfRegistrationEnabled;
 
-  public AuthController(UserRepository userRepository, RoleRepository roleRepository, OrganizationRepository organizationRepository, VerificationService verificationService, EmailService emailService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil, AuditLogService auditLogService, PasswordPolicy passwordPolicy) {
+  public AuthController(UserRepository userRepository, RoleRepository roleRepository, OrganizationRepository organizationRepository, VerificationService verificationService, PasswordEncoder passwordEncoder, LoginRateLimiter loginRateLimiter, JwtUtil jwtUtil, AuditLogService auditLogService, PasswordPolicy passwordPolicy, SaasAccessService saasAccessService,
+                        @Value("${app.saas.self-registration-enabled:false}") boolean selfRegistrationEnabled) {
     this.userRepository = userRepository;
     this.roleRepository = roleRepository;
     this.organizationRepository = organizationRepository;
     this.verificationService = verificationService;
-    this.emailService = emailService;
     this.passwordEncoder = passwordEncoder;
     this.loginRateLimiter = loginRateLimiter;
     this.jwtUtil = jwtUtil;
     this.auditLogService = auditLogService;
     this.passwordPolicy = passwordPolicy;
+    this.saasAccessService = saasAccessService;
+    this.selfRegistrationEnabled = selfRegistrationEnabled;
   }
 
   private static boolean isBCryptHash(String value) {
@@ -59,7 +63,7 @@ public class AuthController {
 
     if (user == null) {
       loginRateLimiter.recordFailure(request.username());
-      auditLogService.log("LOGIN_FAILED", request.username(), "UNKNOWN", "Usuario no existe", httpRequest, "FAIL");
+      auditLogService.logForOrganization("LOGIN_FAILED", request.username(), "UNKNOWN", "Usuario no existe", null, null, httpRequest, "FAIL", 0L);
       logger.warn("Login fallido para usuario: {}", request.username());
       return ResponseEntity.status(401).body("Credenciales inválidas");
     }
@@ -79,39 +83,50 @@ public class AuthController {
 
     if (passwordMatches) {
       if (Boolean.FALSE.equals(user.getActive())) {
-        auditLogService.log("LOGIN_BLOCKED", user.getUsername(), user.getRole(), "Usuario inactivo intentó iniciar sesión", httpRequest, "BLOCKED");
+        auditLogService.logForOrganization("LOGIN_BLOCKED", user.getUsername(), user.getRole(), "Usuario inactivo intentó iniciar sesión", null, null, httpRequest, "BLOCKED", user.getOrganizationId());
         logger.warn("Login rechazado (usuario inactivo): {}", request.username());
         return ResponseEntity.status(403).body("La cuenta está inactiva");
       }
-      loginRateLimiter.reset(request.username());
-      auditLogService.log("LOGIN_SUCCESS", user.getUsername(), user.getRole(), "Inicio de sesión exitoso", httpRequest, "SUCCESS");
-      logger.info("Login exitoso para usuario: {}", request.username());
-
       // Validar organización/tenant
       Organization org = organizationRepository.findById(user.getOrganizationId()).orElse(null);
       String orgSlug = org != null ? org.getSlug() : "ph";
-      if (org != null && !"ACTIVE".equals(org.getStatus()) && !"TRIAL".equals(org.getStatus())) {
-        return ResponseEntity.status(403).body("La organización no está activa. Contacte al administrador.");
+      SaasAccessService.AccessDecision access = saasAccessService.validateAccess(user.getOrganizationId(), user.getRole());
+      if (!access.allowed()) {
+        auditLogService.logForOrganization("LOGIN_BLOCKED", user.getUsername(), user.getRole(), access.message(), null, null, httpRequest, "BLOCKED", user.getOrganizationId());
+        return ResponseEntity.status(403).body(access.message());
       }
 
       Role role = roleRepository.findByName(user.getRole()).orElse(null);
-      String modules = role != null ? role.getModules() : "";
+      String modules = saasAccessService.effectiveModules(
+        user.getOrganizationId(), role != null ? role.getModules() : "");
       String token = jwtUtil.generateToken(user.getUsername(), user.getRole(), user.getOrganizationId(), orgSlug);
+      loginRateLimiter.reset(request.username());
+      auditLogService.logForOrganization("LOGIN_SUCCESS", user.getUsername(), user.getRole(), "Inicio de sesión exitoso", null, null, httpRequest, "SUCCESS", user.getOrganizationId());
+      logger.info("Login exitoso para usuario: {}", request.username());
       return ResponseEntity.ok(new LoginResponse(user.getId(), user.getUsername(), user.getRole(), modules, token, user.getOrganizationId(), orgSlug, org != null ? org.getName() : "PH Transparente"));
     }
 
     loginRateLimiter.recordFailure(request.username());
-    auditLogService.log("LOGIN_FAILED", request.username(), user.getRole(), "Contraseña incorrecta", httpRequest, "FAIL");
+    auditLogService.logForOrganization("LOGIN_FAILED", request.username(), user.getRole(), "Contraseña incorrecta", null, null, httpRequest, "FAIL", user.getOrganizationId());
     logger.warn("Login fallido para usuario: {}", request.username());
     return ResponseEntity.status(401).body("Credenciales inválidas");
   }
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+    if (!selfRegistrationEnabled) {
+      return ResponseEntity.status(403).body("El registro público está deshabilitado. Solicita una invitación al administrador.");
+    }
+    if (request.password() == null || !request.password().equals(request.confirmPassword())) {
+      return ResponseEntity.badRequest().body("Las contraseñas no coinciden");
+    }
+    if (request.organizationSlug() == null || request.organizationSlug().isBlank()) {
+      return ResponseEntity.badRequest().body("El código de la organización es obligatorio");
+    }
     User existingUser = userRepository.findByUsername(request.username());
     
     if (existingUser != null) {
-      auditLogService.log("REGISTER_FAILED", request.username(), "COPROPIETARIO", "Intento de registro con usuario existente", httpRequest, "FAIL");
+      auditLogService.logForOrganization("REGISTER_FAILED", request.username(), "COPROPIETARIO", "Intento de registro con usuario existente", null, null, httpRequest, "FAIL", existingUser.getOrganizationId());
       return ResponseEntity.status(400).body("El usuario ya existe");
     }
 
@@ -120,6 +135,18 @@ public class AuthController {
       return ResponseEntity.status(400).body("Contraseña débil: " + String.join(", ", validation.errors()));
     }
     
+    Organization organization = organizationRepository.findBySlug(request.organizationSlug().trim().toLowerCase()).orElse(null);
+    if (organization == null) {
+      return ResponseEntity.badRequest().body("La organización no existe");
+    }
+    SaasAccessService.AccessDecision access = saasAccessService.validateAccess(organization.getId(), "COPROPIETARIO");
+    if (!access.allowed()) {
+      return ResponseEntity.status(403).body(access.message());
+    }
+    if (saasAccessService.hasReachedUserLimit(organization.getId())) {
+      return ResponseEntity.status(409).body("La organización alcanzó el límite de usuarios de su plan");
+    }
+
     User newUser = new User();
     newUser.setUsername(request.username());
     newUser.setPassword(passwordEncoder.encode(request.password()));
@@ -127,18 +154,17 @@ public class AuthController {
     newUser.setEmail(request.email());
     newUser.setActive(true);
 
-    // Asignar a organizacion demo si no se especifica otra (para MVP)
-    Organization demo = organizationRepository.findBySlug("demo").orElse(null);
-    newUser.setOrganizationId(demo != null ? demo.getId() : 0L);
+    newUser.setOrganizationId(organization.getId());
     
     User savedUser = userRepository.save(newUser);
-    auditLogService.log("REGISTER_SUCCESS", savedUser.getUsername(), savedUser.getRole(), "Nuevo usuario registrado", "USER", savedUser.getId(), httpRequest, "SUCCESS");
+    auditLogService.logForOrganization("REGISTER_SUCCESS", savedUser.getUsername(), savedUser.getRole(), "Nuevo usuario registrado", "USER", savedUser.getId(), httpRequest, "SUCCESS", savedUser.getOrganizationId());
 
     // Obtener módulos del rol
     Role role = roleRepository.findByName(savedUser.getRole()).orElse(null);
-    String modules = role != null ? role.getModules() : "";
-    String orgSlug = demo != null ? demo.getSlug() : "ph";
-    String orgName = demo != null ? demo.getName() : "PH Transparente";
+    String modules = saasAccessService.effectiveModules(
+      organization.getId(), role != null ? role.getModules() : "");
+    String orgSlug = organization.getSlug();
+    String orgName = organization.getName();
     String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole(), savedUser.getOrganizationId(), orgSlug);
 
     return ResponseEntity.ok(new LoginResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole(), modules, token, savedUser.getOrganizationId(), orgSlug, orgName));
@@ -155,7 +181,8 @@ public class AuthController {
       return ResponseEntity.status(404).body("Usuario no encontrado");
     }
     Role role = roleRepository.findByName(user.getRole()).orElse(null);
-    String modules = role != null ? role.getModules() : "";
+    String modules = saasAccessService.effectiveModules(
+      user.getOrganizationId(), role != null ? role.getModules() : "");
     Organization org = organizationRepository.findById(user.getOrganizationId()).orElse(null);
     String orgSlug = org != null ? org.getSlug() : "ph";
     String orgName = org != null ? org.getName() : "PH Transparente";
@@ -170,6 +197,12 @@ public class AuthController {
     // y nunca se expone la contraseña.
     if (user == null) {
       logger.warn("forgot-password solicitado para usuario inexistente: {}", request.username());
+    } else {
+      try {
+        verificationService.createAndSendVerificationCode(request.username());
+      } catch (RuntimeException ex) {
+        logger.warn("No fue posible enviar recuperación para {}: {}", request.username(), ex.getMessage());
+      }
     }
     return ResponseEntity.ok(new ForgotPasswordResponse(
       "Si la cuenta existe, se enviarán instrucciones de recuperación al correo registrado."));
@@ -177,10 +210,19 @@ public class AuthController {
 
   @PostMapping("/reset-password")
   public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+    String limiterKey = "password-reset:" + request.username();
+    if (loginRateLimiter.isBlocked(limiterKey)) {
+      return ResponseEntity.status(429).body("Demasiados intentos. Intenta nuevamente más tarde.");
+    }
     User user = userRepository.findByUsername(request.username());
     
     if (user == null) {
-      return ResponseEntity.status(404).body("Usuario no encontrado");
+      loginRateLimiter.recordFailure(limiterKey);
+      return ResponseEntity.status(400).body("Código inválido o expirado");
+    }
+    if (request.code() == null || !verificationService.verifyCode(request.username(), request.code())) {
+      loginRateLimiter.recordFailure(limiterKey);
+      return ResponseEntity.status(400).body("Código inválido o expirado");
     }
 
     PasswordPolicy.PasswordValidationResult validation = passwordPolicy.validate(request.newPassword());
@@ -190,49 +232,15 @@ public class AuthController {
     
     user.setPassword(passwordEncoder.encode(request.newPassword()));
     userRepository.save(user);
+    loginRateLimiter.reset(limiterKey);
     
     return ResponseEntity.ok("Contraseña actualizada exitosamente");
   }
 
-  @PostMapping("/send-verification-code")
-  public ResponseEntity<?> sendVerificationCode(@RequestBody SendVerificationCodeRequest request) {
-    logger.info("Solicitud de código de verificación para usuario: {}", request.username());
-    
-    try {
-      String code = verificationService.createAndSendVerificationCode(request.username());
-      return ResponseEntity.ok(new SendVerificationCodeResponse("Código enviado exitosamente", code));
-    } catch (IllegalArgumentException e) {
-      logger.error("Error al enviar código: {}", e.getMessage());
-      return ResponseEntity.status(400).body(e.getMessage());
-    }
-  }
-
-  @PostMapping("/verify-code")
-  public ResponseEntity<?> verifyCode(@RequestBody VerifyCodeRequest request) {
-    logger.info("Verificación de código para usuario: {}", request.username());
-    
-    boolean isValid = verificationService.verifyCode(request.username(), request.code());
-    
-    if (isValid) {
-      // Enviar alerta de inicio de sesión por correo
-      User user = userRepository.findByUsername(request.username());
-      if (user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
-        emailService.sendLoginAlert(user.getEmail(), user.getUsername());
-      }
-      return ResponseEntity.ok(new VerifyCodeResponse("Código verificado exitosamente", true));
-    } else {
-      return ResponseEntity.status(400).body("Código inválido o expirado");
-    }
-  }
-
   public record LoginRequest(String username, String password) {}
   public record LoginResponse(Long id, String username, String role, String modules, String token, Long organizationId, String organizationSlug, String organizationName) {}
-  public record RegisterRequest(String username, String email, String password, String confirmPassword) {}
+  public record RegisterRequest(String username, String email, String password, String confirmPassword, String organizationSlug) {}
   public record ForgotPasswordRequest(String username) {}
   public record ForgotPasswordResponse(String message) {}
-  public record ResetPasswordRequest(String username, String newPassword) {}
-  public record SendVerificationCodeRequest(String username) {}
-  public record SendVerificationCodeResponse(String message, String code) {}
-  public record VerifyCodeRequest(String username, String code) {}
-  public record VerifyCodeResponse(String message, boolean success) {}
+  public record ResetPasswordRequest(String username, String code, String newPassword) {}
 }

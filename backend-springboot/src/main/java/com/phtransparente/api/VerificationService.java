@@ -4,11 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Service
 public class VerificationService {
   private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private final VerificationCodeRepository verificationCodeRepository;
   private final UserRepository userRepository;
   private final EmailService emailService;
@@ -21,8 +22,7 @@ public class VerificationService {
 
   // Generar código de 6 dígitos
   public String generateCode() {
-    Random random = new Random();
-    return String.format("%06d", random.nextInt(1000000));
+    return String.format("%06d", SECURE_RANDOM.nextInt(1000000));
   }
 
   // Crear y enviar código de verificación
@@ -34,6 +34,12 @@ public class VerificationService {
 
     if (user.getEmail() == null || user.getEmail().isEmpty()) {
       throw new IllegalArgumentException("El usuario no tiene correo electronico configurado");
+    }
+
+    VerificationCode pending = verificationCodeRepository.findByUsernameAndUsedFalse(username).orElse(null);
+    if (pending != null && pending.getCreatedAt() != null
+        && pending.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(1))) {
+      return "";
     }
 
     // Eliminar códigos anteriores no usados
@@ -55,15 +61,10 @@ public class VerificationService {
 
   // Verificar código
   public boolean verifyCode(String username, String code) {
-    VerificationCode verificationCode = verificationCodeRepository.findByCode(code).orElse(null);
+    VerificationCode verificationCode = verificationCodeRepository.findByUsernameAndCode(username, code).orElse(null);
 
     if (verificationCode == null) {
       logger.warn("Código no encontrado: {}", code);
-      return false;
-    }
-
-    if (!verificationCode.getUsername().equals(username)) {
-      logger.warn("Código no pertenece al usuario: {}", username);
       return false;
     }
 

@@ -166,7 +166,7 @@ public class VoteController {
     long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, id, "CONTRA");
     long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, id, "ABSTENCION");
 
-    List<User> allUsers = userRepository.findAll();
+    List<User> allUsers = userRepository.findByOrganizationId(orgId);
     Set<Long> votedUserIds = new HashSet<>();
     List<Map<String, Object>> votedList = new ArrayList<>();
     for (VoteRecord r : records) {

@@ -5,3 +5,6 @@ target/
 *.log
 .idea/
 .vscode/
+openshift/parameters.env
+openshift/rendered*.yaml
+openshift/*secret*.yaml

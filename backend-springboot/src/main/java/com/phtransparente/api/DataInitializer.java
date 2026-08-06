@@ -1,10 +1,14 @@
 package com.phtransparente.api;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 
 @Component
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
+@Order(0)
 public class DataInitializer implements CommandLineRunner {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
@@ -64,38 +68,31 @@ public class DataInitializer implements CommandLineRunner {
     if (roleRepository.count() == 0) {
       // ADMINISTRADOR - Acceso total a todos los módulos
       roleRepository.save(new Role("ADMIN", "Administrador del sistema con acceso total", 
-        "dashboard,users,pqr,pqr-statistics,payment-reports,payments,reservations,visitors,contracts,fines,documents,assemblies,votes,councils,security,contractors,property-units,reserve-funds,annual-budgets,insurance-policies,bank-accounts,official-minutes,council-minutes,accounting-reports,fiscal-reports,horizontal-property-regulations,alerts,transparency,authorizations,reports,personnel-ratings,support-tasks,task-statistics,staff-info,staff-ratings,appstore", 
-        "admin123"));
+        "dashboard,users,pqr,pqr-statistics,payment-reports,payments,reservations,visitors,contracts,fines,documents,assemblies,votes,councils,security,contractors,property-units,reserve-funds,annual-budgets,insurance-policies,bank-accounts,official-minutes,council-minutes,accounting-reports,fiscal-reports,horizontal-property-regulations,alerts,transparency,authorizations,reports,personnel-ratings,support-tasks,task-statistics,staff-info,staff-ratings,appstore"));
       
       // CONTADOR - Módulos financieros y legales + reportes + calificaciones
       roleRepository.save(new Role("CONTADOR", "Contador con acceso a módulos financieros", 
-        "dashboard,accounting-reports,payment-reports,payments,bank-accounts,reserve-funds,annual-budgets,fines,contracts,council-minutes,fiscal-reports,reports,documents,transparency,staff-info,staff-ratings", 
-        "contador123"));
+        "dashboard,accounting-reports,payment-reports,payments,bank-accounts,reserve-funds,annual-budgets,fines,contracts,council-minutes,fiscal-reports,reports,documents,transparency,staff-info,staff-ratings"));
       
       // REVISOR FISCAL - Módulos de auditoría y legales + reportes + calificaciones
       roleRepository.save(new Role("REVISOR_FISCAL", "Revisor Fiscal con acceso a auditoría y legales", 
-        "dashboard,fiscal-reports,payments,bank-accounts,reserve-funds,annual-budgets,contracts,council-minutes,accounting-reports,official-minutes,reports,documents,transparency,assemblies,task-statistics,staff-info,staff-ratings", 
-        "revisor123"));
+        "dashboard,fiscal-reports,payments,bank-accounts,reserve-funds,annual-budgets,contracts,council-minutes,accounting-reports,official-minutes,reports,documents,transparency,assemblies,task-statistics,staff-info,staff-ratings"));
       
       // CONSEJEROS - Módulos de gestión y decisiones legales + reportes + calificaciones
       roleRepository.save(new Role("CONSEJERO", "Consejero con acceso a gestión y decisiones", 
-        "dashboard,council-minutes,assemblies,votes,councils,documents,accounting-reports,fiscal-reports,security,contractors,property-units,annual-budgets,official-minutes,horizontal-property-regulations,alerts,reports,personnel-ratings,support-tasks,task-statistics,staff-ratings", 
-        "consejero123"));
+        "dashboard,council-minutes,assemblies,votes,councils,documents,accounting-reports,fiscal-reports,security,contractors,property-units,annual-budgets,official-minutes,horizontal-property-regulations,alerts,reports,personnel-ratings,support-tasks,task-statistics,staff-ratings"));
       
       // COPROPIETARIOS - Módulos básicos de residentes + transparencia + reportes + calificaciones + soporte
       roleRepository.save(new Role("COPROPIETARIO", "Copropietario con acceso a módulos básicos y transparencia", 
-        "dashboard,pqr,pqr-statistics,reservations,visitors,payments,bank-accounts,council-minutes,accounting-reports,fiscal-reports,property-units,alerts,transparency,reports,personnel-ratings,support-tasks", 
-        "copropietario123"));
+        "dashboard,pqr,pqr-statistics,reservations,visitors,payments,bank-accounts,council-minutes,accounting-reports,fiscal-reports,property-units,alerts,transparency,reports,personnel-ratings,support-tasks"));
       
       // EMPRESA DE VIGILANCIA - Módulos de seguridad
       roleRepository.save(new Role("VIGILANCIA", "Empresa de vigilancia con acceso a módulos de seguridad", 
-        "dashboard,security-reports,security,visitors,alerts,reports,support-tasks,personnel-ratings", 
-        "vigilancia123"));
+        "dashboard,security-reports,security,visitors,alerts,reports,support-tasks,personnel-ratings"));
       
       // EMPRESA DE ASEO - Módulos de limpieza
       roleRepository.save(new Role("ASEO", "Empresa de aseo con acceso a módulos de limpieza", 
-        "dashboard,cleaning-tasks,support-tasks,reports,alerts,personnel-ratings,documents", 
-        "aseo123"));
+        "dashboard,cleaning-tasks,support-tasks,reports,alerts,personnel-ratings,documents"));
       
       System.out.println("Roles específicos creados");
     }
@@ -124,8 +121,7 @@ public class DataInitializer implements CommandLineRunner {
     // Crear rol ASEO si no existe
     if (roleRepository.findByName("ASEO").isEmpty()) {
       roleRepository.save(new Role("ASEO", "Empresa de aseo con acceso a módulos de limpieza",
-        "dashboard,cleaning-tasks,support-tasks,reports,alerts,personnel-ratings,documents",
-        "aseo123"));
+        "dashboard,cleaning-tasks,support-tasks,reports,alerts,personnel-ratings,documents"));
       System.out.println("Rol ASEO creado");
     }
 

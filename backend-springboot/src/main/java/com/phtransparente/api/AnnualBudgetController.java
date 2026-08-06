@@ -119,14 +119,14 @@ public class AnnualBudgetController {
   @GetMapping("/{id}/items")
   public ResponseEntity<List<BudgetItem>> getBudgetItems(@PathVariable @NonNull Long id) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, TenantContext.getOrganizationId())) return ResponseEntity.notFound().build();
     return ResponseEntity.ok(budgetItemRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/items")
   public ResponseEntity<BudgetItem> addBudgetItem(@PathVariable @NonNull Long id, @RequestBody BudgetItem item) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, orgId)) return ResponseEntity.notFound().build();
     item.setBudgetId(id);
     item.setOrganizationId(orgId);
     return ResponseEntity.ok(budgetItemRepository.save(item));
@@ -166,14 +166,14 @@ public class AnnualBudgetController {
   @GetMapping("/{id}/inquiries")
   public ResponseEntity<List<BudgetInquiry>> getInquiries(@PathVariable @NonNull Long id) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, TenantContext.getOrganizationId())) return ResponseEntity.notFound().build();
     return ResponseEntity.ok(budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/inquiries")
   public ResponseEntity<BudgetInquiry> createInquiry(@PathVariable @NonNull Long id, @RequestBody InquiryRequest request) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, orgId)) return ResponseEntity.notFound().build();
     String username = currentUsername();
     User user = userRepository.findByUsername(username);
     BudgetInquiry inquiry = new BudgetInquiry();
@@ -212,14 +212,14 @@ public class AnnualBudgetController {
   @GetMapping("/{id}/proposals")
   public ResponseEntity<List<BudgetProposal>> getProposals(@PathVariable @NonNull Long id) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, TenantContext.getOrganizationId())) return ResponseEntity.notFound().build();
     return ResponseEntity.ok(budgetProposalRepository.findByOrganizationIdAndBudgetId(orgId, id));
   }
 
   @PostMapping("/{id}/proposals")
   public ResponseEntity<BudgetProposal> createProposal(@PathVariable @NonNull Long id, @RequestBody ProposalRequest request) {
     Long orgId = TenantContext.getOrganizationId();
-    if (!annualBudgetRepository.existsById(id)) return ResponseEntity.notFound().build();
+    if (!annualBudgetRepository.existsByIdAndOrganizationId(id, orgId)) return ResponseEntity.notFound().build();
     BudgetProposal proposal = new BudgetProposal();
     proposal.setBudgetId(id);
     proposal.setOrganizationId(orgId);
@@ -305,7 +305,7 @@ public class AnnualBudgetController {
     long contra = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "CONTRA");
     long abstencion = voteRecordRepository.countByOrganizationIdAndVoteIdAndChoice(orgId, proposalId, "ABSTENCION");
 
-    List<User> allUsers = userRepository.findAll();
+    List<User> allUsers = userRepository.findByOrganizationId(orgId);
     Set<Long> votedUserIds = new HashSet<>();
     List<Map<String, Object>> votedList = new ArrayList<>();
     for (VoteRecord r : records) {

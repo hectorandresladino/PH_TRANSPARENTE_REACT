@@ -5,13 +5,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "subscriptions")
+@Table(name = "subscriptions", uniqueConstraints =
+  @UniqueConstraint(name = "uk_subscription_organization", columnNames = "organization_id"))
 public class Subscription {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
+  @Column(name = "organization_id", nullable = false)
   private Long organizationId;
 
   @Column(nullable = false)

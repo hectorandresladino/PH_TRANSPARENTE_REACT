@@ -46,25 +46,33 @@ import StaffInfoManagement from './StaffInfoManagement.jsx';
 import StaffRatingsManagement from './StaffRatingsManagement.jsx';
 import AuditLogManagement from './AuditLogManagement.jsx';
 import IdleTimer from './IdleTimer.jsx';
+import SaasAdminDashboard from './SaasAdminDashboard.jsx';
 import './styles.css';
 import { getToken, API_URL } from './api.js';
 
 // Parche global de fetch: inyecta el JWT en las peticiones a la API para que
 // todos los componentes existentes se beneficien sin editarlos uno a uno.
-const originalFetch = window.fetch;
-window.fetch = async function patchedFetch(url, options = {}) {
-  const token = getToken();
-  if (token && typeof url === 'string' && url.startsWith(API_URL)) {
-    const headers = options.headers || {};
-    if (!headers['Authorization'] && !headers['authorization']) {
-      options = {
-        ...options,
-        headers: { ...headers, 'Authorization': `Bearer ${token}` }
-      };
+if (!window.__phFetchPatched) {
+  const originalFetch = window.fetch.bind(window);
+  window.__phFetchPatched = true;
+  window.fetch = async function patchedFetch(url, options = {}) {
+    const token = getToken();
+    const requestUrl = typeof url === 'string' ? url : url?.url;
+    if (token && requestUrl?.startsWith(API_URL)) {
+      const headers = new Headers(options.headers || (url instanceof Request ? url.headers : undefined));
+      if (!headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+        options = { ...options, headers };
+      }
     }
-  }
-  return originalFetch(url, options);
-};
+    const response = await originalFetch(url, options);
+    if (token && response.status === 401 && requestUrl?.startsWith(API_URL)) {
+      removeToken();
+      window.dispatchEvent(new Event('ph:session-expired'));
+    }
+    return response;
+  };
+}
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -177,13 +185,17 @@ function App() {
   };
 
   const handleLogout = useCallback(() => {
-    console.log('handleLogout llamado por inactividad');
     setUser(null);
     setAuthView('login');
     setAllowedModules([]);
     removeToken();
     localStorage.removeItem('allowedModules');
   }, []);
+
+  useEffect(() => {
+    window.addEventListener('ph:session-expired', handleLogout);
+    return () => window.removeEventListener('ph:session-expired', handleLogout);
+  }, [handleLogout]);
 
   const handleRegister = (userData) => {
     console.log('handleRegister llamado con:', userData);
@@ -217,6 +229,15 @@ function App() {
           />
         );
     }
+  }
+
+  if (user.role === 'SUPERADMIN') {
+    return (
+      <>
+        <SaasAdminDashboard user={user} onLogout={handleLogout} />
+        <IdleTimer onLogout={handleLogout} />
+      </>
+    );
   }
 
   console.log('Usuario autenticado, renderizando dashboard');
@@ -499,7 +520,8 @@ function App() {
             <span>App Store</span>
           </button>
           )}
-          {(user?.role === 'ADMIN' || user?.role === 'REVISOR_FISCAL') && (
+          {allowedModules.includes('authorizations') &&
+            (user?.role === 'ADMIN' || user?.role === 'REVISOR_FISCAL') && (
           <button 
             className={`nav-item ${currentView === 'audit' ? 'active' : ''}`}
             onClick={() => setCurrentView('audit')}

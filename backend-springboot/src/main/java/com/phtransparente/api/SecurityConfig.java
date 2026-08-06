@@ -23,9 +23,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final SaasAuthorizationFilter saasAuthorizationFilter;
 
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                        SaasAuthorizationFilter saasAuthorizationFilter) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.saasAuthorizationFilter = saasAuthorizationFilter;
   }
 
   @Bean
@@ -37,12 +40,13 @@ public class SecurityConfig {
       .authorizeHttpRequests(auth -> auth
         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
-        .requestMatchers("/api/auth/send-verification-code", "/api/auth/verify-code").permitAll()
         .requestMatchers("/api/health").permitAll()
+        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
         .requestMatchers("/api/**").authenticated()
         .anyRequest().permitAll()
       )
-      .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+      .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+      .addFilterAfter(saasAuthorizationFilter, JwtAuthenticationFilter.class);
 
     return http.build();
   }

@@ -2,6 +2,7 @@ package com.phtransparente.api;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
@@ -14,19 +15,23 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+  private static final Set<String> TENANT_ROLES = Set.of(
+    "ADMIN", "CONTADOR", "REVISOR_FISCAL", "CONSEJERO", "COPROPIETARIO", "VIGILANCIA", "ASEO");
   private final UserRepository userRepository;
   private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
   private final AuditLogService auditLogService;
   private final PasswordPolicy passwordPolicy;
+  private final SaasAccessService saasAccessService;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-  public UserController(UserRepository userRepository, EmailService emailService, PasswordEncoder passwordEncoder, AuditLogService auditLogService, PasswordPolicy passwordPolicy) {
+  public UserController(UserRepository userRepository, EmailService emailService, PasswordEncoder passwordEncoder, AuditLogService auditLogService, PasswordPolicy passwordPolicy, SaasAccessService saasAccessService) {
     this.userRepository = userRepository;
     this.emailService = emailService;
     this.passwordEncoder = passwordEncoder;
     this.auditLogService = auditLogService;
     this.passwordPolicy = passwordPolicy;
+    this.saasAccessService = saasAccessService;
   }
 
   private static boolean isBCryptHash(String value) {
@@ -48,7 +53,19 @@ public class UserController {
 
   @PostMapping
   public ResponseEntity<?> createUser(@RequestBody User user, HttpServletRequest httpRequest) {
-    user.setOrganizationId(TenantContext.getOrganizationId());
+    Long organizationId = TenantContext.getOrganizationId();
+    if (saasAccessService.hasReachedUserLimit(organizationId)) {
+      return ResponseEntity.status(409).body("La organización alcanzó el límite de usuarios de su plan");
+    }
+    user.setOrganizationId(organizationId);
+    if (user.getUsername() == null || user.getUsername().isBlank()
+        || user.getPassword() == null || user.getPassword().isBlank()) {
+      return ResponseEntity.badRequest().body("Usuario y contraseña son obligatorios");
+    }
+    if (user.getRole() == null || !TENANT_ROLES.contains(user.getRole().toUpperCase())) {
+      return ResponseEntity.badRequest().body("Rol de tenant inválido");
+    }
+    user.setRole(user.getRole().toUpperCase());
     if (userRepository.existsByUsername(user.getUsername())) {
       auditLogService.log("USER_CREATE_FAILED", currentUsername(), currentRole(), "Intento de crear usuario existente: " + user.getUsername(), httpRequest, "FAIL");
       return ResponseEntity.badRequest().body("El usuario ya existe");
@@ -67,6 +84,16 @@ public class UserController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateUser(@PathVariable @NonNull Long id, @RequestBody User user, HttpServletRequest httpRequest) {
+    if (user.getUsername() == null || user.getUsername().isBlank()) {
+      return ResponseEntity.badRequest().body("El usuario es obligatorio");
+    }
+    User userWithSameName = userRepository.findByUsername(user.getUsername());
+    if (userWithSameName != null && !id.equals(userWithSameName.getId())) {
+      return ResponseEntity.status(409).body("El usuario ya existe");
+    }
+    if (user.getRole() == null || !TENANT_ROLES.contains(user.getRole().toUpperCase())) {
+      return ResponseEntity.badRequest().body("Rol de tenant inválido");
+    }
     if (user.getPassword() != null && !user.getPassword().isEmpty() && !isBCryptHash(user.getPassword())) {
       PasswordPolicy.PasswordValidationResult validation = passwordPolicy.validate(user.getPassword());
       if (!validation.valid()) {
@@ -84,7 +111,7 @@ public class UserController {
             : passwordEncoder.encode(user.getPassword());
           existingUser.setPassword(newPassword);
         }
-        existingUser.setRole(user.getRole());
+        existingUser.setRole(user.getRole().toUpperCase());
         existingUser.setEmail(user.getEmail());
         existingUser.setFullName(user.getFullName());
         existingUser.setPhone(user.getPhone());

@@ -17,9 +17,6 @@ public class Role {
   @Column(length = 1000)
   private String modules;
 
-  @Column(length = 255)
-  private String password;
-
   public Role() {}
 
   public Role(String name, String description) {
@@ -27,11 +24,10 @@ public class Role {
     this.description = description;
   }
 
-  public Role(String name, String description, String modules, String password) {
+  public Role(String name, String description, String modules) {
     this.name = name;
     this.description = description;
     this.modules = modules;
-    this.password = password;
   }
 
   public Long getId() { return id; }
@@ -46,6 +42,4 @@ public class Role {
   public String getModules() { return modules; }
   public void setModules(String modules) { this.modules = modules; }
 
-  public String getPassword() { return password; }
-  public void setPassword(String password) { this.password = password; }
 }

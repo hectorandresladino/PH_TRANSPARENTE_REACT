@@ -25,9 +25,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private static final String BEARER_PREFIX = "Bearer ";
 
   private final JwtUtil jwtUtil;
+  private final UserRepository userRepository;
+  private final SaasAccessService saasAccessService;
 
-  public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+  public JwtAuthenticationFilter(JwtUtil jwtUtil, UserRepository userRepository,
+                                 SaasAccessService saasAccessService) {
     this.jwtUtil = jwtUtil;
+    this.userRepository = userRepository;
+    this.saasAccessService = saasAccessService;
   }
 
   @Override
@@ -45,6 +50,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = jwtUtil.parseToken(token);
         String username = claims.getSubject();
         String role = claims.get("role", String.class);
+        Object orgIdClaim = claims.get("organizationId");
+        Long organizationId = orgIdClaim == null ? null : Long.valueOf(orgIdClaim.toString());
+        User currentUser = userRepository.findByUsername(username);
+
+        if (currentUser == null || !Boolean.TRUE.equals(currentUser.getActive())
+            || role == null || !role.equalsIgnoreCase(currentUser.getRole())
+            || !java.util.Objects.equals(organizationId, currentUser.getOrganizationId())
+            || ("SUPERADMIN".equalsIgnoreCase(role) && !Long.valueOf(0L).equals(organizationId))) {
+          response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "La sesion ya no es valida");
+          return;
+        }
+
+        SaasAccessService.AccessDecision access = saasAccessService.validateAccess(organizationId, role);
+        if (!access.allowed()) {
+          response.sendError(HttpServletResponse.SC_FORBIDDEN, access.message());
+          return;
+        }
         String authority = role != null ? "ROLE_" + role.toUpperCase() : "ROLE_USER";
 
         UsernamePasswordAuthenticationToken authentication =
@@ -57,9 +79,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Establecer tenant en el contexto de la petición
-        Object orgId = claims.get("organizationId");
-        if (orgId != null) {
-          TenantContext.setOrganizationId(Long.valueOf(orgId.toString()));
+        if (organizationId != null) {
+          TenantContext.setOrganizationId(organizationId);
         }
       }
     }
@@ -68,6 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       filterChain.doFilter(request, response);
     } finally {
       TenantContext.clear();
+      SecurityContextHolder.clearContext();
     }
   }
 }

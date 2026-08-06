@@ -16,10 +16,10 @@ cd /d "%~dp0"
 start "PH DB" cmd /k "docker-compose up -d postgres pgadmin && echo Base de datos lista en puerto 5432 && echo pgAdmin en http://localhost:5050 && pause"
 
 :: Iniciar backend
-start "PH Backend" cmd /k "cd backend-springboot && mvn spring-boot:run"
+start "PH Backend" cmd /k "cd backend-springboot && mvn spring-boot:run -Dspring-boot.run.profiles=dev"
 
 :: Iniciar frontend
-start "PH Frontend" cmd /k "cd frontend-react && npm install && npm run dev"
+start "PH Frontend" cmd /k "cd frontend-react && set ""VITE_SELF_REGISTRATION_ENABLED=true"" && npm install && npm run dev"
 
 echo.
 echo ==========================================

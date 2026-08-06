@@ -1,0 +1,576 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: ph-transparente
+  annotations:
+    openshift.io/display-name: PH Transparente SaaS
+    openshift.io/provider-display-name: PH Transparente
+    description: Frontend React, API Spring Boot y PostgreSQL para OpenShift.
+    tags: saas,react,spring-boot,postgresql
+labels:
+  app.kubernetes.io/name: ph-transparente
+  app.kubernetes.io/part-of: ph-transparente
+objects:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ph-transparente-secrets
+      labels:
+        app.kubernetes.io/name: ph-transparente
+        app.kubernetes.io/part-of: ph-transparente
+    type: Opaque
+    stringData:
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_BOOTSTRAP_SUPERADMIN_USERNAME: ${SUPERADMIN_USERNAME}
+      APP_BOOTSTRAP_SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      APP_BOOTSTRAP_SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: ph-transparente-config
+      labels:
+        app.kubernetes.io/name: ph-transparente
+        app.kubernetes.io/part-of: ph-transparente
+    data:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: "8081"
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_URL: jdbc:postgresql://ph-postgresql:5432/${DATABASE_NAME}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      EMAIL_FROM: ${EMAIL_FROM}
+      JWT_EXPIRATION_MS: "3600000"
+      APP_SEED_ENABLED: "false"
+      APP_SAAS_SELF_REGISTRATION_ENABLED: "false"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ph-postgresql-data
+      labels:
+        app.kubernetes.io/name: ph-postgresql
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: ${POSTGRESQL_STORAGE_SIZE}
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ph-postgresql
+      labels:
+        app.kubernetes.io/name: ph-postgresql
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      replicas: 1
+      revisionHistoryLimit: 2
+      strategy:
+        type: Recreate
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: ph-postgresql
+          app.kubernetes.io/component: database
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ph-postgresql
+            app.kubernetes.io/component: database
+            app.kubernetes.io/part-of: ph-transparente
+        spec:
+          automountServiceAccountToken: false
+          terminationGracePeriodSeconds: 60
+          containers:
+            - name: postgresql
+              image: ${POSTGRESQL_IMAGE}
+              imagePullPolicy: IfNotPresent
+              ports:
+                - name: postgresql
+                  containerPort: 5432
+                  protocol: TCP
+              env:
+                - name: POSTGRESQL_DATABASE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: ph-transparente-config
+                      key: DATABASE_NAME
+                - name: POSTGRESQL_USER
+                  valueFrom:
+                    configMapKeyRef:
+                      name: ph-transparente-config
+                      key: DATABASE_USERNAME
+                - name: POSTGRESQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ph-transparente-secrets
+                      key: DATABASE_PASSWORD
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/pgsql/data
+              startupProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - pg_isready -U "$POSTGRESQL_USER" -d "$POSTGRESQL_DATABASE"
+                periodSeconds: 5
+                timeoutSeconds: 3
+                failureThreshold: 30
+              readinessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - pg_isready -U "$POSTGRESQL_USER" -d "$POSTGRESQL_DATABASE"
+                periodSeconds: 10
+                timeoutSeconds: 3
+                failureThreshold: 6
+              livenessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - pg_isready -U "$POSTGRESQL_USER" -d "$POSTGRESQL_DATABASE"
+                periodSeconds: 20
+                timeoutSeconds: 3
+                failureThreshold: 6
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: ph-postgresql-data
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ph-postgresql
+      labels:
+        app.kubernetes.io/name: ph-postgresql
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      type: ClusterIP
+      selector:
+        app.kubernetes.io/name: ph-postgresql
+        app.kubernetes.io/component: database
+      ports:
+        - name: postgresql
+          port: 5432
+          targetPort: postgresql
+          protocol: TCP
+
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      name: ph-backend
+      labels:
+        app.kubernetes.io/name: ph-backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: ph-transparente
+
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: ph-backend
+      labels:
+        app.kubernetes.io/name: ph-backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      runPolicy: SerialLatestOnly
+      source:
+        type: Git
+        git:
+          uri: ${SOURCE_REPOSITORY_URL}
+          ref: ${SOURCE_REPOSITORY_REF}
+        contextDir: backend-springboot
+      strategy:
+        type: Docker
+        dockerStrategy:
+          dockerfilePath: Dockerfile
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ph-backend:latest
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+      triggers:
+        - type: ConfigChange
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ph-backend
+      labels:
+        app.kubernetes.io/name: ph-backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: ph-transparente
+      annotations:
+        image.openshift.io/triggers: >-
+          [{"from":{"kind":"ImageStreamTag","name":"ph-backend:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"backend\")].image","pause":false}]
+    spec:
+      replicas: ${{BACKEND_REPLICAS}}
+      revisionHistoryLimit: 3
+      progressDeadlineSeconds: 600
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: ph-backend
+          app.kubernetes.io/component: api
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ph-backend
+            app.kubernetes.io/component: api
+            app.kubernetes.io/part-of: ph-transparente
+        spec:
+          automountServiceAccountToken: false
+          terminationGracePeriodSeconds: 30
+          containers:
+            - name: backend
+              image: ph-backend:latest
+              imagePullPolicy: Always
+              ports:
+                - name: http
+                  containerPort: 8081
+                  protocol: TCP
+              envFrom:
+                - configMapRef:
+                    name: ph-transparente-config
+                - secretRef:
+                    name: ph-transparente-secrets
+              startupProbe:
+                httpGet:
+                  path: /api/health
+                  port: http
+                  scheme: HTTP
+                periodSeconds: 5
+                timeoutSeconds: 3
+                failureThreshold: 36
+              readinessProbe:
+                httpGet:
+                  path: /actuator/health/readiness
+                  port: http
+                  scheme: HTTP
+                periodSeconds: 10
+                timeoutSeconds: 3
+                failureThreshold: 6
+              livenessProbe:
+                httpGet:
+                  path: /actuator/health/liveness
+                  port: http
+                  scheme: HTTP
+                periodSeconds: 20
+                timeoutSeconds: 3
+                failureThreshold: 3
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 512Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ph-backend
+      labels:
+        app.kubernetes.io/name: ph-backend
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      type: ClusterIP
+      selector:
+        app.kubernetes.io/name: ph-backend
+        app.kubernetes.io/component: api
+      ports:
+        - name: http
+          port: 8081
+          targetPort: http
+          protocol: TCP
+
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      name: ph-frontend
+      labels:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: ph-transparente
+
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: ph-frontend
+      labels:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      runPolicy: SerialLatestOnly
+      source:
+        type: Git
+        git:
+          uri: ${SOURCE_REPOSITORY_URL}
+          ref: ${SOURCE_REPOSITORY_REF}
+        contextDir: frontend-react
+      strategy:
+        type: Docker
+        dockerStrategy:
+          dockerfilePath: Dockerfile
+          buildArgs:
+            - name: VITE_API_URL
+              value: /api
+            - name: VITE_SELF_REGISTRATION_ENABLED
+              value: "false"
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ph-frontend:latest
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+      triggers:
+        - type: ConfigChange
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ph-frontend
+      labels:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: ph-transparente
+      annotations:
+        image.openshift.io/triggers: >-
+          [{"from":{"kind":"ImageStreamTag","name":"ph-frontend:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"frontend\")].image","pause":false}]
+    spec:
+      replicas: ${{FRONTEND_REPLICAS}}
+      revisionHistoryLimit: 3
+      progressDeadlineSeconds: 600
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: ph-frontend
+          app.kubernetes.io/component: web
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ph-frontend
+            app.kubernetes.io/component: web
+            app.kubernetes.io/part-of: ph-transparente
+        spec:
+          automountServiceAccountToken: false
+          terminationGracePeriodSeconds: 20
+          containers:
+            - name: frontend
+              image: ph-frontend:latest
+              imagePullPolicy: Always
+              ports:
+                - name: http
+                  containerPort: 8080
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  path: /healthz
+                  port: http
+                  scheme: HTTP
+                initialDelaySeconds: 3
+                periodSeconds: 10
+                timeoutSeconds: 3
+                failureThreshold: 3
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: http
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 20
+                timeoutSeconds: 3
+                failureThreshold: 3
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 300m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ph-frontend
+      labels:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: ph-transparente
+    spec:
+      type: ClusterIP
+      selector:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+      ports:
+        - name: http
+          port: 8080
+          targetPort: http
+          protocol: TCP
+
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: ph-transparente
+      labels:
+        app.kubernetes.io/name: ph-frontend
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: ph-transparente
+      annotations:
+        haproxy.router.openshift.io/hsts_header: max-age=31536000;includeSubDomains;preload
+        haproxy.router.openshift.io/timeout: 60s
+    spec:
+      host: ${APPLICATION_HOSTNAME}
+      to:
+        kind: Service
+        name: ph-frontend
+        weight: 100
+      port:
+        targetPort: http
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
+parameters:
+  - name: SOURCE_REPOSITORY_URL
+    displayName: Repositorio Git
+    description: URL publica del repositorio que contiene backend-springboot y frontend-react.
+    value: https://github.com/hectorandresladino/PH_TRANSPARENTE_REACT.git
+    required: true
+  - name: SOURCE_REPOSITORY_REF
+    displayName: Rama o etiqueta Git
+    value: main
+    required: true
+  - name: APPLICATION_HOSTNAME
+    displayName: Dominio de la aplicacion
+    description: Deje vacio para que OpenShift genere el hostname de la Route.
+    value: ""
+  - name: CORS_ALLOWED_ORIGINS
+    displayName: Origenes CORS adicionales
+    description: Solo se usa para clientes que llaman la API directamente. La web usa el proxy del frontend.
+    value: https://example.invalid
+    required: true
+  - name: DATABASE_NAME
+    displayName: Base de datos PostgreSQL
+    value: phdb
+    required: true
+  - name: DATABASE_USERNAME
+    displayName: Usuario PostgreSQL
+    value: phuser
+    required: true
+  - name: DATABASE_PASSWORD
+    displayName: Contrasena PostgreSQL
+    generate: expression
+    from: "[a-zA-Z0-9]{32}"
+  - name: JWT_SECRET
+    displayName: Secreto JWT en Base64
+    description: Cadena Base64 con al menos 32 bytes de entropia.
+    generate: expression
+    from: "[a-zA-Z0-9]{64}"
+  - name: SUPERADMIN_USERNAME
+    displayName: Usuario superadministrador
+    value: superadmin
+    required: true
+  - name: SUPERADMIN_PASSWORD
+    displayName: Contrasena inicial del superadministrador
+    generate: expression
+    from: "Aa1![a-zA-Z0-9]{20}"
+  - name: SUPERADMIN_EMAIL
+    displayName: Correo del superadministrador
+    value: admin@example.com
+    required: true
+  - name: EMAIL_USERNAME
+    displayName: Usuario SMTP
+    value: ""
+  - name: EMAIL_PASSWORD
+    displayName: Clave SMTP
+    value: ""
+  - name: EMAIL_FROM
+    displayName: Remitente de correo
+    value: no-reply@example.com
+    required: true
+  - name: POSTGRESQL_IMAGE
+    displayName: Imagen PostgreSQL compatible con OpenShift
+    value: registry.access.redhat.com/rhel9/postgresql-15:latest
+    required: true
+  - name: POSTGRESQL_STORAGE_SIZE
+    displayName: Almacenamiento PostgreSQL
+    value: 5Gi
+    required: true
+  - name: BACKEND_REPLICAS
+    displayName: Replicas del backend
+    value: "1"
+    required: true
+  - name: FRONTEND_REPLICAS
+    displayName: Replicas del frontend
+    value: "1"
+    required: true
+message: |-
+  PH Transparente fue creado. Consulte la URL con:
+    oc get route ph-transparente -o jsonpath='https://{.spec.host}{"\n"}'
+  Consulte la clave inicial con:
+    oc extract secret/ph-transparente-secrets --keys=APP_BOOTSTRAP_SUPERADMIN_PASSWORD --to=-

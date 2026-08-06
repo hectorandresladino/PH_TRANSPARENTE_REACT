@@ -30,8 +30,9 @@ public class AiAssistantService {
   // =================== PQR AI SUGGESTION ===================
 
   public Map<String, Object> suggestPqrResponse(Long pqrId) {
+    Long orgId = TenantContext.getOrganizationId();
     Optional<Pqr> opt = pqrRepository.findById(pqrId);
-    if (opt.isEmpty()) {
+    if (opt.isEmpty() || !orgId.equals(opt.get().getOrganizationId())) {
       return Map.of("error", "PQR no encontrado");
     }
     Pqr pqr = opt.get();
@@ -294,14 +295,15 @@ public class AiAssistantService {
   // =================== BUDGET AI ANALYSIS ===================
 
   public Map<String, Object> analyzeBudget(Long budgetId) {
+    Long orgId = TenantContext.getOrganizationId();
     Optional<AnnualBudget> opt = annualBudgetRepository.findById(budgetId);
-    if (opt.isEmpty()) {
+    if (opt.isEmpty() || !orgId.equals(opt.get().getOrganizationId())) {
       return Map.of("error", "Presupuesto no encontrado");
     }
     AnnualBudget budget = opt.get();
-    List<BudgetItem> items = budgetItemRepository.findByBudgetId(budgetId);
-    List<BudgetInquiry> inquiries = budgetInquiryRepository.findByBudgetId(budgetId);
-    List<BudgetProposal> proposals = budgetProposalRepository.findByBudgetId(budgetId);
+    List<BudgetItem> items = budgetItemRepository.findByOrganizationIdAndBudgetId(orgId, budgetId);
+    List<BudgetInquiry> inquiries = budgetInquiryRepository.findByOrganizationIdAndBudgetId(orgId, budgetId);
+    List<BudgetProposal> proposals = budgetProposalRepository.findByOrganizationIdAndBudgetId(orgId, budgetId);
 
     Map<String, Object> analysis = new LinkedHashMap<>();
     analysis.put("budgetName", budget.getBudgetName());

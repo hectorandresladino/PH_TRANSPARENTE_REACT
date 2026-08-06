@@ -21,11 +21,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtil {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-  private static final long EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 horas
-
   private final SecretKey key;
+  private final long expirationMs;
 
-  public JwtUtil(@Value("${app.jwt.secret:}") String secret) {
+  public JwtUtil(@Value("${app.jwt.secret:}") String secret,
+                 @Value("${app.jwt.expiration-ms:3600000}") long expirationMs) {
+    if (expirationMs < 60_000) {
+      throw new IllegalArgumentException("app.jwt.expiration-ms debe ser de al menos 60000 ms");
+    }
+    this.expirationMs = expirationMs;
     if (secret == null || secret.isBlank()) {
       // Desarrollo: generar secreto aleatorio y advertir.
       byte[] randomBytes = new byte[32];
@@ -40,7 +44,7 @@ public class JwtUtil {
 
   public String generateToken(String username, String role, Long organizationId, String organizationSlug) {
     Date now = new Date();
-    Date expiry = new Date(now.getTime() + EXPIRATION_MS);
+    Date expiry = new Date(now.getTime() + expirationMs);
     return Jwts.builder()
       .subject(username)
       .claim("role", role)

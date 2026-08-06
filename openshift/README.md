@@ -1,146 +1,152 @@
-# Despliegue en Red Hat OpenShift Sandbox
+# Despliegue de PH Transparente en OpenShift
 
-Configuración lista para desplegar PH Transparente en Red Hat OpenShift Sandbox.
+Esta carpeta contiene un despliegue completo y seguro para OpenShift 4:
 
-## Archivos incluidos
+- PostgreSQL 15 con volumen persistente.
+- Backend Spring Boot construido desde Git mediante `BuildConfig`.
+- Frontend React/Nginx construido desde Git mediante `BuildConfig`.
+- `Secret`, `ConfigMap`, `ImageStream`, `Deployment`, `Service` y `Route` HTTPS.
+- Probes de inicio, disponibilidad y vida, limites de recursos y ejecucion sin privilegios.
 
-```
-openshift/
-├── secrets.yaml        # Secret con credenciales de BD, JWT y email
-├── postgresql.yaml     # PostgreSQL con almacenamiento persistente
-├── backend.yaml        # BuildConfig + Deployment + Service + Route del backend
-├── frontend.yaml       # BuildConfig + Deployment + Service + Route del frontend
-└── README.md           # Esta guía
-```
+Solo el frontend se publica. Las solicitudes a `/api` se envian desde Nginx al servicio interno `ph-backend`; PostgreSQL y el backend no se exponen a Internet.
 
-## Requisitos
+## Archivos
 
-- Cuenta en [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox)
-- CLI `oc` instalado
-- Repositorio en GitHub/GitLab (los BuildConfig apuntan a él)
+| Archivo | Uso |
+| --- | --- |
+| `ph-transparente-template.yaml` | Plantilla OpenShift con todos los componentes. |
+| `deploy.ps1` | Instalacion o actualizacion idempotente desde Windows/PowerShell. |
+| `parameters.example.env` | Ejemplo de parametros para usar directamente con `oc process`. |
 
-## Pasos de despliegue
+La plantilla no contiene contrasenas reales. OpenShift o `deploy.ps1` generan claves aleatorias para PostgreSQL, JWT y el primer superadministrador.
 
-### 1. Configurar secret
+## Antes de desplegar
 
-Edite `secrets.yaml` y cambie al menos estas claves:
+1. Confirme que estos cambios esten guardados y enviados al repositorio Git. Los `BuildConfig` construyen desde el repositorio remoto, no desde los archivos locales.
+2. Instale la CLI `oc` e inicie sesion:
 
-```yaml
-stringData:
-  database-url: "jdbc:postgresql://ph-postgresql:5432/phdb"
-  database-username: "postgres"
-  database-password: "UNA_CONTRASEÑA_SEGURA"
-  jwt-secret: "UN_SECRET_BASE64_O_TEXTO_LARGO"
-  email-password: "SU_CLAVE_DE_APLICACION_GMAIL"
+```powershell
+oc login --token=SU_TOKEN --server=https://api.SU_CLUSTER:6443
+oc whoami
 ```
 
-> El JWT secret debe ser largo y seguro. En producción nunca use el valor por defecto.
+3. Use un proyecto existente del Sandbox o cree uno si su cuenta tiene permiso.
 
-### 2. Actualizar URL del repositorio Git
+## Opcion recomendada: PowerShell
 
-En `backend.yaml` y `frontend.yaml` reemplace la URL de Git por la suya:
+Desde la raiz del repositorio:
 
-```yaml
-spec:
-  source:
-    git:
-      uri: "https://github.com/SU_USUARIO/ph_transparente.git"
+```powershell
+.\openshift\deploy.ps1 `
+  -Project ph-transparente `
+  -GitUri https://github.com/hectorandresladino/PH_TRANSPARENTE_REACT.git `
+  -GitRef main `
+  -SuperAdminEmail admin@su-dominio.com `
+  -EmailFrom no-reply@su-dominio.com `
+  -WaitForRollout
 ```
 
-### 3. Login y crear proyecto
+Si OpenShift Sandbox ya le asigno un proyecto y no puede crear otro, seleccionelo primero y omita `-Project`:
 
-```bash
-oc login --token=SU_TOKEN --server=https://api.sandbox-...:6443
-oc new-project ph-transparente
+```powershell
+oc project SU_PROYECTO
+.\openshift\deploy.ps1 -SuperAdminEmail admin@su-dominio.com -WaitForRollout
 ```
 
-### 4. Aplicar manifiestos
+El script conserva `DATABASE_PASSWORD` y `JWT_SECRET` cuando se vuelve a ejecutar. Esto evita romper la base de datos o invalidar todas las sesiones durante una actualizacion.
 
-```bash
-cd openshift
-oc apply -f secrets.yaml
-oc apply -f postgresql.yaml
-oc apply -f backend.yaml
+Para configurar Gmail u otro SMTP en la primera instalacion:
+
+```powershell
+.\openshift\deploy.ps1 `
+  -SuperAdminEmail admin@su-dominio.com `
+  -EmailUsername cuenta@su-dominio.com `
+  -EmailPassword CLAVE_DE_APLICACION `
+  -EmailFrom cuenta@su-dominio.com
 ```
 
-### 5. Obtener URL pública del backend
+## Opcion por CLI
 
-Espere a que el backend esté desplegado y obtenga su URL:
+Copie el archivo de ejemplo sin guardar secretos en Git:
 
-```bash
-oc get route ph-backend
+```powershell
+Copy-Item openshift\parameters.example.env openshift\parameters.env
 ```
 
-La URL será similar a:
-`https://ph-backend-ph-transparente.apps.sandbox-...openshiftapps.com`
+Edite `parameters.env` y procese la plantilla una sola vez:
 
-### 6. Configurar frontend con URL del backend
-
-Edite `frontend.yaml` y reemplace el valor de `VITE_API_URL`:
-
-```yaml
-      dockerStrategy:
-        buildArgs:
-          - name: "VITE_API_URL"
-            value: "https://ph-backend-ph-transparente.apps.sandbox-...openshiftapps.com/api"
+```powershell
+oc process -f openshift/ph-transparente-template.yaml --param-file=openshift/parameters.env | oc apply -f -
 ```
 
-### 7. Desplegar frontend
+No repita ese comando sin aportar los mismos secretos: los parametros generados cambiarian. Para instalaciones y actualizaciones repetibles use `deploy.ps1`.
 
-```bash
-oc apply -f frontend.yaml
+## Opcion desde la consola web
+
+1. Seleccione la perspectiva **Developer** y el proyecto destino.
+2. Abra **+Add > Import YAML** y cargue `ph-transparente-template.yaml`.
+3. Cree la plantilla y luego instanciela desde **Developer Catalog**.
+4. Revise `SOURCE_REPOSITORY_URL`, `SOURCE_REPOSITORY_REF`, correo del superadministrador y almacenamiento.
+5. Espere a que terminen los builds `ph-backend` y `ph-frontend`.
+
+La consola genera las claves marcadas como parametros automaticos. Guarde la clave del superadministrador en un gestor de contrasenas.
+
+## Verificacion
+
+```powershell
+oc get builds,pods,deployments,services,routes,pvc
+oc logs -f bc/ph-backend
+oc logs -f bc/ph-frontend
+oc rollout status deployment/ph-postgresql --timeout=5m
+oc rollout status deployment/ph-backend --timeout=10m
+oc rollout status deployment/ph-frontend --timeout=5m
+oc get route ph-transparente -o jsonpath='https://{.spec.host}'
 ```
 
-### 8. Ver URLs públicas
+Consulte las credenciales iniciales sin almacenarlas en archivos:
 
-```bash
-oc get routes
+```powershell
+oc extract secret/ph-transparente-secrets --keys=APP_BOOTSTRAP_SUPERADMIN_USERNAME --to=-
+oc extract secret/ph-transparente-secrets --keys=APP_BOOTSTRAP_SUPERADMIN_PASSWORD --to=-
 ```
 
-Acceda a la URL del frontend (`ph-frontend`) para usar la aplicación.
+El bootstrap solo crea el superadministrador cuando aun no existe. Cambie su clave despues del primer ingreso y no habilite datos de demostracion ni autorregistro en produccion.
 
-## Verificación rápida
+## Publicar una nueva version
 
-```bash
-# Ver pods
-oc get pods
+Despues de enviar cambios a la rama configurada:
 
-# Ver logs del backend
-oc logs -f deployment/ph-backend
-
-# Ver logs del frontend
-oc logs -f deployment/ph-frontend
-
-# Ver logs de PostgreSQL
-oc logs -f deployment/ph-postgresql
-```
-
-## Credenciales de prueba
-
-| Rol        | Usuario         | Contraseña   |
-|------------|-----------------|--------------|
-| Admin      | admin           | admin123     |
-| Contador   | contador        | contador123  |
-| Revisor    | revisor         | revisor123   |
-| Consejero  | consejero       | consejero123 |
-| Copropietario | copropietario | copropietario123 |
-| Vigilancia | vigilancia      | vigilancia123 |
-
-## Notas importantes
-
-- El backend está configurado para escuchar en 0.0.0.0:8081 dentro del pod.
-- Las variables de entorno `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` y `JWT_SECRET` toman prioridad sobre `application.properties`.
-- El frontend se construye con `VITE_API_URL` apuntando al backend. Si la URL del backend cambia, debe reconstruir la imagen del frontend.
-- Para producción desactive `CORS_ALLOWED_ORIGINS=*` en `backend.yaml` y especifique solo el origen del frontend.
-
-## Reconstruir imágenes
-
-```bash
+```powershell
 oc start-build ph-backend --follow
 oc start-build ph-frontend --follow
+oc rollout status deployment/ph-backend --timeout=10m
+oc rollout status deployment/ph-frontend --timeout=5m
 ```
 
-## Recursos
+## Diagnostico rapido
 
-- [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox)
-- [OpenShift CLI](https://docs.openshift.com/container-platform/4.15/cli_reference/openshift_cli/getting-started-cli.html)
+```powershell
+oc describe pod -l app.kubernetes.io/part-of=ph-transparente
+oc logs deployment/ph-backend --tail=200
+oc logs deployment/ph-frontend --tail=200
+oc logs deployment/ph-postgresql --tail=200
+oc get events --sort-by=.lastTimestamp
+```
+
+Si el backend no queda listo, compruebe primero PostgreSQL. Para consultar el endpoint de readiness, abra temporalmente un port-forward y visite la URL indicada:
+
+```powershell
+oc port-forward service/ph-backend 18081:8081
+# En otra terminal:
+Invoke-RestMethod http://localhost:18081/actuator/health/readiness
+```
+
+## Copias de seguridad
+
+Antes de actualizaciones de esquema o cambios importantes, haga un respaldo:
+
+```powershell
+oc exec deployment/ph-postgresql -- pg_dump -U phuser phdb > phdb-backup.sql
+```
+
+El PVC protege los datos frente al reinicio del pod, pero no reemplaza una politica externa de copias de seguridad. Para alta disponibilidad real use un servicio PostgreSQL administrado o un operador certificado en lugar del `Deployment` incluido para el MVP.

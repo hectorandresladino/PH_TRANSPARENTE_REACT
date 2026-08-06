@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Lock, User, Mail, ArrowLeft } from 'lucide-react';
+import { Building2, Lock, User, Mail, ArrowLeft } from 'lucide-react';
 import './styles.css';
 
 import { API_URL, setToken } from './api.js';
@@ -9,6 +9,7 @@ export default function Register({ onRegister, onBackToLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [organizationSlug, setOrganizationSlug] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -37,7 +38,7 @@ export default function Register({ onRegister, onBackToLogin }) {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, confirmPassword })
+        body: JSON.stringify({ username, email, password, confirmPassword, organizationSlug })
       });
 
       if (response.ok) {
@@ -68,6 +69,17 @@ export default function Register({ onRegister, onBackToLogin }) {
         <h1>Crear Cuenta</h1>
         <p>Regístrate en PH Transparente</p>
         <form onSubmit={handleSubmit}>
+          <div className="login-form-group">
+            <Building2 size={20} />
+            <input
+              type="text"
+              placeholder="Código de la copropiedad"
+              value={organizationSlug}
+              onChange={(e) => setOrganizationSlug(e.target.value.toLowerCase())}
+              required
+              autoCapitalize="none"
+            />
+          </div>
           <div className="login-form-group">
             <User size={20} />
             <input
